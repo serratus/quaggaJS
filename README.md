@@ -15,7 +15,7 @@ This is not yet another port of the great [zxing][zxing_github] library, but mor
 
 In order to take full advantage of quaggaJS, the browser needs to support the `getUserMedia` API which is already implemented by the recent versions of Firefox, Chrome and Opera. The API is also available on their mobile counterparts installed on Android. Safari and IE do not allow the access to the camera yet, neither on desktop, nor on mobile. You can check [caniuse][caniuse_getusermedia] for updates.
 
-In cases where real-time decoding is not needed, or the platform does not support `getUserMedia` QuaggaJS is also capable to decode image-files.
+In cases where real-time decoding is not needed, or the platform does not support `getUserMedia` QuaggaJS is also capable of decoding image-files.
 
 ## Installation
 
