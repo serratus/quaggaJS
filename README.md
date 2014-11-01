@@ -17,11 +17,9 @@ In order to take full advantage of quaggaJS, the browser needs to support the `g
 
 In cases where real-time decoding is not needed, or the platform does not support `getUserMedia` QuaggaJS is also capable of decoding image-files.
 
-## Installation
-
-Just clone the repository and include `quagga.min.js` in your project. The code uses [requirejs][requirejs] for dependency management.
-
 ## Usage
+
+Just download the pre-built version `quagga.min.js` from the `dist` folder and include in your project.
 
 The library exposes the following API
 
@@ -58,6 +56,10 @@ quagga.decodeSingle({
   console.log(result);
 });
 ```
+
+## Build it yourself
+
+In case you want to build the library directly from the source code, just run `npm install` follewed by the `grunt` task. This places two files in the `dist` folder, of which `quagga.min.js` is the minified version.
 
 [zxing_github]: https://github.com/zxing/zxing
 [teaser_left]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-located.png

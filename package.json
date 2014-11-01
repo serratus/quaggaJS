@@ -1,0 +1,21 @@
+{
+  "name": "quagga",
+  "version": "0.1.0",
+  "description": "This README would normally document whatever steps are necessary to get your application up and running.",
+  "main": "js/main.js",
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-contrib-jshint": "~0.10.0",
+    "grunt-contrib-nodeunit": "~0.4.1",
+    "grunt-contrib-uglify": "~0.5.0",
+    "grunt-requirejs": "^0.4.2"
+  },
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
