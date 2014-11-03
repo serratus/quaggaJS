@@ -1,0 +1,54 @@
+#interactive.viewport{
+  width: $videoWidth;
+  height: $videoHeight;
+}
+
+#interactive.viewport canvas, video{
+  float: left;
+  width: $videoWidth;
+  height: $videoHeight;
+  &.drawingBuffer{
+    margin-left: -$videoWidth;
+  }
+}
+
+#result_strip{
+  margin: 10px 0;
+  border-top: 1px solid #EEE;
+  border-bottom: 1px solid #EEE;
+  padding: 10px 0;
+  overflow: auto;
+  ul.thumbnails{
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    
+    & > li{
+      float: left;
+      width: $videoWidth/4;
+      .thumbnail{
+        padding: 5px;
+        margin: 4px;
+        border: 1px dashed #CCC;
+        
+        img{
+          max-width: $videoWidth/4 - 20px;
+        }
+        .caption{
+          h4{
+            text-align: center;
+            word-wrap: break-word;
+            height: 40px;
+            margin: 0px;
+          }
+        }
+      }
+    }
+    
+    &:after{
+      content: "";
+      display: table;
+      clear: both;
+    }
+  }
+}

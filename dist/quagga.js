@@ -1176,7 +1176,7 @@ define(
             }
 
             if ( epsilon === undefined) {
-                epsilon = 2;
+                epsilon = 1.5;
             }
 
             for ( i = 0; i < pattern.length; i++) {
