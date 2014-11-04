@@ -24,9 +24,18 @@
         <h3>Working with static images</h3>
         <p>This examples uses static image files as input which are loaded from the server on startup.
             The locating and decoding process takes place inside the browser.
-            Hit the <strong>next</strong> button to try a different image</p>
+            Hit the <strong>next</strong> button to try a different image. You can also switch between
+            two different test-sets. Each of those contains 10 images, demonstrating the capabilities of decoding
+            <strong>Code128</strong> and <strong>EAN</strong> encoded barcodes.
+        </p>
       <div class="controls">
         <button class="next">Next</button>
+        <fieldset class="reader-group">
+            <label>Code128</label>
+            <input type="radio" name="reader" value="code_128" checked />
+            <label>EAN</label>
+            <input type="radio" name="reader" value="ean" />
+        </fieldset>
       </div>
       <div id="result_strip">
         <ul class="thumbnails"></ul>

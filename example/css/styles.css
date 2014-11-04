@@ -33,43 +33,57 @@
   margin-left: -640px;
 }
 
-/* line 15, ../sass/_viewport.scss */
+/* line 16, ../sass/_viewport.scss */
+.controls .reader-group {
+  float: right;
+  border: none;
+}
+
+/* line 22, ../sass/_viewport.scss */
 #result_strip {
   margin: 10px 0;
   border-top: 1px solid #EEE;
   border-bottom: 1px solid #EEE;
   padding: 10px 0;
-  overflow: auto;
 }
-/* line 21, ../sass/_viewport.scss */
+/* line 28, ../sass/_viewport.scss */
 #result_strip ul.thumbnails {
   padding: 0;
   margin: 0;
   list-style-type: none;
+  width: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
-/* line 26, ../sass/_viewport.scss */
+/* line 37, ../sass/_viewport.scss */
 #result_strip ul.thumbnails > li {
-  float: left;
+  display: inline-block;
+  vertical-align: middle;
   width: 160px;
 }
-/* line 29, ../sass/_viewport.scss */
+/* line 41, ../sass/_viewport.scss */
 #result_strip ul.thumbnails > li .thumbnail {
   padding: 5px;
   margin: 4px;
   border: 1px dashed #CCC;
 }
-/* line 34, ../sass/_viewport.scss */
+/* line 46, ../sass/_viewport.scss */
 #result_strip ul.thumbnails > li .thumbnail img {
   max-width: 140px;
 }
-/* line 38, ../sass/_viewport.scss */
+/* line 49, ../sass/_viewport.scss */
+#result_strip ul.thumbnails > li .thumbnail .caption {
+  white-space: normal;
+}
+/* line 51, ../sass/_viewport.scss */
 #result_strip ul.thumbnails > li .thumbnail .caption h4 {
   text-align: center;
   word-wrap: break-word;
   height: 40px;
   margin: 0px;
 }
-/* line 48, ../sass/_viewport.scss */
+/* line 61, ../sass/_viewport.scss */
 #result_strip ul.thumbnails:after {
   content: "";
   display: table;

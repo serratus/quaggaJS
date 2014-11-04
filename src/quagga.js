@@ -198,6 +198,9 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         isInitialized : function() {
             return _initialized;
         },
+        setReaders: function(readers) {
+            _decoder.setReaders(readers);
+        },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
             config.inputStream = {

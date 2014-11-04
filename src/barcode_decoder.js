@@ -238,6 +238,11 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
                             return result;
                         }
                     }
+                },
+                setReaders: function(readers) {
+                    config.readers = readers;
+                    _barcodeReaders.length = 0;
+                    initReaders();
                 }
             };
         }

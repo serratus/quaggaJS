@@ -6641,6 +6641,11 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                             return result;
                         }
                     }
+                },
+                setReaders: function(readers) {
+                    config.readers = readers;
+                    _barcodeReaders.length = 0;
+                    initReaders();
                 }
             };
         }
@@ -7174,6 +7179,9 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         },
         isInitialized : function() {
             return _initialized;
+        },
+        setReaders: function(readers) {
+            _decoder.setReaders(readers);
         },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
