@@ -1,2 +1,5 @@
 name: QuaggaJS
 markdown: redcarpet
+
+
+exclude: [node_modules]
