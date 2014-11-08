@@ -7,59 +7,127 @@ showInMenu: true
 quaggaJS
 ========
 
-QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-time localization and decoding of various types of barcodes such as EAN and CODE128. The library is also configured to use `getUserMedia` to get direct access to the user's camera stream. Although the code contains some heavy image-processing parts even recent smartphones are capable of locating and decoding  barcodes in real-time.
+QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-time localization and decoding of 
+various types of barcodes such as __EAN__ and __CODE128__. The library is also capable of using `getUserMedia` to get direct 
+access to the user's camera stream. Although the code relies on heavy image-processing even recent smartphones are 
+capable of locating and decoding barcodes in real-time.
+
+Try some [examples]({{ site.baseurl }}/examples)
 
 ![teaser][teaser_left]![teaser][teaser_right]
 
 
 ## Yet another barcode library?
 
-This is not yet another port of the great [zxing][zxing_github] library, but more of an extension to it. This implementation features a barcode locator which is capable of finding a barcode-like pattern in an image resulting in an estimated bounding box including rotation. Simply speaking, this reader is invariant in scale and rotation, whereas other libraries require the barcode to be aligned with the viewport.
+This is not yet another port of the great [zxing][zxing_github] library, but more of an extension to it. 
+This implementation features a barcode locator which is capable of finding a barcode-like pattern in an 
+image resulting in an estimated bounding box including the rotation. Simply speaking, this reader is invariant 
+to scale and rotation, whereas other libraries require the barcode to be aligned with the viewport.
 
 
 ## Requirements
 
-In order to take full advantage of quaggaJS, the browser needs to support the `getUserMedia` API which is already implemented by the recent versions of Firefox, Chrome and Opera. The API is also available on their mobile counterparts installed on Android. Safari and IE do not allow the access to the camera yet, neither on desktop, nor on mobile. You can check [caniuse][caniuse_getusermedia] for updates.
+In order to take full advantage of quaggaJS, the browser needs to support the `getUserMedia` API which is 
+already implemented in recent versions of Firefox, Chrome and Opera. The API is also available on their 
+mobile counterparts installed on Android. Safari and IE do not allow the access to the camera yet, neither 
+on desktop, nor on mobile. You can check [caniuse][caniuse_getusermedia] for updates.
 
-In cases where real-time decoding is not needed, or the platform does not support `getUserMedia` QuaggaJS is also capable of decoding image-files.
+In cases where real-time decoding is not needed, or the platform does not support `getUserMedia` QuaggaJS is 
+also capable of decoding image-files using the File API or other URL sources.
 
 ## Installation
 
-Just clone the repository and include `quagga.min.js` in your project. The code uses [requirejs][requirejs] for dependency management.
+Just clone the repository and include `dist/quagga.js` in your project. You can also build the library yourself 
+by simply typing:
+
+```console
+> npm install
+> grunt
+```
 
 ## Usage
 
-The library exposes the following API
+You can check out the [examples]({{ site.baseurl }}/examples) to get an idea of how to use QuaggaJS.
+Basically the library exposes the following API:
 
-### quagga.init(config, callback)
+### Quagga.init(config, callback)
 
-This method initializes the library for a given configuration and a function which is called when the loading-process has finished. The initialization process also requests for camera access if real-time detection is configured.
+This method initializes the library for a given configuration (see below) and a function which is called
+when the loading-process has finished. The initialization process also requests for camera access if real-time
+detection is configured.
 
-### quagga.start()
+### Quagga.start()
 
-When the library is initialized, the `start()` method starts the video-stream and begins locating and decoding the images.
+When the library is initialized, the `start()` method starts the video-stream and begins locating and decoding
+the images.
 
-### quagga.stop()
+### Quagga.stop()
 
 If the decoder is currently running, after calling `stop()` the decoder does not process any more images.
 
-### onDetected(callback)
+### Quagga.onDetected(callback)
 
-Registeres a callback function which is triggered whenever a barcode-pattern has been located and decoded successfully. The callback function is called with the decoded data as the first parameter.
+Registeres a callback function which is triggered whenever a barcode-pattern has been located and decoded
+successfully. The callback function is called with the decoded data as the first parameter.
 
-### decodeSingle(config, callback)
+### Quagga.decodeSingle(config, callback)
 
-In contrast to the calls described above, this method does not rely on `getUserMedia` and operates on a single image instead. The provided callback is the same as in `onDetected` and contains the decoded data as first parameter.
+In contrast to the calls described above, this method does not rely on `getUserMedia` and operates on a
+single image instead. The provided callback is the same as in `onDetected` and contains the decoded data
+as first parameter.
+
+## Config
+
+The default `config` object is set as followed:
+
+```javascript
+{
+  inputStream: { name: "Live",
+       type: "LiveStream"
+  },
+  tracking: false,
+  debug: false,
+  controls: false,
+  locate: true,
+  visual: {
+    show: true
+  },
+  decoder:{
+    drawBoundingBox: true,
+    showFrequency: false,
+    drawScanline: true,
+    showPattern: false,
+    readers: [
+      'code_128_reader'
+    ]
+  },
+  locator: {
+    showCanvas: false,
+    showPatches: false,
+    showFoundPatches: false,
+    showSkeleton: false,
+    showLabels: false,
+    showPatchLabels: false,
+    showRemainingPatchLabels: false,
+    boxFromPatches: {
+      showTransformed: false,
+      showTransformedBox: false,
+      showBB: false
+    }
+  }
+}
+```
 
 ## Examples
 
-The following example takes an image `src` as input and prints the result on the console. The decoder is configured to detect _Code128_ barcodes and enables the locating-mechanism for more robust results.
+The following example takes an image `src` as input and prints the result on the console. 
+The decoder is configured to detect _Code128_ barcodes and enables the locating-mechanism for more robust results.
 
 ```javascript
-quagga.decodeSingle({
-  readers: [quagga.Reader.Code128Reader],
+Quagga.decodeSingle({
+  readers: ['code_128_reader'],
   locate: true, // try to locate the barcode in the image
-  src: src //'data:image/jpg;base64,' + data
+  src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
 }, function(result){
   console.log(result);
 });
@@ -69,4 +137,3 @@ quagga.decodeSingle({
 [teaser_left]: {{ site.baseurl }}/assets/mobile-located.jpg
 [teaser_right]: {{ site.baseurl }}/assets/mobile-detected.jpg
 [caniuse_getusermedia]: http://caniuse.com/#feat=stream
-[requirejs]: http://requirejs.org/

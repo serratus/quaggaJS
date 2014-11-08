@@ -27,7 +27,9 @@ $(function() {
         },
         decode: function(src) {
             Quagga.decodeSingle({
-                readers : [App.config.reader + '_reader'],
+                decoder: {
+                    readers : [App.config.reader + '_reader']
+                },
                 locate : true,
                 src : src
             }, function(result) {});

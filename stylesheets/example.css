@@ -109,16 +109,15 @@
 @media (max-width: 603px) {
   /* line 5, ../sass/phone/_viewport.scss */
   #interactive.viewport {
-    width: 300px;
-    height: 300px;
+    width: 100%;
+    height: auto;
     overflow: hidden;
   }
 
   /* line 11, ../sass/phone/_viewport.scss */
   #interactive.viewport canvas, video {
-    margin-top: -50px;
-    width: 300px;
-    height: 400px;
+    width: 100%;
+    height: auto;
   }
   /* line 15, ../sass/phone/_viewport.scss */
   #interactive.viewport canvas.drawingBuffer, video.drawingBuffer {
@@ -130,6 +129,12 @@
     margin-top: 5px;
     padding-top: 5px;
   }
+  
+  #result_strip ul.thumbnails {
+    width: 100%;
+    height: auto;
+  }
+  
   /* line 24, ../sass/phone/_viewport.scss */
   #result_strip ul.thumbnails > li {
     width: 150px;

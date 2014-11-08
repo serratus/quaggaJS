@@ -7,16 +7,13 @@ showInMenu: true
 Examples
 ========
 
-The following examples showcase some of features offered by QuaggaJS.
+The following examples showcase some of the features offered by QuaggaJS.
 
 ## Using static image files
 
 [This example]({{ site.baseurl }}/examples/static_images.html) shows the capabilities of QuaggaJS using images taken under various conditions.
 
-[![Image 1]({{ site.baseurl }}/assets/example_static_01.jpg)]({{ site.baseurl }}/examples/static_images.html)
-[![Image 2]({{ site.baseurl }}/assets/example_static_02.jpg)]({{ site.baseurl }}/examples/static_images.html)
-[![Image 3]({{ site.baseurl }}/assets/example_static_03.jpg)]({{ site.baseurl }}/examples/static_images.html)
-[![Image 4]({{ site.baseurl }}/assets/example_static_04.jpg)]({{ site.baseurl }}/examples/static_images.html)
+[![Image 1]({{ site.baseurl }}/assets/example_static_01.jpg) ![Image 2]({{ site.baseurl }}/assets/example_static_02.jpg) ![Image 3]({{ site.baseurl }}/assets/example_static_03.jpg) ![Image 4]({{ site.baseurl }}/assets/example_static_04.jpg)]({{ site.baseurl }}/examples/static_images.html)
 
 ## Using the live-stream from your webcam
 

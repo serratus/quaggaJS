@@ -276,6 +276,14 @@ footer {
   header ul.github {
     display:none;
   }
+  
+  a > img:first-child:last-child {
+      width: 100%;
+  }
+  
+  a > img {
+      width: 49%;
+  }
 }
 
 @media print {
