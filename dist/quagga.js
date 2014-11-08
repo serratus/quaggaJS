@@ -7197,7 +7197,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 type : "ImageStream",
                 src : config.src,
                 sequence : false,
-                size: 800
+                size: 640
             };
             config.readyFunc = function() {
                 Events.subscribe("detected", function(result) {
