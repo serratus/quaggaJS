@@ -65,9 +65,17 @@ define(
                 }
             }
             ratio = sum / (modulo - numOnes);
-            for (i = 0; i < counter.length; i++) {
-                norm = counter[i] === 1 ? counter[i] : counter[i] / ratio;
-                normalized.push(norm);
+            if (ratio > 1.0) {
+                for (i = 0; i < counter.length; i++) {
+                    norm = counter[i] === 1 ? counter[i] : counter[i] / ratio;
+                    normalized.push(norm);
+                }
+            } else {
+                ratio = (sum + numOnes)/modulo;
+                for (i = 0; i < counter.length; i++) {
+                    norm = counter[i] / ratio;
+                    normalized.push(norm);
+                }
             }
             return normalized;
         };
