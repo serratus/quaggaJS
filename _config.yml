@@ -1,5 +1,5 @@
 name: QuaggaJS
 markdown: redcarpet
-
+baseurl: /quaggaJS
 
 exclude: [node_modules]

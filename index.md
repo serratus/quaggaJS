@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Home
+showInMenu: true
 ---
 
 quaggaJS
@@ -65,7 +66,7 @@ quagga.decodeSingle({
 ```
 
 [zxing_github]: https://github.com/zxing/zxing
-[teaser_left]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-located.png
-[teaser_right]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-detected.png
+[teaser_left]: {{ site.baseurl }}/assets/mobile-located.jpg
+[teaser_right]: {{ site.baseurl }}/assets/mobile-detected.jpg
 [caniuse_getusermedia]: http://caniuse.com/#feat=stream
 [requirejs]: http://requirejs.org/

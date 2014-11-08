@@ -109,7 +109,7 @@ header {
   position:fixed;
 }
 
-header ul {
+header ul.github {
   list-style:none;
   height:40px;
   
@@ -129,22 +129,22 @@ header ul {
   width:270px;
 }
 
-header li {
+header ul.github li {
   width:89px;
   float:left;
   border-right:1px solid #d2d2d2;
   height:40px;
 }
 
-header li:first-child a {
+header ul.github li:first-child a {
   border-radius:5px 0 0 5px;
 }
 
-header li:last-child a {
+header ul.github li:last-child a {
   border-radius:0 5px 5px 0;
 }
 
-header ul a {
+header ul.github a {
   line-height:1;
   font-size:11px;
   color:#999;
@@ -154,7 +154,7 @@ header ul a {
   height:34px;
 }
 
-header ul a:hover {
+header ul.github a:hover {
   color:#999;
   background: -moz-linear-gradient(top, #fff 0%, #ddd 100%);
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fff), color-stop(100%,#ddd));
@@ -164,7 +164,7 @@ header ul a:hover {
   background: linear-gradient(top, #fff 0%,#ddd 100%);
 }
 
-header ul a:active {
+header ul.github a:active {
   -webkit-box-shadow: inset 0px 2px 2px 0px #ddd;
   -moz-box-shadow: inset 0px 2px 2px 0px #ddd;
   box-shadow: inset 0px 2px 2px 0px #ddd;
@@ -175,17 +175,17 @@ strong {
   font-weight:700;
 }
 
-header ul li + li {
+header ul.github li + li {
   width:88px;
   border-left:1px solid #fff;
 }
 
-header ul li + li + li {
+header ul.github li + li + li {
   border-right:none;
   width:89px;
 }
 
-header ul a strong {
+header ul.github a strong {
   font-size:14px;
   display:block;
   color:#222;
@@ -243,7 +243,7 @@ footer {
     display:inline;
   }
   
-  header ul {
+  header ul.github {
     position:absolute;
     right:50px;
     top:52px;
@@ -259,7 +259,7 @@ footer {
     padding:0;
   }
   
-  header ul, header p.view {
+  header ul.github, header p.view {
     position:static;
   }
   
@@ -273,7 +273,7 @@ footer {
     padding:15px;
   }
   
-  header ul {
+  header ul.github {
     display:none;
   }
 }

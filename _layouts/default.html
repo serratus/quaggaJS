@@ -16,22 +16,24 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1><img src="{{ site.url }}/assets/code128.png" alt="QuaggaJS" /></h1>
+        <h1><img src="{{ site.baseurl }}/assets/code128.png" alt="QuaggaJS" /></h1>
         <p>An advanced barcode-reader written in JavaScript</p>
 
+        <nav class="side-nav">
+            <ul class="pages">
+                <li><a href="{{ site.baseurl }}/">Project Home</a></li>
+                <li><a href="{{ site.baseurl }}/examples">Examples</a></li>
+            </ul>
+        </nav>
+
         <p class="view"><a href="https://github.com/serratus/quaggaJS">View the Project on GitHub <small>serratus/quaggaJS</small></a></p>
-        <ul>
+        <ul class="github">
           <li><a href="https://github.com/serratus/quaggaJS/zipball/master">Download <strong>ZIP File</strong></a></li>
           <li><a href="https://github.com/serratus/quaggaJS/tarball/master">Download <strong>TAR Ball</strong></a></li>
           <li><a href="https://github.com/serratus/quaggaJS">Fork On <strong>GitHub</strong></a></li>
         </ul>
       </header>
       <section>
-		<ul class="pages">
-			{% for subpage in site.pages %}
-				<li><a href="{{ subpage.url }}">{{ subpage.title }}</a></li>
-			{% endfor %}
-		</ul>
         {{ content }}
       </section>
       <footer>
