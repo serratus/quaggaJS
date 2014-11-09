@@ -4,7 +4,7 @@ $(function() {
             Quagga.init({
                 inputStream: { name: "Test",
                    type: "ImageStream",
-                   src: "/test/fixtures/" + App.config.reader + "/",
+                   src: site.baseurl + "/test/fixtures/" + App.config.reader + "/",
                    length: App.config.length
                 },
                 decoder : {
