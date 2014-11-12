@@ -12,7 +12,9 @@ various types of barcodes such as __EAN__ and __CODE128__. The library is also c
 access to the user's camera stream. Although the code relies on heavy image-processing even recent smartphones are 
 capable of locating and decoding barcodes in real-time.
 
-Try some [examples]({{ site.baseurl }}/examples)
+Try some [examples]({{ site.baseurl }}/examples) and check out the blog post 
+([How barcode-localization works in QuaggaJS](http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/))
+if you want to dive deeper into this topic.
 
 ![teaser][teaser_left]![teaser][teaser_right]
 
