@@ -5909,7 +5909,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         if (_config.showFoundPatches) {
             for ( i = 0; i < patchesFound.length; i++) {
                 patch = patchesFound[i];
-                ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary, {color: "99ff00", lineWidth: 2});
+                ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary, {color: "#99ff00", lineWidth: 2});
             }
         }
         
