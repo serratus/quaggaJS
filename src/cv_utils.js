@@ -115,7 +115,7 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
         var imageData = imageWrapper.data, length = imageData.length, targetData = targetWrapper.data;
 
         while (length--) {
-            targetData[length] = imageData[length] < threshold ? 0 : 1;
+            targetData[length] = imageData[length] < threshold ? 1 : 0;
         }
     };
 

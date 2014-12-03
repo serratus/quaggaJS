@@ -4299,7 +4299,7 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         var imageData = imageWrapper.data, length = imageData.length, targetData = targetWrapper.data;
 
         while (length--) {
-            targetData[length] = imageData[length] < threshold ? 0 : 1;
+            targetData[length] = imageData[length] < threshold ? 1 : 0;
         }
     };
 
@@ -7183,7 +7183,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
             _stopped = true;
         },
         onDetected : function(callback) {
-            Events.subscribe("detected", callback, true);
+            Events.subscribe("detected", callback);
         },
         isInitialized : function() {
             return _initialized;
@@ -7197,7 +7197,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 type : "ImageStream",
                 src : config.src,
                 sequence : false,
-                size: 640
+                size: 800
             };
             config.readyFunc = function() {
                 Events.subscribe("detected", function(result) {
