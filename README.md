@@ -129,6 +129,15 @@ Quagga.decodeSingle({
 });
 ```
 
+## Tests
+
+Unit Tests can be run with Karma and written using Mocha, Chai and SinonJS. Coverage reports are automatically generated in coverage/.
+
+```console
+> npm install
+> npm test 
+```
+
 [zxing_github]: https://github.com/zxing/zxing
 [teaser_left]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-located.png
 [teaser_right]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-detected.png

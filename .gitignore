@@ -1,4 +1,5 @@
 .sass-cache/
 node_modules/
+coverage/
 .project
 _site/
