@@ -135,8 +135,7 @@ Unit Tests can be run with [Karma][karmaUrl] and written using [Mocha][mochaUrl]
 
 ```console
 > npm install
-> npm install -g karma-cli
-> npm test
+> grunt test
 ```
 
 
