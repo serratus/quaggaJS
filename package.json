@@ -23,7 +23,7 @@
     "doc": "doc"
   },
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start"
+    "test": "karma start"
   },
   "author": "",
   "license": "ISC"
