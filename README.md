@@ -129,7 +129,21 @@ Quagga.decodeSingle({
 });
 ```
 
+## Tests
+
+Unit Tests can be run with [Karma][karmaUrl] and written using [Mocha][mochaUrl], [Chai][chaiUrl] and [SinonJS][sinonUrl]. Coverage reports are automatically generated in the coverage/ folder.
+
+```console
+> npm install
+> grunt test
+```
+
+
 [zxing_github]: https://github.com/zxing/zxing
 [teaser_left]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-located.png
 [teaser_right]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-detected.png
 [caniuse_getusermedia]: http://caniuse.com/#feat=stream
+[sinonUrl]: http://sinonjs.org/
+[chaiUrl]: http://chaijs.com/
+[mochaUrl]: https://github.com/mochajs/mocha
+[karmaUrl]: http://karma-runner.github.io/
