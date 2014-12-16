@@ -63,7 +63,7 @@ If the decoder is currently running, after calling `stop()` the decoder does not
 
 ### Quagga.onDetected(callback)
 
-Registeres a callback function which is triggered whenever a barcode-pattern has been located and decoded
+Registers a callback function which is triggered whenever a barcode-pattern has been located and decoded
 successfully. The callback function is called with the decoded data as the first parameter.
 
 ### Quagga.decodeSingle(config, callback)
