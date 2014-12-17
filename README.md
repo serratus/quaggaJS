@@ -48,8 +48,23 @@ Basically the library exposes the following API:
 
 ### Quagga.init(config)
 
-This method initializes the library for a given configuration (see below) which also includes a callback function (`readyFunc`) which is called when Quagga is ready to start. The initialization process also requests for camera access if real-time
-detection is configured.
+This method initializes the library for a given configuration (see below) which also includes a callback function (`readyFunc`) which is called when Quagga is ready to start. The initialization process also requests for camera access if real-time detection is configured.
+
+```javascript
+Quagga.init({
+  inputStream : {
+    name : "Live",
+    type : "LiveStream"
+  },
+  decoder : {
+    readers : ["code_128_reader"]
+  },
+  readyFunc : function() {
+    console.log("Initialization finished. Ready to start");
+    Quagga.start();
+  }
+});
+```
 
 ### Quagga.start()
 
