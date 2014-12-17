@@ -93,10 +93,11 @@ define(function() {
             request(video, callback);
         },
         release : function() {
-          var tracks = streamRef && streamRef.getVideoTracks();
-          if (tracks.length)
-            tracks[0].stop();
-          streamRef = null;
+            var tracks = streamRef && streamRef.getVideoTracks();
+            if (tracks.length) {
+                tracks[0].stop();
+            }
+            streamRef = null;
         }
     };
 }); 

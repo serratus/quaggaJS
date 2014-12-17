@@ -6899,7 +6899,8 @@ define('events',[],function() {
 
 define('camera_access',[],function() {
     
-
+    var streamRef;
+    
     /**
      * Wraps browser-specific getUserMedia
      * @param {Object} constraints
@@ -6908,6 +6909,7 @@ define('camera_access',[],function() {
      */
     function getUserMedia(constraints, success, failure) {
         navigator.getUserMedia(constraints, function(stream) {
+            streamRef = stream;
             var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
             success.apply(null, [videoSrc]);
         }, failure);
@@ -6985,6 +6987,13 @@ define('camera_access',[],function() {
     return {
         request : function(video, callback) {
             request(video, callback);
+        },
+        release : function() {
+            var tracks = streamRef && streamRef.getVideoTracks();
+            if (tracks.length) {
+                tracks[0].stop();
+            }
+            streamRef = null;
         }
     };
 }); 
@@ -7181,6 +7190,9 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         },
         stop : function() {
             _stopped = true;
+            if (_config.inputStream.type === "LiveStream") {
+                CameraAccess.release();
+            }
         },
         onDetected : function(callback) {
             Events.subscribe("detected", callback);

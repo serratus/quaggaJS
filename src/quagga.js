@@ -191,8 +191,8 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         },
         stop : function() {
             _stopped = true;
-            if (_config.inputStream.type == "LiveStream") {
-              CameraAccess.release();
+            if (_config.inputStream.type === "LiveStream") {
+                CameraAccess.release();
             }
         },
         onDetected : function(callback) {
