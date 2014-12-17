@@ -7181,8 +7181,8 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     }
 
     return {
-        init : function(config, callback) {
-            initialize(config, callback);
+        init : function(config) {
+            initialize(config);
         },
         start : function() {
             console.log("Start!");
