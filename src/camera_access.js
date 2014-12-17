@@ -3,7 +3,8 @@
 
 define(function() {
     "use strict";
-
+    var streamRef;
+    
     /**
      * Wraps browser-specific getUserMedia
      * @param {Object} constraints
@@ -12,6 +13,7 @@ define(function() {
      */
     function getUserMedia(constraints, success, failure) {
         navigator.getUserMedia(constraints, function(stream) {
+            streamRef = stream;
             var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
             success.apply(null, [videoSrc]);
         }, failure);
@@ -89,6 +91,12 @@ define(function() {
     return {
         request : function(video, callback) {
             request(video, callback);
+        },
+        release : function() {
+          var tracks = streamRef && streamRef.getVideoTracks();
+          if (tracks.length)
+            tracks[0].stop();
+          streamRef = null;
         }
     };
 }); 
