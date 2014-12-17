@@ -46,10 +46,9 @@ by simply typing:
 You can check out the [examples](http://serratus.github.io/quaggaJS/examples) to get an idea of how to use QuaggaJS.
 Basically the library exposes the following API:
 
-### Quagga.init(config, callback)
+### Quagga.init(config)
 
-This method initializes the library for a given configuration (see below) and a function which is called
-when the loading-process has finished. The initialization process also requests for camera access if real-time
+This method initializes the library for a given configuration (see below) which also includes a callback function (`readyFunc`) which is called when Quagga is ready to start. The initialization process also requests for camera access if real-time
 detection is configured.
 
 ### Quagga.start()
