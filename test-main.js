@@ -19,7 +19,8 @@ require.config({
     'cv_utils': 'src/cv_utils',
     'typedefs': 'src/typedefs',
     'glMatrixAddon': 'src/glMatrixAddon',
-    'cluster': 'src/cluster'
+    'cluster': 'src/cluster',
+    'camera_access': 'src/camera_access'
   },
   deps: allTestFiles,
   callback: window.__karma__.start
