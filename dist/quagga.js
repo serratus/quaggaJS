@@ -6864,30 +6864,44 @@ define('events',[],function() {
                 subscription.callback.call(null, data);
             }
         }
+        
+        function subscribe(event, callback, async) {
+            var subscription;
+
+            if ( typeof callback === "function") {
+                subscription = {
+                    callback : callback,
+                    async : async
+                };
+            } else {
+                subscription = callback;
+                if (!subscription.callback) {
+                    throw "Callback was not specified on options";
+                }
+            }
+
+            getEvent(event).subscribers.push(subscription);
+        }
 
         return {
             subscribe : function(event, callback, async) {
-                var subscription;
-
-                if ( typeof callback === "function") {
-                    subscription = {
-                        callback : callback,
-                        async : async
-                    };
-                } else {
-                    subscription = callback;
-                    if (!subscription.callback) {
-                        throw "Callback was not specified on options";
-                    }
-                }
-
-                getEvent(event).subscribers.push(subscription);
+                return subscribe(event, callback, async);
             },
             publish : function(eventName, data) {
-                var subscribers = getEvent(eventName).subscribers, i;
-                for ( i = 0; i < subscribers.length; i++) {
-                    publishSubscription(subscribers[i], data);
-                }
+                var event = getEvent(eventName),
+                    subscribers = event.subscribers;
+                    
+                event.subscribers = subscribers.filter(function(subscriber) {
+                    publishSubscription(subscriber, data);
+                    return !subscriber.once;
+                });
+            },
+            once: function(event, callback, async) {
+                subscribe(event, {
+                    callback: callback,
+                    async: async,
+                    once: true
+                });
             }
         };
     }();
@@ -7212,7 +7226,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 size: 800
             };
             config.readyFunc = function() {
-                Events.subscribe("detected", function(result) {
+                Events.once("detected", function(result) {
                     _stopped = true;
                     resultCallback.call(null, result);
                 }, true);

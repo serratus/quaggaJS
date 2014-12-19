@@ -213,7 +213,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 size: 800
             };
             config.readyFunc = function() {
-                Events.subscribe("detected", function(result) {
+                Events.once("detected", function(result) {
                     _stopped = true;
                     resultCallback.call(null, result);
                 }, true);

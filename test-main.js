@@ -20,7 +20,8 @@ require.config({
     'typedefs': 'src/typedefs',
     'glMatrixAddon': 'src/glMatrixAddon',
     'cluster': 'src/cluster',
-    'camera_access': 'src/camera_access'
+    'camera_access': 'src/camera_access',
+    'events': 'src/events'
   },
   deps: allTestFiles,
   callback: window.__karma__.start

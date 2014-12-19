@@ -15,6 +15,10 @@ define(function() {
             }
             return events[eventName];
         }
+        
+        function clearEvents(){
+            events = {};
+        }
 
         function publishSubscription(subscription, data) {
             if (subscription.async) {
@@ -25,29 +29,59 @@ define(function() {
                 subscription.callback.call(null, data);
             }
         }
+        
+        function subscribe(event, callback, async) {
+            var subscription;
+
+            if ( typeof callback === "function") {
+                subscription = {
+                    callback : callback,
+                    async : async
+                };
+            } else {
+                subscription = callback;
+                if (!subscription.callback) {
+                    throw "Callback was not specified on options";
+                }
+            }
+
+            getEvent(event).subscribers.push(subscription);
+        }
 
         return {
             subscribe : function(event, callback, async) {
-                var subscription;
-
-                if ( typeof callback === "function") {
-                    subscription = {
-                        callback : callback,
-                        async : async
-                    };
-                } else {
-                    subscription = callback;
-                    if (!subscription.callback) {
-                        throw "Callback was not specified on options";
-                    }
-                }
-
-                getEvent(event).subscribers.push(subscription);
+                return subscribe(event, callback, async);
             },
             publish : function(eventName, data) {
-                var subscribers = getEvent(eventName).subscribers, i;
-                for ( i = 0; i < subscribers.length; i++) {
-                    publishSubscription(subscribers[i], data);
+                var event = getEvent(eventName),
+                    subscribers = event.subscribers;
+                    
+                event.subscribers = subscribers.filter(function(subscriber) {
+                    publishSubscription(subscriber, data);
+                    return !subscriber.once;
+                });
+            },
+            once: function(event, callback, async) {
+                subscribe(event, {
+                    callback: callback,
+                    async: async,
+                    once: true
+                });
+            },
+            unsubscribe: function(eventName, callback) {
+                var event;
+                
+                if (eventName) {
+                    event = getEvent(eventName);
+                    if (event && callback) {
+                        event.subscribers = event.subscribers.filter(function(subscriber){
+                            return subscriber.callback !== callback;
+                        });
+                    } else {
+                        event.subscribers = [];
+                    }
+                } else {
+                    clearEvents();
                 }
             }
         };
