@@ -1,3 +1,4 @@
 _site
 node_modules/
 example/.sass-cache/
+coverage/
