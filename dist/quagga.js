@@ -6854,6 +6854,10 @@ define('events',[],function() {
             }
             return events[eventName];
         }
+        
+        function clearEvents(){
+            events = {};
+        }
 
         function publishSubscription(subscription, data) {
             if (subscription.async) {
@@ -6902,6 +6906,22 @@ define('events',[],function() {
                     async: async,
                     once: true
                 });
+            },
+            unsubscribe: function(eventName, callback) {
+                var event;
+                
+                if (eventName) {
+                    event = getEvent(eventName);
+                    if (event && callback) {
+                        event.subscribers = event.subscribers.filter(function(subscriber){
+                            return subscriber.callback !== callback;
+                        });
+                    } else {
+                        event.subscribers = [];
+                    }
+                } else {
+                    clearEvents();
+                }
             }
         };
     }();
