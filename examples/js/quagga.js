@@ -6854,6 +6854,10 @@ define('events',[],function() {
             }
             return events[eventName];
         }
+        
+        function clearEvents(){
+            events = {};
+        }
 
         function publishSubscription(subscription, data) {
             if (subscription.async) {
@@ -6864,29 +6868,59 @@ define('events',[],function() {
                 subscription.callback.call(null, data);
             }
         }
+        
+        function subscribe(event, callback, async) {
+            var subscription;
+
+            if ( typeof callback === "function") {
+                subscription = {
+                    callback : callback,
+                    async : async
+                };
+            } else {
+                subscription = callback;
+                if (!subscription.callback) {
+                    throw "Callback was not specified on options";
+                }
+            }
+
+            getEvent(event).subscribers.push(subscription);
+        }
 
         return {
             subscribe : function(event, callback, async) {
-                var subscription;
-
-                if ( typeof callback === "function") {
-                    subscription = {
-                        callback : callback,
-                        async : async
-                    };
-                } else {
-                    subscription = callback;
-                    if (!subscription.callback) {
-                        throw "Callback was not specified on options";
-                    }
-                }
-
-                getEvent(event).subscribers.push(subscription);
+                return subscribe(event, callback, async);
             },
             publish : function(eventName, data) {
-                var subscribers = getEvent(eventName).subscribers, i;
-                for ( i = 0; i < subscribers.length; i++) {
-                    publishSubscription(subscribers[i], data);
+                var event = getEvent(eventName),
+                    subscribers = event.subscribers;
+                    
+                event.subscribers = subscribers.filter(function(subscriber) {
+                    publishSubscription(subscriber, data);
+                    return !subscriber.once;
+                });
+            },
+            once: function(event, callback, async) {
+                subscribe(event, {
+                    callback: callback,
+                    async: async,
+                    once: true
+                });
+            },
+            unsubscribe: function(eventName, callback) {
+                var event;
+                
+                if (eventName) {
+                    event = getEvent(eventName);
+                    if (event && callback) {
+                        event.subscribers = event.subscribers.filter(function(subscriber){
+                            return subscriber.callback !== callback;
+                        });
+                    } else {
+                        event.subscribers = [];
+                    }
+                } else {
+                    clearEvents();
                 }
             }
         };
@@ -6899,7 +6933,8 @@ define('events',[],function() {
 
 define('camera_access',[],function() {
     
-
+    var streamRef;
+    
     /**
      * Wraps browser-specific getUserMedia
      * @param {Object} constraints
@@ -6908,6 +6943,7 @@ define('camera_access',[],function() {
      */
     function getUserMedia(constraints, success, failure) {
         navigator.getUserMedia(constraints, function(stream) {
+            streamRef = stream;
             var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
             success.apply(null, [videoSrc]);
         }, failure);
@@ -6985,6 +7021,13 @@ define('camera_access',[],function() {
     return {
         request : function(video, callback) {
             request(video, callback);
+        },
+        release : function() {
+            var tracks = streamRef && streamRef.getVideoTracks();
+            if (tracks.length) {
+                tracks[0].stop();
+            }
+            streamRef = null;
         }
     };
 }); 
@@ -7172,8 +7215,8 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     }
 
     return {
-        init : function(config, callback) {
-            initialize(config, callback);
+        init : function(config) {
+            initialize(config);
         },
         start : function() {
             console.log("Start!");
@@ -7181,6 +7224,9 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         },
         stop : function() {
             _stopped = true;
+            if (_config.inputStream.type === "LiveStream") {
+                CameraAccess.release();
+            }
         },
         onDetected : function(callback) {
             Events.subscribe("detected", callback);
@@ -7200,7 +7246,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 size: 800
             };
             config.readyFunc = function() {
-                Events.subscribe("detected", function(result) {
+                Events.once("detected", function(result) {
                     _stopped = true;
                     resultCallback.call(null, result);
                 }, true);
