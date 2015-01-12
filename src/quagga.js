@@ -78,18 +78,19 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     }
 
     function canRecord() {
-        initBuffers();
-        initCanvas();
-        _decoder = BarcodeDecoder.create(_config.decoder, _inputImageWrapper);
-        _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
-        _framegrabber.attachData(_inputImageWrapper.data);
+        initBuffers(function() {
+            initCanvas();
+            _decoder = BarcodeDecoder.create(_config.decoder, _inputImageWrapper);
+            _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
+            _framegrabber.attachData(_inputImageWrapper.data);
 
-        initConfig();
-        _inputStream.play();
-        _initialized = true;
-        if (_config.readyFunc) {
-            _config.readyFunc.apply();
-        }
+            initConfig();
+            _inputStream.play();
+            _initialized = true;
+            if (_config.readyFunc) {
+                _config.readyFunc.apply();
+            }
+        });
     }
 
     function initCanvas() {
@@ -124,7 +125,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         _canvasContainer.dom.overlay.height = _inputImageWrapper.size.y;
     }
 
-    function initBuffers() {
+    function initBuffers(cb) {
         _inputImageWrapper = new ImageWrapper({
             x : _inputStream.getWidth(),
             y : _inputStream.getHeight()
@@ -137,35 +138,34 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 vec2.create([_inputStream.getWidth() - 20, _inputStream.getHeight() / 2 + 100]), 
                 vec2.create([_inputStream.getWidth() - 20, _inputStream.getHeight() / 2 - 100])
             ];
-        BarcodeLocator.init(_config.locator, {
-            inputImageWrapper : _inputImageWrapper
-        });
+        BarcodeLocator.init(_config.locator, {inputImageWrapper : _inputImageWrapper}, cb);
     }
 
-    function getBoundingBoxes() {
-        var boxes;
-
+    function getBoundingBoxes(cb) {
         if (_config.locate) {
-            boxes = BarcodeLocator.locate();
+            BarcodeLocator.locate(cb);
         } else {
-            boxes = [_boxSize];
+            cb([_boxSize]);
         }
-        return boxes;
     }
 
     function update() {
-        var result,
-            boxes;
+        var result;
 
         if (_framegrabber.grab()) {
             _canvasContainer.ctx.overlay.clearRect(0, 0, _inputImageWrapper.size.x, _inputImageWrapper.size.y);
-            boxes = getBoundingBoxes();
-            if (boxes) {
-                result = _decoder.decodeFromBoundingBoxes(boxes);
-                if (result && result.codeResult) {
-                    Events.publish("detected", result.codeResult.code);
+            console.time("getBoundingBoxes");
+            getBoundingBoxes(function(boxes) {
+                console.timeEnd("getBoundingBoxes");
+                // attach data back to grabber
+                _framegrabber.attachData(_inputImageWrapper.data);
+                if (boxes) {
+                    result = _decoder.decodeFromBoundingBoxes(boxes);
+                    if (result && result.codeResult) {
+                        Events.publish("detected", result.codeResult.code);
+                    }
                 }
-            }
+            });
         }
     }
 

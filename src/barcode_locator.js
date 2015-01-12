@@ -26,7 +26,11 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         },
         _numPatches = {x: 0, y: 0},
         _inputImageWrapper,
-        _skeletonizer;
+        _skeletonizer,
+        self = this,
+        _worker,
+        _locatedCb,
+        _initialized;
 
     function initBuffers() {
         var skeletonImageData;
@@ -52,10 +56,10 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 
         _labelImageWrapper = new ImageWrapper(_patchSize, undefined, Array, true);
 
-        skeletonImageData = new ArrayBuffer(_patchSize.x * _patchSize.y * 16);
+        skeletonImageData = new ArrayBuffer(64*1024);
         _subImageWrapper = new ImageWrapper(_patchSize, new Uint8Array(skeletonImageData, 0, _patchSize.x * _patchSize.y));
         _skelImageWrapper = new ImageWrapper(_patchSize, new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y), undefined, true);
-        _skeletonizer = skeletonizer(window, {
+        _skeletonizer = skeletonizer(self, {
             size : _patchSize.x
         }, skeletonImageData);
 
@@ -68,6 +72,9 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
     }
 
     function initCanvas() {
+        if (_config.useWorker || typeof document === 'undefined') {
+            return;
+        }
         _canvasContainer.dom.binary = document.createElement("canvas");
         _canvasContainer.dom.binary.className = "binaryBuffer";
         if (_config.showCanvas === true) {
@@ -471,44 +478,74 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         return label;
     }
 
+    function initWorker(cb) {
+        var tmpData;
+
+        _worker = new Worker('../src/worker_locator.js');
+        tmpData = _inputImageWrapper.data;
+        _inputImageWrapper.data = null; // do not send the data along
+        _worker.postMessage({cmd: 'init', inputImageWrapper: _inputImageWrapper});
+        _inputImageWrapper.data = tmpData;
+        _worker.onmessage = function(e) {
+            if (e.data.event === 'initialized') {
+                _initialized = true;
+                cb();
+            } else if (e.data.event === 'located') {
+                _inputImageWrapper.data = new Uint8Array(e.data.buffer);
+                _locatedCb(e.data.result);
+            }
+        };
+    }
+
     return {
-        init : function(config, data) {
+        init : function(config, data, cb) {
             _config = config;
             _inputImageWrapper = data.inputImageWrapper;
-            initBuffers();
-            initCanvas();
+
+            // 1. check config for web-worker
+            if (_config.useWorker) {
+                initWorker(cb);
+            } else {
+                initBuffers();
+                initCanvas();
+                cb();
+            }
         },
-        locate : function() {
+        locate : function(cb) {
             var patchesFound,
             topLabels = [],
             boxes = [];
 
-            if (_halfSample) {
-                CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
+            if (_config.useWorker) {
+                _locatedCb = cb;
+                _worker.postMessage({cmd: 'locate', buffer: _inputImageWrapper.data}, [_inputImageWrapper.data.buffer]);
+            } else {
+                if (_halfSample) {
+                    CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
+                }
+
+                binarizeImage();
+                patchesFound = findPatches();
+                // return unless 5% or more patches are found
+                if (patchesFound.length < _numPatches.x * _numPatches.y * 0.05) {
+                    return cb(null);
+                }
+
+                // rasterrize area by comparing angular similarity;
+                var maxLabel = rasterizeAngularSimilarity(patchesFound);
+                if (maxLabel <= 1) {
+                    return cb(null);
+                }
+
+                // search for area with the most patches (biggest connected area)
+                topLabels = findBiggestConnectedAreas(maxLabel);
+                if (topLabels.length === 0) {
+                    return cb(null);
+                }
+
+                boxes = findBoxes(topLabels, maxLabel);
+                cb(boxes);
             }
-            
-            binarizeImage();
-            patchesFound = findPatches();
-            // return unless 5% or more patches are found
-            if (patchesFound.length < _numPatches.x * _numPatches.y * 0.05) {
-                return;
-            }
-    
-            // rasterrize area by comparing angular similarity;
-            var maxLabel = rasterizeAngularSimilarity(patchesFound);
-            if (maxLabel <= 1) {
-                return null;
-            }
-    
-            // search for area with the most patches (biggest connected area)
-            topLabels = findBiggestConnectedAreas(maxLabel);
-            if (topLabels.length === 0) {
-                return null;
-            }
-            
-            boxes = findBoxes(topLabels, maxLabel);
-    
-            return boxes;
         }
     };
 });
