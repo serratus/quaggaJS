@@ -26,6 +26,7 @@ define(function(){
       locator: {
         halfSample: true,
         useWorker: true,
+        scriptName: 'quagga.js',
         showCanvas: false,
         showPatches: false,
         showFoundPatches: false,

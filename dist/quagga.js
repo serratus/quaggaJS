@@ -6173,9 +6173,13 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
     }
 
     function initWorker(cb) {
-        var tmpData;
+        var tmpData,
+            blobURL;
 
-        _worker = new Worker('../src/worker_locator.js');
+        blobURL = generateWorkerBlob();
+        _worker = new Worker(blobURL);
+        URL.revokeObjectURL(blobURL);
+
         tmpData = _inputImageWrapper.data;
         _inputImageWrapper.data = null; // do not send the data along
         _worker.postMessage({cmd: 'init', inputImageWrapper: _inputImageWrapper, config: _config});
@@ -6190,6 +6194,50 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             }
         };
     }
+
+    function generateWorkerBlob() {
+        var blob,
+            quaggaAbsoluteUrl,
+            scripts = document.getElementsByTagName('script'),
+            regex = new RegExp('\/' + _config.scriptName + '$');
+
+        quaggaAbsoluteUrl = Array.prototype.slice.apply(scripts).filter(function(script) {
+            return script.src && script.src.match(regex);
+        }).map(function(script) {
+            return script.src;
+        })[0];
+
+        /* jshint ignore:start */
+        blob = new Blob(['(' +
+            (function(scriptUrl){
+                importScripts(scriptUrl);
+                var inputImageWrapper,
+                    config,
+                    Locator = Quagga.Locator;
+
+                self.onmessage = function(e) {
+                    if (e.data.cmd === 'init') {
+                        inputImageWrapper = e.data.inputImageWrapper;
+                        config = e.data.config;
+
+                        config.useWorker = false;
+                        Locator.init(inputImageWrapper, config, function() {
+                            self.postMessage({'event': 'initialized'});
+                        });
+                    } else if (e.data.cmd === 'locate') {
+                        inputImageWrapper.data = new Uint8Array(e.data.buffer);
+                        Locator.locate(function(result) {
+                            self.postMessage({'event': 'located', result: result, buffer : inputImageWrapper.data}, [inputImageWrapper.data.buffer]);
+                        });
+                    }
+                };
+            }).toString() + ')("' + quaggaAbsoluteUrl + '");'
+        ], {type : 'text/javascript'});
+
+        /* jshint ignore:end */
+        return window.URL.createObjectURL(blob);
+    }
+
 
     return {
         init : function(inputImageWrapper, config, cb) {
@@ -6859,6 +6907,7 @@ define('config',[],function(){
       locator: {
         halfSample: true,
         useWorker: true,
+        scriptName: 'quagga.js',
         showCanvas: false,
         showPatches: false,
         showFoundPatches: false,
@@ -7296,7 +7345,8 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         Reader: {
           EANReader : EANReader,
           Code128Reader : Code128Reader
-        }
+        },
+        Locator: BarcodeLocator
     };
 });
 

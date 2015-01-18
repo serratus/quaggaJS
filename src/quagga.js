@@ -224,6 +224,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         Reader: {
           EANReader : EANReader,
           Code128Reader : Code128Reader
-        }
+        },
+        Locator: BarcodeLocator
     };
 });
