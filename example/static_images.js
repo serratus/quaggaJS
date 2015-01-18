@@ -9,11 +9,10 @@ $(function() {
                 },
                 decoder : {
                     readers : [App.config.reader + "_reader"]
-                },
-                readyFunc : function() {
-                    App.attachListeners();
-                    Quagga.start();
                 }
+            }, function() {
+                App.attachListeners();
+                Quagga.start();
             });
         },
         config: {

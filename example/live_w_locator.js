@@ -8,11 +8,10 @@ $(function() {
                 },
                 decoder : {
                     readers : ["code_128_reader"]
-                },
-                readyFunc : function() {
-                    App.attachListeners();
-                    Quagga.start();
                 }
+            }, function() {
+                App.attachListeners();
+                Quagga.start();
             });
         },
         attachListeners : function() {

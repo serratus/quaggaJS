@@ -30,7 +30,7 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
             initConfig();
 
             function initCanvas() {
-                var $debug = document.querySelector("#debug.detection");
+               /* var $debug = document.querySelector("#debug.detection");
                 _canvas.dom.frequency = document.querySelector("canvas.frequency");
                 if (!_canvas.dom.frequency) {
                     _canvas.dom.frequency = document.createElement("canvas");
@@ -54,7 +54,7 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
                 _canvas.dom.overlay = document.querySelector("canvas.drawingBuffer");
                 if (_canvas.dom.overlay) {
                     _canvas.ctx.overlay = _canvas.dom.overlay.getContext("2d");
-                }
+                } */
             }
 
             function initReaders() {
@@ -66,7 +66,7 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
             }
 
             function initConfig() {
-                var i,
+                /* var i,
                     vis = [{
                         node : _canvas.dom.frequency,
                         prop : config.showFrequency
@@ -81,7 +81,7 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
                     } else {
                         vis[i].node.style.display = "none";
                     }
-                }
+                } */
             }
 
             /**

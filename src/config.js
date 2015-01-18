@@ -11,13 +11,15 @@ define(function(){
       debug: false,
       controls: false,
       locate: true,
+      numOfWorkers: 4,
+      scriptName: 'quagga.js',
       visual: {
         show: true
       },
       decoder:{
-        drawBoundingBox: true,
+        drawBoundingBox: false,
         showFrequency: false,
-        drawScanline: true,
+        drawScanline: false,
         showPattern: false,
         readers: [
           'code_128_reader'
@@ -25,8 +27,6 @@ define(function(){
       },
       locator: {
         halfSample: true,
-        useWorker: true,
-        scriptName: 'quagga.js',
         showCanvas: false,
         showPatches: false,
         showFoundPatches: false,

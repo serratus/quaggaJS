@@ -48,13 +48,18 @@ module.exports = function(grunt) {
                         "glMatrixAddon" : {
                             "deps" : ["glMatrix"],
                             "exports" : "glMatrixAddon"
+                        },
+                        "async": {
+                            "deps": [],
+                            "exports": "async"
                         }
                     },
 
                     "paths" : {
                         "typedefs" : "typedefs",
                         "glMatrix" : "vendor/glMatrix",
-                        "glMatrixAddon" : "glMatrixAddon"
+                        "glMatrixAddon" : "glMatrixAddon",
+                        "async": "vendor/async"
                     }
                 }
             }

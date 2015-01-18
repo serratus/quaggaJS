@@ -26,10 +26,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         _numPatches = {x: 0, y: 0},
         _inputImageWrapper,
         _skeletonizer,
-        self = this,
-        _worker,
-        _locatedCb,
-        _initialized;
+        self = this;
 
     function initBuffers() {
         var skeletonImageData;
@@ -477,122 +474,44 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         return label;
     }
 
-    function initWorker(cb) {
-        var tmpData,
-            blobURL;
-
-        blobURL = generateWorkerBlob();
-        _worker = new Worker(blobURL);
-        URL.revokeObjectURL(blobURL);
-
-        tmpData = _inputImageWrapper.data;
-        _inputImageWrapper.data = null; // do not send the data along
-        _worker.postMessage({cmd: 'init', inputImageWrapper: _inputImageWrapper, config: _config});
-        _inputImageWrapper.data = tmpData;
-        _worker.onmessage = function(e) {
-            if (e.data.event === 'initialized') {
-                _initialized = true;
-                cb();
-            } else if (e.data.event === 'located') {
-                _inputImageWrapper.data = new Uint8Array(e.data.buffer);
-                _locatedCb(e.data.result);
-            }
-        };
-    }
-
-    function generateWorkerBlob() {
-        var blob,
-            quaggaAbsoluteUrl,
-            scripts = document.getElementsByTagName('script'),
-            regex = new RegExp('\/' + _config.scriptName + '$');
-
-        quaggaAbsoluteUrl = Array.prototype.slice.apply(scripts).filter(function(script) {
-            return script.src && script.src.match(regex);
-        }).map(function(script) {
-            return script.src;
-        })[0];
-
-        /* jshint ignore:start */
-        blob = new Blob(['(' +
-            (function(scriptUrl){
-                importScripts(scriptUrl);
-                var inputImageWrapper,
-                    config,
-                    Locator = Quagga.Locator;
-
-                self.onmessage = function(e) {
-                    if (e.data.cmd === 'init') {
-                        inputImageWrapper = e.data.inputImageWrapper;
-                        config = e.data.config;
-
-                        config.useWorker = false;
-                        Locator.init(inputImageWrapper, config, function() {
-                            self.postMessage({'event': 'initialized'});
-                        });
-                    } else if (e.data.cmd === 'locate') {
-                        inputImageWrapper.data = new Uint8Array(e.data.buffer);
-                        Locator.locate(function(result) {
-                            self.postMessage({'event': 'located', result: result, buffer : inputImageWrapper.data}, [inputImageWrapper.data.buffer]);
-                        });
-                    }
-                };
-            }).toString() + ')("' + quaggaAbsoluteUrl + '");'
-        ], {type : 'text/javascript'});
-
-        /* jshint ignore:end */
-        return window.URL.createObjectURL(blob);
-    }
-
-
     return {
-        init : function(inputImageWrapper, config, cb) {
+        init : function(inputImageWrapper, config) {
             _config = config;
             _inputImageWrapper = inputImageWrapper;
 
-            // 1. check config for web-worker
-            if (_config.useWorker) {
-                initWorker(cb);
-            } else {
-                initBuffers();
-                initCanvas();
-                cb();
-            }
+            initBuffers();
+            initCanvas();
         },
-        locate : function(cb) {
+        locate : function() {
             var patchesFound,
             topLabels = [],
             boxes = [];
 
-            if (_config.useWorker) {
-                _locatedCb = cb;
-                _worker.postMessage({cmd: 'locate', buffer: _inputImageWrapper.data}, [_inputImageWrapper.data.buffer]);
-            } else {
-                if (_config.halfSample) {
-                    CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
-                }
-
-                binarizeImage();
-                patchesFound = findPatches();
-                // return unless 5% or more patches are found
-                if (patchesFound.length < _numPatches.x * _numPatches.y * 0.05) {
-                    return cb(null);
-                }
-
-                // rasterrize area by comparing angular similarity;
-                var maxLabel = rasterizeAngularSimilarity(patchesFound);
-                if (maxLabel <= 1) {
-                    return cb(null);
-                }
-
-                // search for area with the most patches (biggest connected area)
-                topLabels = findBiggestConnectedAreas(maxLabel);
-                if (topLabels.length === 0) {
-                    return cb(null);
-                }
-
-                boxes = findBoxes(topLabels, maxLabel);
-                cb(boxes);
+            if (_config.halfSample) {
+                CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
             }
+
+            binarizeImage();
+            patchesFound = findPatches();
+            // return unless 5% or more patches are found
+            if (patchesFound.length < _numPatches.x * _numPatches.y * 0.05) {
+                return null;
+            }
+
+            // rasterrize area by comparing angular similarity;
+            var maxLabel = rasterizeAngularSimilarity(patchesFound);
+            if (maxLabel <= 1) {
+                return null;
+            }
+
+            // search for area with the most patches (biggest connected area)
+            topLabels = findBiggestConnectedAreas(maxLabel);
+            if (topLabels.length === 0) {
+                return null;
+            }
+
+            boxes = findBoxes(topLabels, maxLabel);
+            return boxes;
         }
     };
 });
