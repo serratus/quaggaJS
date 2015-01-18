@@ -20,9 +20,15 @@ $(function() {
                 e.preventDefault();
                 Quagga.setReaders([e.target.value + "_reader"]);
             });
+
+            $(".controls").on("click", "button.stop", function(e) {
+                e.preventDefault();
+                Quagga.stop();
+            });
         },
         detachListeners : function() {
             $(".controls .reader-group").off("change", "input");
+            $(".controls").off("click", "button.stop");
         },
         lastResult : null
     };

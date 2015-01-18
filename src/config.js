@@ -24,6 +24,7 @@ define(function(){
         ]
       },
       locator: {
+        halfSample: true,
         useWorker: true,
         showCanvas: false,
         showPatches: false,

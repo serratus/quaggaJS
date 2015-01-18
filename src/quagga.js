@@ -138,7 +138,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 vec2.create([_inputStream.getWidth() - 20, _inputStream.getHeight() / 2 + 100]), 
                 vec2.create([_inputStream.getWidth() - 20, _inputStream.getHeight() / 2 - 100])
             ];
-        BarcodeLocator.init(_config.locator, {inputImageWrapper : _inputImageWrapper}, cb);
+        BarcodeLocator.init(_inputImageWrapper, _config.locator, cb);
     }
 
     function getBoundingBoxes(cb) {
@@ -149,14 +149,12 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         }
     }
 
-    function update() {
+    function update(cb) {
         var result;
 
         if (_framegrabber.grab()) {
             _canvasContainer.ctx.overlay.clearRect(0, 0, _inputImageWrapper.size.x, _inputImageWrapper.size.y);
-            console.time("getBoundingBoxes");
             getBoundingBoxes(function(boxes) {
-                console.timeEnd("getBoundingBoxes");
                 // attach data back to grabber
                 _framegrabber.attachData(_inputImageWrapper.data);
                 if (boxes) {
@@ -165,6 +163,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                         Events.publish("detected", result.codeResult.code);
                     }
                 }
+                return cb();
             });
         }
     }
@@ -173,10 +172,11 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         _stopped = false;
         ( function frame() {
             if (!_stopped) {
-                if (_config.inputStream.type == "LiveStream") {
-                    window.requestAnimFrame(frame);
-                }
-                update();
+                update(function() {
+                    if (_config.inputStream.type == "LiveStream") {
+                        window.requestAnimFrame(frame);
+                    }
+                });
             }
         }());
     }

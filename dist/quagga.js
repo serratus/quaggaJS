@@ -5709,7 +5709,6 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         _patchLabelGrid,
         _imageToPatchGrid,
         _binaryImageWrapper,
-        _halfSample = true,
         _patchSize,
         _canvasContainer = {
             ctx : {
@@ -5730,7 +5729,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
     function initBuffers() {
         var skeletonImageData;
         
-        if (_halfSample) {
+        if (_config.halfSample) {
             _currentImageWrapper = new ImageWrapper({
                 x : _inputImageWrapper.size.x / 2 | 0,
                 y : _inputImageWrapper.size.y / 2 | 0
@@ -5740,8 +5739,8 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         }
 
         _patchSize = {
-            x : 16 * ( _halfSample ? 1 : 2),
-            y : 16 * ( _halfSample ? 1 : 2)
+            x : 16 * ( _config.halfSample ? 1 : 2),
+            y : 16 * ( _config.halfSample ? 1 : 2)
         };
 
         _numPatches.x = _currentImageWrapper.size.x / _patchSize.x | 0;
@@ -5844,7 +5843,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             ImageDebug.drawPath(box, {x: 0, y: 1}, _canvasContainer.ctx.binary, {color: '#ff0000', lineWidth: 2});
         }
 
-        scale = _halfSample ? 2 : 1;
+        scale = _config.halfSample ? 2 : 1;
         // reverse rotation;
         transMat = mat2.inverse(transMat);
         for ( j = 0; j < 4; j++) {
@@ -6179,7 +6178,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         _worker = new Worker('../src/worker_locator.js');
         tmpData = _inputImageWrapper.data;
         _inputImageWrapper.data = null; // do not send the data along
-        _worker.postMessage({cmd: 'init', inputImageWrapper: _inputImageWrapper});
+        _worker.postMessage({cmd: 'init', inputImageWrapper: _inputImageWrapper, config: _config});
         _inputImageWrapper.data = tmpData;
         _worker.onmessage = function(e) {
             if (e.data.event === 'initialized') {
@@ -6193,9 +6192,9 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
     }
 
     return {
-        init : function(config, data, cb) {
+        init : function(inputImageWrapper, config, cb) {
             _config = config;
-            _inputImageWrapper = data.inputImageWrapper;
+            _inputImageWrapper = inputImageWrapper;
 
             // 1. check config for web-worker
             if (_config.useWorker) {
@@ -6215,7 +6214,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
                 _locatedCb = cb;
                 _worker.postMessage({cmd: 'locate', buffer: _inputImageWrapper.data}, [_inputImageWrapper.data.buffer]);
             } else {
-                if (_halfSample) {
+                if (_config.halfSample) {
                     CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
                 }
 
@@ -6858,6 +6857,7 @@ define('config',[],function(){
         ]
       },
       locator: {
+        halfSample: true,
         useWorker: true,
         showCanvas: false,
         showPatches: false,
@@ -7210,7 +7210,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 vec2.create([_inputStream.getWidth() - 20, _inputStream.getHeight() / 2 + 100]), 
                 vec2.create([_inputStream.getWidth() - 20, _inputStream.getHeight() / 2 - 100])
             ];
-        BarcodeLocator.init(_config.locator, {inputImageWrapper : _inputImageWrapper}, cb);
+        BarcodeLocator.init(_inputImageWrapper, _config.locator, cb);
     }
 
     function getBoundingBoxes(cb) {
@@ -7221,14 +7221,12 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         }
     }
 
-    function update() {
+    function update(cb) {
         var result;
 
         if (_framegrabber.grab()) {
             _canvasContainer.ctx.overlay.clearRect(0, 0, _inputImageWrapper.size.x, _inputImageWrapper.size.y);
-            console.time("getBoundingBoxes");
             getBoundingBoxes(function(boxes) {
-                console.timeEnd("getBoundingBoxes");
                 // attach data back to grabber
                 _framegrabber.attachData(_inputImageWrapper.data);
                 if (boxes) {
@@ -7237,6 +7235,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                         Events.publish("detected", result.codeResult.code);
                     }
                 }
+                return cb();
             });
         }
     }
@@ -7245,10 +7244,11 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         _stopped = false;
         ( function frame() {
             if (!_stopped) {
-                if (_config.inputStream.type == "LiveStream") {
-                    window.requestAnimFrame(frame);
-                }
-                update();
+                update(function() {
+                    if (_config.inputStream.type == "LiveStream") {
+                        window.requestAnimFrame(frame);
+                    }
+                });
             }
         }());
     }
