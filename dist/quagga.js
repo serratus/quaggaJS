@@ -6445,31 +6445,33 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
             initConfig();
 
             function initCanvas() {
-               /* var $debug = document.querySelector("#debug.detection");
-                _canvas.dom.frequency = document.querySelector("canvas.frequency");
-                if (!_canvas.dom.frequency) {
-                    _canvas.dom.frequency = document.createElement("canvas");
-                    _canvas.dom.frequency.className = "frequency";
-                    if($debug) {
-                        $debug.appendChild(_canvas.dom.frequency);
+                if (typeof document !== 'undefined') {
+                    var $debug = document.querySelector("#debug.detection");
+                    _canvas.dom.frequency = document.querySelector("canvas.frequency");
+                    if (!_canvas.dom.frequency) {
+                        _canvas.dom.frequency = document.createElement("canvas");
+                        _canvas.dom.frequency.className = "frequency";
+                        if($debug) {
+                            $debug.appendChild(_canvas.dom.frequency);
+                        }
+                    }
+                    _canvas.ctx.frequency = _canvas.dom.frequency.getContext("2d");
+
+                    _canvas.dom.pattern = document.querySelector("canvas.patternBuffer");
+                    if (!_canvas.dom.pattern) {
+                        _canvas.dom.pattern = document.createElement("canvas");
+                        _canvas.dom.pattern.className = "patternBuffer";
+                        if($debug) {
+                            $debug.appendChild(_canvas.dom.pattern);
+                        }
+                    }
+                    _canvas.ctx.pattern = _canvas.dom.pattern.getContext("2d");
+
+                    _canvas.dom.overlay = document.querySelector("canvas.drawingBuffer");
+                    if (_canvas.dom.overlay) {
+                        _canvas.ctx.overlay = _canvas.dom.overlay.getContext("2d");
                     }
                 }
-                _canvas.ctx.frequency = _canvas.dom.frequency.getContext("2d");
-
-                _canvas.dom.pattern = document.querySelector("canvas.patternBuffer");
-                if (!_canvas.dom.pattern) {
-                    _canvas.dom.pattern = document.createElement("canvas");
-                    _canvas.dom.pattern.className = "patternBuffer";
-                    if($debug) {
-                        $debug.appendChild(_canvas.dom.pattern);
-                    }
-                }
-                _canvas.ctx.pattern = _canvas.dom.pattern.getContext("2d");
-
-                _canvas.dom.overlay = document.querySelector("canvas.drawingBuffer");
-                if (_canvas.dom.overlay) {
-                    _canvas.ctx.overlay = _canvas.dom.overlay.getContext("2d");
-                } */
             }
 
             function initReaders() {
@@ -6481,22 +6483,24 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
             }
 
             function initConfig() {
-                /* var i,
-                    vis = [{
-                        node : _canvas.dom.frequency,
-                        prop : config.showFrequency
-                    }, {
-                        node : _canvas.dom.pattern,
-                        prop : config.showPattern
-                    }];
+                if (typeof document !== 'undefined') {
+                    var i,
+                        vis = [{
+                            node : _canvas.dom.frequency,
+                            prop : config.showFrequency
+                        }, {
+                            node : _canvas.dom.pattern,
+                            prop : config.showPattern
+                        }];
 
-                for (i = 0; i < vis.length; i++) {
-                    if (vis[i].prop === true) {
-                        vis[i].node.style.display = "block";
-                    } else {
-                        vis[i].node.style.display = "none";
+                    for (i = 0; i < vis.length; i++) {
+                        if (vis[i].prop === true) {
+                            vis[i].node.style.display = "block";
+                        } else {
+                            vis[i].node.style.display = "none";
+                        }
                     }
-                } */
+                }
             }
 
             /**
@@ -6650,6 +6654,7 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                     for ( i = 0; i < boxes.length; i++) {
                         result = decodeFromBoundingBox(boxes[i]);
                         if (result && result.codeResult) {
+                            result.box = boxes[i];
                             return result;
                         }
                     }
@@ -6811,7 +6816,7 @@ define('config',[],function(){
       debug: false,
       controls: false,
       locate: true,
-      numOfWorkers: 4,
+      numOfWorkers: 0,
       scriptName: 'quagga.js',
       visual: {
         show: true
@@ -6827,9 +6832,9 @@ define('config',[],function(){
       },
       locator: {
         halfSample: true,
-        showCanvas: false,
+        showCanvas: true,
         showPatches: false,
-        showFoundPatches: false,
+        showFoundPatches: true,
         showSkeleton: false,
         showLabels: false,
         showPatchLabels: false,
@@ -6869,10 +6874,10 @@ define('events',[],function() {
         function publishSubscription(subscription, data) {
             if (subscription.async) {
                 setTimeout(function() {
-                    subscription.callback.call(null, data);
+                    subscription.callback(data);
                 }, 4);
             } else {
-                subscription.callback.call(null, data);
+                subscription.callback(data);
             }
         }
         
@@ -7010,6 +7015,10 @@ define('camera_access',[],function() {
                 var constraints = {
                     audio : false,
                     video : {
+                        mandatory: {
+                            minWidth: 1280,
+                            minHeight: 720
+                        },
                         optional : [{
                             sourceId : videoSourceId
                         }]
@@ -7019,7 +7028,12 @@ define('camera_access',[],function() {
             });
         } else {
             initCamera({
-                video : true,
+                video : {
+                    mandatory: {
+                        minWidth: 1280,
+                        minHeight: 720
+                    }
+                },
                 audio : false
             }, video, callback);
         }
@@ -8165,8 +8179,8 @@ define('camera_access',[],function() {
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define,  vec2, importScripts */
 
-define('quagga',["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "async"],
-function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, async) {
+define('quagga',["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "async", "image_debug"],
+function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, async, ImageDebug) {
     
     
     var _inputStream,
@@ -8185,7 +8199,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         _inputImageWrapper,
         _boxSize,
         _decoder,
-        _workerPool,
+        _workerPool = [],
         _onUIThread = true;
 
     function initializeData(imageWrapper) {
@@ -8250,9 +8264,6 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         if (_config.numOfWorkers > 0) {
             initWorkers(function() {
                 console.log("Workers created");
-                _workerPool.forEach(function(workerThread) {
-                   console.log(workerThread.busy);
-                });
                 ready(cb);
             });
         } else {
@@ -8333,9 +8344,11 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         boxes = getBoundingBoxes();
         if (boxes) {
             result = _decoder.decodeFromBoundingBoxes(boxes);
+            result = result || {};
+            result.boxes = boxes;
             Events.publish("processed", result);
             if (result && result.codeResult) {
-                Events.publish("detected", result.codeResult.code);
+                Events.publish("detected", result);
             }
         } else {
             Events.publish("processed");
@@ -8360,7 +8373,6 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 _framegrabber.attachData(_inputImageWrapper.data);
             }
             if (_framegrabber.grab()) {
-                _canvasContainer.ctx.overlay.clearRect(0, 0, _inputStream.getWidth(), _inputStream.getHeight());
                 if (availableWorker) {
                     availableWorker.busy = true;
                     availableWorker.worker.postMessage({
@@ -8420,8 +8432,9 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
             } else if (e.data.event === 'processed') {
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
+                Events.publish("processed", e.data.result);
                 if (e.data.result && e.data.result.codeResult) {
-                    Events.publish("detected", e.data.result.codeResult.code);
+                    Events.publish("detected", e.data.result);
                 }
             }
         };
@@ -8535,7 +8548,8 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
           EANReader : EANReader,
           Code128Reader : Code128Reader
         },
-        ImageWrapper: ImageWrapper
+        ImageWrapper: ImageWrapper,
+        ImageDebug: ImageDebug
     };
 });
 

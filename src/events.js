@@ -23,10 +23,10 @@ define(function() {
         function publishSubscription(subscription, data) {
             if (subscription.async) {
                 setTimeout(function() {
-                    subscription.callback.call(null, data);
+                    subscription.callback(data);
                 }, 4);
             } else {
-                subscription.callback.call(null, data);
+                subscription.callback(data);
             }
         }
         

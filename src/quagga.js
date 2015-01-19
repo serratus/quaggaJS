@@ -1,8 +1,8 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define,  vec2, importScripts */
 
-define(["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "async"],
-function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, async) {
+define(["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "async", "image_debug"],
+function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, async, ImageDebug) {
     "use strict";
     
     var _inputStream,
@@ -21,7 +21,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         _inputImageWrapper,
         _boxSize,
         _decoder,
-        _workerPool,
+        _workerPool = [],
         _onUIThread = true;
 
     function initializeData(imageWrapper) {
@@ -86,9 +86,6 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         if (_config.numOfWorkers > 0) {
             initWorkers(function() {
                 console.log("Workers created");
-                _workerPool.forEach(function(workerThread) {
-                   console.log(workerThread.busy);
-                });
                 ready(cb);
             });
         } else {
@@ -169,9 +166,11 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         boxes = getBoundingBoxes();
         if (boxes) {
             result = _decoder.decodeFromBoundingBoxes(boxes);
+            result = result || {};
+            result.boxes = boxes;
             Events.publish("processed", result);
             if (result && result.codeResult) {
-                Events.publish("detected", result.codeResult.code);
+                Events.publish("detected", result);
             }
         } else {
             Events.publish("processed");
@@ -196,7 +195,6 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 _framegrabber.attachData(_inputImageWrapper.data);
             }
             if (_framegrabber.grab()) {
-                _canvasContainer.ctx.overlay.clearRect(0, 0, _inputStream.getWidth(), _inputStream.getHeight());
                 if (availableWorker) {
                     availableWorker.busy = true;
                     availableWorker.worker.postMessage({
@@ -256,8 +254,9 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
             } else if (e.data.event === 'processed') {
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
+                Events.publish("processed", e.data.result);
                 if (e.data.result && e.data.result.codeResult) {
-                    Events.publish("detected", e.data.result.codeResult.code);
+                    Events.publish("detected", e.data.result);
                 }
             }
         };
@@ -371,6 +370,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
           EANReader : EANReader,
           Code128Reader : Code128Reader
         },
-        ImageWrapper: ImageWrapper
+        ImageWrapper: ImageWrapper,
+        ImageDebug: ImageDebug
     };
 });
