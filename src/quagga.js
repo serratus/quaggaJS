@@ -288,6 +288,8 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
             } else if (e.data.cmd === 'process') {
                 imageWrapper.data = new Uint8Array(e.data.imageData);
                 Quagga.start();
+            } else if (e.data.cmd === 'setReaders') {
+                Quagga.setReaders(e.data.readers);
             }
         };
 
@@ -320,6 +322,16 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         return window.URL.createObjectURL(blob);
     }
 
+    function setReaders(readers) {
+        if (_decoder) {
+            _decoder.setReaders(readers);
+        } else if (_onUIThread && _workerPool.length > 0) {
+            _workerPool.forEach(function(workerThread) {
+                workerThread.worker.postMessage({cmd: 'setReaders', readers: readers});
+            });
+        }
+    }
+
     return {
         init : function(config, cb, imageWrapper) {
             _config = HtmlUtils.mergeObjects(_config, config);
@@ -347,7 +359,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
             Events.subscribe("processed", callback);
         },
         setReaders: function(readers) {
-            _decoder.setReaders(readers);
+            setReaders(readers);
         },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {

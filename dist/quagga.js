@@ -6816,7 +6816,7 @@ define('config',[],function(){
       debug: false,
       controls: false,
       locate: true,
-      numOfWorkers: 0,
+      numOfWorkers: 4,
       scriptName: 'quagga.js',
       visual: {
         show: true
@@ -6832,9 +6832,9 @@ define('config',[],function(){
       },
       locator: {
         halfSample: true,
-        showCanvas: true,
+        showCanvas: false,
         showPatches: false,
-        showFoundPatches: true,
+        showFoundPatches: false,
         showSkeleton: false,
         showLabels: false,
         showPatchLabels: false,
@@ -7015,10 +7015,6 @@ define('camera_access',[],function() {
                 var constraints = {
                     audio : false,
                     video : {
-                        mandatory: {
-                            minWidth: 1280,
-                            minHeight: 720
-                        },
                         optional : [{
                             sourceId : videoSourceId
                         }]
@@ -7028,12 +7024,7 @@ define('camera_access',[],function() {
             });
         } else {
             initCamera({
-                video : {
-                    mandatory: {
-                        minWidth: 1280,
-                        minHeight: 720
-                    }
-                },
+                video : true,
                 audio : false
             }, video, callback);
         }
@@ -8466,6 +8457,8 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
             } else if (e.data.cmd === 'process') {
                 imageWrapper.data = new Uint8Array(e.data.imageData);
                 Quagga.start();
+            } else if (e.data.cmd === 'setReaders') {
+                Quagga.setReaders(e.data.readers);
             }
         };
 
@@ -8498,6 +8491,16 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         return window.URL.createObjectURL(blob);
     }
 
+    function setReaders(readers) {
+        if (_decoder) {
+            _decoder.setReaders(readers);
+        } else if (_onUIThread && _workerPool.length > 0) {
+            _workerPool.forEach(function(workerThread) {
+                workerThread.worker.postMessage({cmd: 'setReaders', readers: readers});
+            });
+        }
+    }
+
     return {
         init : function(config, cb, imageWrapper) {
             _config = HtmlUtils.mergeObjects(_config, config);
@@ -8525,7 +8528,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
             Events.subscribe("processed", callback);
         },
         setReaders: function(readers) {
-            _decoder.setReaders(readers);
+            setReaders(readers);
         },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
