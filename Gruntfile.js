@@ -48,13 +48,18 @@ module.exports = function(grunt) {
                         "glMatrixAddon" : {
                             "deps" : ["glMatrix"],
                             "exports" : "glMatrixAddon"
+                        },
+                        "async": {
+                            "deps": [],
+                            "exports": "async"
                         }
                     },
 
                     "paths" : {
                         "typedefs" : "typedefs",
                         "glMatrix" : "vendor/glMatrix",
-                        "glMatrixAddon" : "glMatrixAddon"
+                        "glMatrixAddon" : "glMatrixAddon",
+                        "async": "vendor/async"
                     }
                 }
             }
@@ -68,7 +73,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-requirejs');
     grunt.loadNpmTasks('grunt-karma');
     // Default task(s).
-    grunt.registerTask('default', ['jshint', 'requirejs', 'uglify']);
+    grunt.registerTask('default', ['jshint', 'requirejs']);
     grunt.registerTask('test', ['karma']);
 
 }; 

@@ -14,7 +14,6 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         _patchLabelGrid,
         _imageToPatchGrid,
         _binaryImageWrapper,
-        _halfSample = true,
         _patchSize,
         _canvasContainer = {
             ctx : {
@@ -26,12 +25,13 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         },
         _numPatches = {x: 0, y: 0},
         _inputImageWrapper,
-        _skeletonizer;
+        _skeletonizer,
+        self = this;
 
     function initBuffers() {
         var skeletonImageData;
         
-        if (_halfSample) {
+        if (_config.halfSample) {
             _currentImageWrapper = new ImageWrapper({
                 x : _inputImageWrapper.size.x / 2 | 0,
                 y : _inputImageWrapper.size.y / 2 | 0
@@ -41,8 +41,8 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         }
 
         _patchSize = {
-            x : 16 * ( _halfSample ? 1 : 2),
-            y : 16 * ( _halfSample ? 1 : 2)
+            x : 16 * ( _config.halfSample ? 1 : 2),
+            y : 16 * ( _config.halfSample ? 1 : 2)
         };
 
         _numPatches.x = _currentImageWrapper.size.x / _patchSize.x | 0;
@@ -52,10 +52,10 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 
         _labelImageWrapper = new ImageWrapper(_patchSize, undefined, Array, true);
 
-        skeletonImageData = new ArrayBuffer(_patchSize.x * _patchSize.y * 16);
+        skeletonImageData = new ArrayBuffer(64*1024);
         _subImageWrapper = new ImageWrapper(_patchSize, new Uint8Array(skeletonImageData, 0, _patchSize.x * _patchSize.y));
         _skelImageWrapper = new ImageWrapper(_patchSize, new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y), undefined, true);
-        _skeletonizer = skeletonizer(window, {
+        _skeletonizer = skeletonizer(self, {
             size : _patchSize.x
         }, skeletonImageData);
 
@@ -68,6 +68,9 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
     }
 
     function initCanvas() {
+        if (_config.useWorker || typeof document === 'undefined') {
+            return;
+        }
         _canvasContainer.dom.binary = document.createElement("canvas");
         _canvasContainer.dom.binary.className = "binaryBuffer";
         if (_config.showCanvas === true) {
@@ -142,7 +145,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             ImageDebug.drawPath(box, {x: 0, y: 1}, _canvasContainer.ctx.binary, {color: '#ff0000', lineWidth: 2});
         }
 
-        scale = _halfSample ? 2 : 1;
+        scale = _config.halfSample ? 2 : 1;
         // reverse rotation;
         transMat = mat2.inverse(transMat);
         for ( j = 0; j < 4; j++) {
@@ -472,9 +475,10 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
     }
 
     return {
-        init : function(config, data) {
+        init : function(inputImageWrapper, config) {
             _config = config;
-            _inputImageWrapper = data.inputImageWrapper;
+            _inputImageWrapper = inputImageWrapper;
+
             initBuffers();
             initCanvas();
         },
@@ -483,31 +487,30 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             topLabels = [],
             boxes = [];
 
-            if (_halfSample) {
+            if (_config.halfSample) {
                 CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
             }
-            
+
             binarizeImage();
             patchesFound = findPatches();
             // return unless 5% or more patches are found
             if (patchesFound.length < _numPatches.x * _numPatches.y * 0.05) {
-                return;
+                return null;
             }
-    
+
             // rasterrize area by comparing angular similarity;
             var maxLabel = rasterizeAngularSimilarity(patchesFound);
             if (maxLabel <= 1) {
                 return null;
             }
-    
+
             // search for area with the most patches (biggest connected area)
             topLabels = findBiggestConnectedAreas(maxLabel);
             if (topLabels.length === 0) {
                 return null;
             }
-            
+
             boxes = findBoxes(topLabels, maxLabel);
-    
             return boxes;
         }
     };

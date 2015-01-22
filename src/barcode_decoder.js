@@ -30,30 +30,32 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
             initConfig();
 
             function initCanvas() {
-                var $debug = document.querySelector("#debug.detection");
-                _canvas.dom.frequency = document.querySelector("canvas.frequency");
-                if (!_canvas.dom.frequency) {
-                    _canvas.dom.frequency = document.createElement("canvas");
-                    _canvas.dom.frequency.className = "frequency";
-                    if($debug) {
-                        $debug.appendChild(_canvas.dom.frequency);
+                if (typeof document !== 'undefined') {
+                    var $debug = document.querySelector("#debug.detection");
+                    _canvas.dom.frequency = document.querySelector("canvas.frequency");
+                    if (!_canvas.dom.frequency) {
+                        _canvas.dom.frequency = document.createElement("canvas");
+                        _canvas.dom.frequency.className = "frequency";
+                        if($debug) {
+                            $debug.appendChild(_canvas.dom.frequency);
+                        }
                     }
-                }
-                _canvas.ctx.frequency = _canvas.dom.frequency.getContext("2d");
+                    _canvas.ctx.frequency = _canvas.dom.frequency.getContext("2d");
 
-                _canvas.dom.pattern = document.querySelector("canvas.patternBuffer");
-                if (!_canvas.dom.pattern) {
-                    _canvas.dom.pattern = document.createElement("canvas");
-                    _canvas.dom.pattern.className = "patternBuffer";
-                    if($debug) {
-                        $debug.appendChild(_canvas.dom.pattern);
+                    _canvas.dom.pattern = document.querySelector("canvas.patternBuffer");
+                    if (!_canvas.dom.pattern) {
+                        _canvas.dom.pattern = document.createElement("canvas");
+                        _canvas.dom.pattern.className = "patternBuffer";
+                        if($debug) {
+                            $debug.appendChild(_canvas.dom.pattern);
+                        }
                     }
-                }
-                _canvas.ctx.pattern = _canvas.dom.pattern.getContext("2d");
+                    _canvas.ctx.pattern = _canvas.dom.pattern.getContext("2d");
 
-                _canvas.dom.overlay = document.querySelector("canvas.drawingBuffer");
-                if (_canvas.dom.overlay) {
-                    _canvas.ctx.overlay = _canvas.dom.overlay.getContext("2d");
+                    _canvas.dom.overlay = document.querySelector("canvas.drawingBuffer");
+                    if (_canvas.dom.overlay) {
+                        _canvas.ctx.overlay = _canvas.dom.overlay.getContext("2d");
+                    }
                 }
             }
 
@@ -66,20 +68,22 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
             }
 
             function initConfig() {
-                var i,
-                    vis = [{
-                        node : _canvas.dom.frequency,
-                        prop : config.showFrequency
-                    }, {
-                        node : _canvas.dom.pattern,
-                        prop : config.showPattern
-                    }];
+                if (typeof document !== 'undefined') {
+                    var i,
+                        vis = [{
+                            node : _canvas.dom.frequency,
+                            prop : config.showFrequency
+                        }, {
+                            node : _canvas.dom.pattern,
+                            prop : config.showPattern
+                        }];
 
-                for (i = 0; i < vis.length; i++) {
-                    if (vis[i].prop === true) {
-                        vis[i].node.style.display = "block";
-                    } else {
-                        vis[i].node.style.display = "none";
+                    for (i = 0; i < vis.length; i++) {
+                        if (vis[i].prop === true) {
+                            vis[i].node.style.display = "block";
+                        } else {
+                            vis[i].node.style.display = "none";
+                        }
                     }
                 }
             }
@@ -235,6 +239,7 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(B
                     for ( i = 0; i < boxes.length; i++) {
                         result = decodeFromBoundingBox(boxes[i]);
                         if (result && result.codeResult) {
+                            result.box = boxes[i];
                             return result;
                         }
                     }
