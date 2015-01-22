@@ -243,6 +243,9 @@ In case you want to take a deeper dive into the inner workings of Quagga, get to
 In the course of implementing web-workers some breaking changes were introduced to the API.
   - The `Quagga.init` function no longer receives the callback as part of the config but rather as a second argument: `Quagga.init(config, cb)`
   - The callback to `Quagga.onDetected` now receives an object containing much more information in addition to the decoded code. (see [data](#resultobject))
+  - Added `Quagga.onProcessed(callback)` which provides a way to get information for each image processed.
+  The callback receives the same `data` object as `Quagga.onDetected` does. Depending on the success of the process the `data` object
+  might not contain any `resultCode` and/or `box` properties.
 
 [zxing_github]: https://github.com/zxing/zxing
 [teaser_left]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-located.png
