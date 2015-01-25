@@ -6810,7 +6810,12 @@ define('html_utils',[], function() {
 define('config',[],function(){
   var config = {
       inputStream: { name: "Live",
-           type: "LiveStream"
+          type: "LiveStream",
+          constraints: {
+              width: 640,
+              height: 480,
+              facing: "environment" // or user
+          }
       },
       tracking: false,
       debug: false,
@@ -6943,7 +6948,7 @@ define('events',[],function() {
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define, MediaStreamTrack */
 
-define('camera_access',[],function() {
+define('camera_access',["html_utils"], function(HtmlUtils) {
     
     var streamRef;
     
@@ -6996,43 +7001,63 @@ define('camera_access',[],function() {
         });
     }
 
+    function normalizeConstraints(config, cb) {
+        var constraints = {
+                audio: false,
+                video: true
+            },
+            videoConstraints = HtmlUtils.mergeObjects({
+                width: 640,
+                height: 480,
+                facing: "environment"
+            }, config);
+
+        if ( typeof MediaStreamTrack.getSources !== 'undefined') {
+            MediaStreamTrack.getSources(function(sourceInfos) {
+                var videoSourceId;
+                for (var i = 0; i != sourceInfos.length; ++i) {
+                    var sourceInfo = sourceInfos[i];
+                    if (sourceInfo.kind == "video" && sourceInfo.facing == videoConstraints.facing) {
+                        videoSourceId = sourceInfo.id;
+                    }
+                }
+                constraints.video = {
+                    mandatory: {
+                        minWidth: videoConstraints.width,
+                        minHeight: videoConstraints.height
+                    },
+                    optional: [{
+                        sourceId: videoSourceId
+                    }]
+                };
+                return cb(constraints);
+            });
+        } else {
+            constraints.video = {
+                mediaSource: "camera",
+                width: { min: videoConstraints.width, max: videoConstraints.width },
+                height: { min: videoConstraints.height, max: videoConstraints.height },
+                require: ["width", "height"]
+            };
+            return cb(constraints);
+        }
+    }
+
     /**
      * Requests the back-facing camera of the user. The callback is called
      * whenever the stream is ready to be consumed, or if an error occures.
      * @param {Object} video
      * @param {Object} callback
      */
-    function request(video, callback) {
-        if ( typeof MediaStreamTrack.getSources !== 'undefined') {
-            MediaStreamTrack.getSources(function(sourceInfos) {
-                var videoSourceId;
-                for (var i = 0; i != sourceInfos.length; ++i) {
-                    var sourceInfo = sourceInfos[i];
-                    if (sourceInfo.kind == "video" && sourceInfo.facing == "environment") {
-                        videoSourceId = sourceInfo.id;
-                    }
-                }
-                var constraints = {
-                    audio : false,
-                    video : {
-                        optional : [{
-                            sourceId : videoSourceId
-                        }]
-                    }
-                };
-                initCamera(constraints, video, callback);
-            });
-        } else {
-            initCamera({
-                video : true,
-                audio : false
-            }, video, callback);
-        }
+    function request(video, videoConstraints, callback) {
+        normalizeConstraints(videoConstraints, function(constraints) {
+            initCamera(constraints, video, callback);
+        });
     }
 
     return {
-        request : function(video, callback) {
-            request(video, callback);
+        request : function(video, constraints, callback) {
+            request(video, constraints, callback);
         },
         release : function() {
             var tracks = streamRef && streamRef.getVideoTracks();
@@ -8232,7 +8257,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 $viewport.appendChild(video);
             }
             _inputStream = InputStream.createLiveStream(video);
-            CameraAccess.request(video, function(err) {
+            CameraAccess.request(video, _config.inputStream.constraints, function(err) {
                 if (!err) {
                     _inputStream.trigger("canrecord");
                 } else {
