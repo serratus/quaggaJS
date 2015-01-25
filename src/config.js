@@ -5,7 +5,12 @@
 define(function(){
   var config = {
       inputStream: { name: "Live",
-           type: "LiveStream"
+          type: "LiveStream",
+          constraints: {
+              width: 640,
+              height: 480,
+              facing: "environment" // or user
+          }
       },
       tracking: false,
       debug: false,

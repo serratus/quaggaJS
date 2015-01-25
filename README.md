@@ -167,7 +167,12 @@ The default `config` object is set as followed:
 ```javascript
 {
   inputStream: { name: "Live",
-       type: "LiveStream"
+       type: "LiveStream",
+       constraints: {
+         width: 640,
+         height: 480,
+         facing: "environment"
+       }
   },
   tracking: false,
   debug: false,

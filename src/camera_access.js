@@ -1,7 +1,7 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define, MediaStreamTrack */
 
-define(function() {
+define(["html_utils"], function(HtmlUtils) {
     "use strict";
     var streamRef;
     
@@ -20,7 +20,7 @@ define(function() {
     }
 
     /**
-     * Tries to attach the camer-stream to a given video-element
+     * Tries to attach the camera-stream to a given video-element
      * and calls the callback function when the content is ready
      * @param {Object} constraints
      * @param {Object} video
@@ -55,42 +55,68 @@ define(function() {
     }
 
     /**
-     * Requests the back-facing camera of the user. The callback is called
-     * whenever the stream is ready to be consumed, or if an error occures.
-     * @param {Object} video
-     * @param {Object} callback
+     * Normalizes the incoming constraints to satisfy the current browser
+     * @param config
+     * @param cb Callback which is called whenever constraints are created
+     * @returns {*}
      */
-    function request(video, callback) {
+    function normalizeConstraints(config, cb) {
+        var constraints = {
+                audio: false,
+                video: true
+            },
+            videoConstraints = HtmlUtils.mergeObjects({
+                width: 640,
+                height: 480,
+                facing: "environment"
+            }, config);
+
         if ( typeof MediaStreamTrack.getSources !== 'undefined') {
             MediaStreamTrack.getSources(function(sourceInfos) {
                 var videoSourceId;
                 for (var i = 0; i != sourceInfos.length; ++i) {
                     var sourceInfo = sourceInfos[i];
-                    if (sourceInfo.kind == "video" && sourceInfo.facing == "environment") {
+                    if (sourceInfo.kind == "video" && sourceInfo.facing == videoConstraints.facing) {
                         videoSourceId = sourceInfo.id;
                     }
                 }
-                var constraints = {
-                    audio : false,
-                    video : {
-                        optional : [{
-                            sourceId : videoSourceId
-                        }]
-                    }
+                constraints.video = {
+                    mandatory: {
+                        minWidth: videoConstraints.width,
+                        minHeight: videoConstraints.height
+                    },
+                    optional: [{
+                        sourceId: videoSourceId
+                    }]
                 };
-                initCamera(constraints, video, callback);
+                return cb(constraints);
             });
         } else {
-            initCamera({
-                video : true,
-                audio : false
-            }, video, callback);
+            constraints.video = {
+                mediaSource: "camera",
+                width: { min: videoConstraints.width, max: videoConstraints.width },
+                height: { min: videoConstraints.height, max: videoConstraints.height },
+                require: ["width", "height"]
+            };
+            return cb(constraints);
         }
     }
 
+    /**
+     * Requests the back-facing camera of the user. The callback is called
+     * whenever the stream is ready to be consumed, or if an error occures.
+     * @param {Object} video
+     * @param {Object} callback
+     */
+    function request(video, videoConstraints, callback) {
+        normalizeConstraints(videoConstraints, function(constraints) {
+            initCamera(constraints, video, callback);
+        });
+    }
+
     return {
-        request : function(video, callback) {
-            request(video, callback);
+        request : function(video, constraints, callback) {
+            request(video, constraints, callback);
         },
         release : function() {
             var tracks = streamRef && streamRef.getVideoTracks();

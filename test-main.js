@@ -21,7 +21,8 @@ require.config({
     'glMatrixAddon': 'src/glMatrixAddon',
     'cluster': 'src/cluster',
     'camera_access': 'src/camera_access',
-    'events': 'src/events'
+    'events': 'src/events',
+    'html_utils': 'src/html_utils'
   },
   deps: allTestFiles,
   callback: window.__karma__.start

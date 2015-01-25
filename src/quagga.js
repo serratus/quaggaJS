@@ -63,7 +63,7 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 $viewport.appendChild(video);
             }
             _inputStream = InputStream.createLiveStream(video);
-            CameraAccess.request(video, function(err) {
+            CameraAccess.request(video, _config.inputStream.constraints, function(err) {
                 if (!err) {
                     _inputStream.trigger("canrecord");
                 } else {

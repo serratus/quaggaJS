@@ -52,7 +52,7 @@ define(['camera_access'], function(CameraAccess){
     
     describe('request', function() {
         it('should request the camera', function(done) {
-            CameraAccess.request(video, function() {
+            CameraAccess.request(video, {}, function() {
                 expect(navigator.getUserMedia.calledOnce).to.equal(true);
                 expect(video.src).to.deep.equal(stream);
                 done();
@@ -62,7 +62,7 @@ define(['camera_access'], function(CameraAccess){
     
     describe('release', function() {
         it('should release the camera', function(done) {
-            CameraAccess.request(video, function() {
+            CameraAccess.request(video, {}, function() {
                 expect(video.src).to.deep.equal(stream);
                 CameraAccess.release();
                 expect(video.src.getVideoTracks()).to.have.length(1);
