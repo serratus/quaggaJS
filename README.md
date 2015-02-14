@@ -33,7 +33,7 @@ on desktop, nor on mobile. You can check [caniuse][caniuse_getusermedia] for upd
 In cases where real-time decoding is not needed, or the platform does not support `getUserMedia` QuaggaJS is 
 also capable of decoding image-files using the File API or other URL sources.
 
-## Installation
+## <a name="installation">Installation</a>
 
 Just clone the repository and include `dist/quagga.js` in your project. You can also build the library yourself 
 by simply typing:
@@ -42,6 +42,29 @@ by simply typing:
 > npm install
 > grunt
 ```
+
+### Minification
+
+Currently, I strongly disapprove using `grunt uglify` since it does not handle asm.js code correctly
+(see [issue](https://github.com/mishoo/UglifyJS2/issues/167)). The resulting code still works, but
+the performance might suffer, especially in Firefox. Additionally it triggers some ugly log-warnings
+in the console.
+
+This is how you create a minified version of quaggaJS (saved in `dist/quagga.min.js`):
+
+```console
+> grunt uglify
+```
+
+Special care has to be taken if a minimized/uglified version of the code is needed. Basically the grunt task
+`grunt uglify` takes the `dist/quagga.js` as input and saves the minified code in `dist/quagga.min.js`.
+Since the introduction of web-workers in quaggaJS, the filename of the script is important, because
+the instantiation of the workers rely on it. This script-name defaults to `quagga.js` and can be changed
+in the config with the key `config.scriptName`. The supplied string must match the filename of the
+file being served by the webserver. Now, in the case of a minified version, the config must be adapted
+so that `config.scriptName` points to `quagga.min.js`.
+
+See the [config](#configobject) for all supported options.
 
 ## Usage
 
@@ -160,7 +183,7 @@ The callbacks passed into `onProcessed`, `onDetected` and `decodeSingle` receive
 }
 ```
 
-## Config
+## <a name="configobject">Config</a>
 
 The default `config` object is set as followed:
 
