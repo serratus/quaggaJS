@@ -1409,7 +1409,7 @@ define('input_stream',["image_loader"], function(ImageLoader) {
 
         that.setInputStream = function(config) {
             _config = config;
-            video.src = config.src;
+            video.src = (typeof config.src !== 'undefined') ? config.src : '';
         };
 
         that.ended = function() {
