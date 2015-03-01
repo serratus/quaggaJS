@@ -34,10 +34,11 @@ define(
             return error;
         };
 
-        BarcodeReader.prototype._nextSet = function(line) {
+        BarcodeReader.prototype._nextSet = function(line, offset) {
             var i;
-            
-            for (i = 0; i < line.length; i++) {
+
+            offset = offset || 0;
+            for (i = offset; i < line.length; i++) {
                 if (line[i]) {
                     return i;
                 }
