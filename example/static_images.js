@@ -17,7 +17,7 @@ $(function() {
         },
         config: {
             reader: "code_39",
-            length: 4
+            length: 10
         },
         attachListeners: function() {
             $(".controls").on("click", "button.next", function(e) {

@@ -597,6 +597,18 @@ define(
             }
             return result;
         };
+
+        BarcodeReader.prototype._matchRange = function(start, end, value) {
+            var i;
+
+            start = start < 0 ? 0 : start;
+            for (i = start; i < end; i++) {
+                if (this._row[i] !== value) {
+                    return false;
+                }
+            }
+            return true;
+        };
         
         BarcodeReader.DIRECTION = {
             FORWARD : 1,
@@ -6505,6 +6517,8 @@ define(
             } while(decodedChar !== '*');
             result.pop();
 
+
+
             return {
                 code : result.join(""),
                 start : start.start,
@@ -6542,6 +6556,7 @@ define(
             var numCounters = counters.length,
                 maxNarrowWidth = 0,
                 numWideBars = numCounters,
+                wideBarWidth = 0,
                 self = this,
                 pattern,
                 i;
@@ -6554,18 +6569,25 @@ define(
                     if (counters[i] > maxNarrowWidth) {
                         pattern |= 1 << (numCounters - 1 - i);
                         numWideBars++;
+                        wideBarWidth += counters[i];
                     }
                 }
 
                 if (numWideBars === 3) {
+                    for (i = 0; i < numCounters && numWideBars > 0; i++) {
+                        if (counters[i] > maxNarrowWidth) {
+                            numWideBars--;
+                            if ((counters[i] * 3) >= wideBarWidth) {
+                                return -1;
+                            }
+                        }
+                    }
                     return pattern;
                 }
             }
             return -1;
         };
-        Code39Reader.prototype._findEnd = function() {
 
-        };
         Code39Reader.prototype._findStart = function() {
             var self = this,
                 offset = self._nextSet(self._row),
@@ -6574,7 +6596,8 @@ define(
                 counterPos = 0,
                 isWhite = false,
                 i,
-                j;
+                j,
+                whiteSpaceMustStart;
 
             for ( i = offset; i < self._row.length; i++) {
                 if (self._row[i] ^ isWhite) {
@@ -6584,10 +6607,13 @@ define(
 
                         // find start pattern
                         if (self._toPattern(counter) === self.ASTERISK) {
-                            return {
-                                start: patternStart,
-                                end: i
-                            };
+                            whiteSpaceMustStart = Math.floor(Math.max(0, patternStart - ((i - patternStart) / 4)));
+                            if (self._matchRange(whiteSpaceMustStart, patternStart, 0)) {
+                                return {
+                                    start: patternStart,
+                                    end: i
+                                };
+                            }
                         }
 
                         patternStart += counter[0] + counter[1];
@@ -7016,7 +7042,7 @@ define('config',[],function(){
           }
       },
       tracking: false,
-      debug: false,
+      debug: true,
       controls: false,
       locate: true,
       numOfWorkers: 0,
@@ -7026,9 +7052,9 @@ define('config',[],function(){
       },
       decoder:{
         drawBoundingBox: false,
-        showFrequency: false,
+        showFrequency: true,
         drawScanline: false,
-        showPattern: false,
+        showPattern: true,
         readers: [
           'code_128_reader'
         ]

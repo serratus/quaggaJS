@@ -161,6 +161,18 @@ define(
             }
             return result;
         };
+
+        BarcodeReader.prototype._matchRange = function(start, end, value) {
+            var i;
+
+            start = start < 0 ? 0 : start;
+            for (i = start; i < end; i++) {
+                if (this._row[i] !== value) {
+                    return false;
+                }
+            }
+            return true;
+        };
         
         BarcodeReader.DIRECTION = {
             FORWARD : 1,

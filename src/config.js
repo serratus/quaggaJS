@@ -16,7 +16,7 @@ define(function(){
       debug: false,
       controls: false,
       locate: true,
-      numOfWorkers: 0,
+      numOfWorkers: 4,
       scriptName: 'quagga.js',
       visual: {
         show: true
