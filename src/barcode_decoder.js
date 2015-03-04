@@ -1,12 +1,13 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader) {
+define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader, Code39Reader) {
     "use strict";
     
     var readers = {
         code_128_reader: Code128Reader,
-        ean_reader: EANReader
+        ean_reader: EANReader,
+        code_39_reader: Code39Reader
     };
     var BarcodeDecoder = {
         create : function(config, inputImageWrapper) {

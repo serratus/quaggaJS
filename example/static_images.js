@@ -16,7 +16,7 @@ $(function() {
             });
         },
         config: {
-            reader: "code_128",
+            reader: "code_39",
             length: 10
         },
         attachListeners: function() {

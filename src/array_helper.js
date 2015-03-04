@@ -71,6 +71,16 @@ define(function() {
                 }
             }
             return max;
+        },
+
+        sum: function(arr) {
+            var length = arr.length,
+                sum = 0;
+
+            while(length--) {
+                sum += arr[length];
+            }
+            return sum;
         }
     };
 }); 
