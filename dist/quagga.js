@@ -7042,19 +7042,19 @@ define('config',[],function(){
           }
       },
       tracking: false,
-      debug: true,
+      debug: false,
       controls: false,
       locate: true,
-      numOfWorkers: 0,
+      numOfWorkers: 4,
       scriptName: 'quagga.js',
       visual: {
         show: true
       },
       decoder:{
         drawBoundingBox: false,
-        showFrequency: true,
+        showFrequency: false,
         drawScanline: false,
-        showPattern: true,
+        showPattern: false,
         readers: [
           'code_128_reader'
         ]
