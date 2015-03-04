@@ -268,6 +268,10 @@ In case you want to take a deeper dive into the inner workings of Quagga, get to
 
 ## <a name="changelog">Changelog</a>
 
+### 2015-03-04
+- Features
+  - Added support for [Code 39][code39_wiki] barcodes
+
 ### 2015-01-21
 - Features
   - Added support for web-worker (using 4 workers as default, can be changed through `config.numOfWorkers`)
@@ -289,3 +293,4 @@ In the course of implementing web-workers some breaking changes were introduced 
 [chaiUrl]: http://chaijs.com/
 [mochaUrl]: https://github.com/mochajs/mocha
 [karmaUrl]: http://karma-runner.github.io/
+[code39_wiki]: http://en.wikipedia.org/wiki/Code_39
