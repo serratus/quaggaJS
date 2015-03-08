@@ -1,8 +1,8 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define,  vec2, importScripts */
 
-define(["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "async", "image_debug"],
-function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, async, ImageDebug) {
+define(["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "image_debug"],
+function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, ImageDebug) {
     "use strict";
     
     var _inputStream,
@@ -223,14 +223,19 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     }
 
     function initWorkers(cb) {
+        var i;
         _workerPool = [];
 
-        async.times(_config.numOfWorkers, function(n, next) {
-            initWorker(function(workerThread) {
-                _workerPool.push(workerThread);
-                next(null);
-            });
-        }, cb);
+        for (i = 0; i < _config.numOfWorkers; i++) {
+            initWorker(workerInitialized);
+        }
+
+        function workerInitialized(workerThread) {
+            _workerPool.push(workerThread);
+            if (_workerPool.length >= _config.numOfWorkers){
+                cb();
+            }
+        }
     }
 
     function initWorker(cb) {
