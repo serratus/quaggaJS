@@ -1,0 +1,12 @@
+test/
+example/
+examples/
+.sass-cache/
+node_modules/
+coverage/
+.project
+_site/
+_includes/
+.idea/
+doc/
+.gitignore
