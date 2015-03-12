@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-01-21)
+- [Changelog](#changelog) (2015-03-12)
 
 QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-time localization and decoding of
 various types of barcodes such as __EAN__ and __CODE128__. The library is also capable of using `getUserMedia` to get direct
@@ -267,6 +267,10 @@ Unit Tests can be run with [Karma][karmaUrl] and written using [Mocha][mochaUrl]
 In case you want to take a deeper dive into the inner workings of Quagga, get to know the _debugging_ capabilities of the current implementation. The various flags exposed through the `config` object give you the abilily to visualize almost every step in the processing. Because of the introduction of the web-workers, and their restriction not to have access to the DOM, the configuration must be explicitly set to `config.numOfWorkers = 0` in order to work.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-03-12
+- Improvements
+  - removed dependency on async.js
 
 ### 2015-03-04
 - Features
