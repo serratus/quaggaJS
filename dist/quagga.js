@@ -7359,10 +7359,13 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         } else if (_config.inputStream.type == "ImageStream") {
             _inputStream = InputStream.createImageStream();
         } else if (_config.inputStream.type == "LiveStream") {
-            video = document.createElement("video");
             var $viewport = document.querySelector("#interactive.viewport");
-            if($viewport) {
-                $viewport.appendChild(video);
+            if ($viewport) {
+                video = $viewport.querySelector("video");
+                if (!video) {
+                    video = document.createElement("video");
+                    $viewport.appendChild(video);
+                }
             }
             _inputStream = InputStream.createLiveStream(video);
             CameraAccess.request(video, _config.inputStream.constraints, function(err) {
