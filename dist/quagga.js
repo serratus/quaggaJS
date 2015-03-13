@@ -1,18 +1,14 @@
 (function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        //Allow using this built library as an AMD module
-        //in another project. That other project will only
-        //see this AMD call, not the internal modules in
-        //the closure below.
-        define([], factory);
-    } else if (typeof module !== 'undefined') {
-        module.exports = factory();
+    var factorySource = factory.toString();
+
+    if (typeof module !== 'undefined') {
+        module.exports = factory(factorySource);
     } else {
         //Browser globals case. Just assign the
         //result to a property on the global.
-        root.Quagga = factory();
+        root.Quagga = factory(factorySource);
     }
-}(this, function () {/**
+}(this, function (__factorySource__) {/**
  * @license almond 0.2.9 Copyright (c) 2011-2014, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/almond for details
@@ -7300,8 +7296,9 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
         }
     };
 }); 
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define,  vec2, importScripts */
+/* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
+/* global define,  vec2 */
+
 
 define('quagga',["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "image_debug"],
 function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, ImageDebug) {
@@ -7580,8 +7577,13 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     }
 
 
-    function workerInterface(scriptUrl) {
-        importScripts(scriptUrl);
+    function workerInterface(factory) {
+        if (factory) {
+            var Quagga = factory();
+            if (!Quagga) {
+                return;
+            }
+        }
         /* jshint ignore:start */
         var imageWrapper;
 
@@ -7615,18 +7617,15 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
 
     function generateWorkerBlob() {
         var blob,
-            quaggaAbsoluteUrl,
-            scripts = document.getElementsByTagName('script'),
-            regex = new RegExp('\/' + _config.scriptName + '$');
+            factorySource;
 
-        quaggaAbsoluteUrl = Array.prototype.slice.apply(scripts).filter(function(script) {
-            return script.src && script.src.match(regex);
-        }).map(function(script) {
-            return script.src;
-        })[0];
+        /* jshint ignore:start */
+        if (typeof __factorySource__ !== 'undefined') {
+            factorySource = __factorySource__;
+        }
+        /* jshint ignore:end */
 
-
-        blob = new Blob(['(' + workerInterface.toString() + ')("' + quaggaAbsoluteUrl + '");'],
+        blob = new Blob(['(' + workerInterface.toString() + ')(' + factorySource + ');'],
             {type : 'text/javascript'});
 
         return window.URL.createObjectURL(blob);
