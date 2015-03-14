@@ -4,6 +4,7 @@
 define(function() {
     "use strict";
 
+    /* @preserve ASM BEGIN */
     function Skeletonizer(stdlib, foreign, buffer) {
         "use asm";
 
@@ -197,6 +198,7 @@ define(function() {
             skeletonize : skeletonize
         };
     }
+    /* @preserve ASM END */
 
     return Skeletonizer;
 });
