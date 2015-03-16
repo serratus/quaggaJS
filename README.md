@@ -326,8 +326,8 @@ introduced to the API.
   object might not contain any `resultCode` and/or `box` properties.
 
 [zxing_github]: https://github.com/zxing/zxing
-[teaser_left]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-located.png
-[teaser_right]: https://github.com/serratus/quaggaJS/blob/master/doc/img/mobile-detected.png
+[teaser_left]: https://raw.githubusercontent.com/serratus/quaggaJS/master/doc/img/mobile-located.png
+[teaser_right]: https://raw.githubusercontent.com/serratus/quaggaJS/master/doc/img/mobile-detected.png
 [caniuse_getusermedia]: http://caniuse.com/#feat=stream
 [sinonUrl]: http://sinonjs.org/
 [chaiUrl]: http://chaijs.com/
