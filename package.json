@@ -1,6 +1,6 @@
 {
   "name": "quagga",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "An advanced barcode-scanner written in JavaScript",
   "main": "dist/quagga.js",
   "devDependencies": {
@@ -30,6 +30,19 @@
     "type": "git",
     "url": "https://github.com/serratus/quaggaJS.git"
   },
+  "bugs": {
+    "url": "https://github.com/serratus/quaggaJS/issues"
+  },
+  "keywords": [
+    "quagga",
+    "quaggajs",
+    "barcode",
+    "ean",
+    "code128",
+    "code39",
+    "getusermedia",
+    "imageprocessing"
+  ],
   "author": "Christoph Oberhofer <ch.oberhofer@gmail.com>",
   "license": "MIT"
 }

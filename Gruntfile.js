@@ -10,7 +10,8 @@ module.exports = function(grunt) {
         },
         uglify : {
             options : {
-                banner : '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+                banner : '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+                preserveComments: 'some'
             },
             build : {
                 src : 'dist/<%= pkg.name %>.js',
@@ -62,13 +63,18 @@ module.exports = function(grunt) {
     });
 
     // Load the plugin that provides the "uglify" task.
-    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
 
     grunt.loadNpmTasks('grunt-requirejs');
     grunt.loadNpmTasks('grunt-karma');
-    // Default task(s).
-    grunt.registerTask('default', ['jshint', 'requirejs']);
+
+    grunt.loadTasks('tasks');
+
+    grunt.registerTask('build', ['check', 'requirejs']);
+    grunt.registerTask('check', ['jshint']);
+    grunt.registerTask('dist', ['build', 'uglify', 'uglyasm']);
     grunt.registerTask('test', ['karma']);
 
+    grunt.registerTask('default', ['build']);
 }; 
