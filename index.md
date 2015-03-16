@@ -7,15 +7,19 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-03-12)
+- [Changelog](#changelog) (2015-03-16)
 
-QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-time localization and decoding of
-various types of barcodes such as __EAN__ and __CODE128__. The library is also capable of using `getUserMedia` to get direct
-access to the user's camera stream. Although the code relies on heavy image-processing even recent smartphones are
-capable of locating and decoding barcodes in real-time.
+## What is QuaggaJS?
 
-Try some [examples]({{ site.baseurl }}/examples) and check out the blog post
-([How barcode-localization works in QuaggaJS](http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/))
+QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-
+time localization and decoding of various types of barcodes such as __EAN__,
+__CODE128__ and __CODE39__. The library is also capable of using `getUserMedia`
+to get direct access to the user's camera stream. Although the code relies on
+heavy image-processing even recent smartphones are capable of locating and
+decoding barcodes in real-time.
+
+Try some [examples](http://serratus.github.io/quaggaJS/examples) and check out
+the blog post ([How barcode-localization works in QuaggaJS][oberhofer_co_how])
 if you want to dive deeper into this topic.
 
 ![teaser][teaser_left]![teaser][teaser_right]
@@ -23,63 +27,70 @@ if you want to dive deeper into this topic.
 
 ## Yet another barcode library?
 
-This is not yet another port of the great [zxing][zxing_github] library, but more of an extension to it.
-This implementation features a barcode locator which is capable of finding a barcode-like pattern in an
-image resulting in an estimated bounding box including the rotation. Simply speaking, this reader is invariant
-to scale and rotation, whereas other libraries require the barcode to be aligned with the viewport.
+This is not yet another port of the great [zxing][zxing_github] library, but
+more of an extension to it. This implementation features a barcode locator which
+is capable of finding a barcode-like pattern in an image resulting in an
+estimated bounding box including the rotation. Simply speaking, this reader is
+invariant to scale and rotation, whereas other libraries require the barcode to
+be aligned with the viewport.
 
 
 ## Requirements
 
-In order to take full advantage of quaggaJS, the browser needs to support the `getUserMedia` API which is
-already implemented in recent versions of Firefox, Chrome and Opera. The API is also available on their
-mobile counterparts installed on Android. Safari and IE do not allow the access to the camera yet, neither
-on desktop, nor on mobile. You can check [caniuse][caniuse_getusermedia] for updates.
+In order to take full advantage of quaggaJS, the browser needs to support the
+`getUserMedia` API which is already implemented in recent versions of Firefox,
+Chrome and Opera. The API is also available on their mobile counterparts
+installed on Android. Safari and IE do not allow the access to the camera yet,
+neither on desktop, nor on mobile. You can check [caniuse][caniuse_getusermedia]
+for updates.
 
-In cases where real-time decoding is not needed, or the platform does not support `getUserMedia` QuaggaJS is
-also capable of decoding image-files using the File API or other URL sources.
+In cases where real-time decoding is not needed, or the platform does not
+support `getUserMedia` QuaggaJS is also capable of decoding image-files using
+the File API or other URL sources.
 
-## <a name="installation">Installation</a>
+## Getting Started
 
-Just clone the repository and include `dist/quagga.js` in your project. You can also build the library yourself
-by simply typing:
+You can simply include `dist/quagga.min.js` in your project and you are ready
+to go.
+
+If you want to keep your project modular, you can also install QuaggaJS via npm:
+
+```console
+> npm install quagga
+```
+
+And then import it as dependency in your project:
+
+```javascript
+var quagga = require('quagga');
+```
+
+For starters, have a look at the [examples][github_examples] to get an idea
+where to go from here.
+
+## <a name="Building">Building</a>
+
+You can build the library yourself by simply cloning the repo and typing:
 
 ```console
 > npm install
-> grunt
+> grunt dist
 ```
 
-### Minification
+This grunt task builds a non optimized version `quagga.js` and a minified
+version `quagga.min.js` and places both files in the `dist` folder.
 
-Currently, I strongly disapprove using `grunt uglify` since it does not handle asm.js code correctly
-(see [issue](https://github.com/mishoo/UglifyJS2/issues/167)). The resulting code still works, but
-the performance might suffer, especially in Firefox. Additionally it triggers some ugly log-warnings
-in the console.
+## API
 
-This is how you create a minified version of quaggaJS (saved in `dist/quagga.min.js`):
-
-```console
-> grunt uglify
-```
-
-Special care has to be taken if a minimized/uglified version of the code is needed. Basically the grunt task
-`grunt uglify` takes the `dist/quagga.js` as input and saves the minified code in `dist/quagga.min.js`.
-Since the introduction of web-workers in quaggaJS, the filename of the script is important, because
-the instantiation of the workers rely on it. This script-name defaults to `quagga.js` and can be changed
-in the config with the key `config.scriptName`. The supplied string must match the filename of the
-file being served by the webserver. Now, in the case of a minified version, the config must be adapted
-so that `config.scriptName` points to `quagga.min.js`.
-
-See the [config](#configobject) for all supported options.
-
-## Usage
-
-You can check out the [examples]({{ site.baseurl }}/examples) to get an idea of how to use QuaggaJS.
-Basically the library exposes the following API:
+You can check out the [examples][github_examples] to get an idea of how to
+use QuaggaJS. Basically the library exposes the following API:
 
 ### Quagga.init(config, callback)
 
-This method initializes the library for a given configuration `config` (see below) and invokes the `callback` when Quagga is ready to start. The initialization process also requests for camera access if real-time detection is configured.
+This method initializes the library for a given configuration `config` (see
+below) and invokes the `callback` when Quagga is ready to start. The
+initialization process also requests for camera access if real-time detection is
+configured.
 
 ```javascript
 Quagga.init({
@@ -98,31 +109,41 @@ Quagga.init({
 
 ### Quagga.start()
 
-When the library is initialized, the `start()` method starts the video-stream and begins locating and decoding
-the images.
+When the library is initialized, the `start()` method starts the video-stream
+and begins locating and decoding the images.
 
 ### Quagga.stop()
 
-If the decoder is currently running, after calling `stop()` the decoder does not process any more images. Additionally, if a camera-stream was requested upon initialization, this operation also disconnects the camera.
+If the decoder is currently running, after calling `stop()` the decoder does not
+process any more images. Additionally, if a camera-stream was requested upon
+initialization, this operation also disconnects the camera.
 
 ### Quagga.onProcessed(callback)
 
-This method registers a `callback(data)` function that is called for each frame after the processing is done. The `data` object contains detailed information about the success/failure of the operation. The output varies, depending whether the detection and/or decoding were successful or not.
+This method registers a `callback(data)` function that is called for each frame
+after the processing is done. The `data` object contains detailed information
+about the success/failure of the operation. The output varies, depending whether
+the detection and/or decoding were successful or not.
 
 ### Quagga.onDetected(callback)
 
-Registers a `callback(data)` function which is triggered whenever a barcode-pattern has been located and decoded
-successfully. The passed `data` object contains information about the decoding process including the detected code which can be obtained by calling `data.codeResult.code`.
+Registers a `callback(data)` function which is triggered whenever a barcode-
+pattern has been located and decoded successfully. The passed `data` object
+contains information about the decoding process including the detected code
+which can be obtained by calling `data.codeResult.code`.
 
 ### Quagga.decodeSingle(config, callback)
 
-In contrast to the calls described above, this method does not rely on `getUserMedia` and operates on a
-single image instead. The provided callback is the same as in `onDetected` and contains the result `data`
-object.
+In contrast to the calls described above, this method does not rely on
+`getUserMedia` and operates on a single image instead. The provided callback
+is the same as in `onDetected` and contains the result `data` object.
 
 ## <a name="resultobject">The result object</a>
 
-The callbacks passed into `onProcessed`, `onDetected` and `decodeSingle` receive a `data` object upon execution. The `data` object contains the following information. Depending on the success, some fields may be `undefined` or just empty.
+The callbacks passed into `onProcessed`, `onDetected` and `decodeSingle`
+receive a `data` object upon execution. The `data` object contains the following
+information. Depending on the success, some fields may be `undefined` or just
+empty.
 
 ```javascript
 {
@@ -208,7 +229,6 @@ The default `config` object is set as followed:
   controls: false,
   locate: true,
   numOfWorkers: 4,
-  scriptName: 'quagga.js',
   visual: {
     show: true
   },
@@ -241,8 +261,9 @@ The default `config` object is set as followed:
 
 ## Examples
 
-The following example takes an image `src` as input and prints the result on the console.
-The decoder is configured to detect _Code128_ barcodes and enables the locating-mechanism for more robust results.
+The following example takes an image `src` as input and prints the result on the
+console. The decoder is configured to detect _Code128_ barcodes and enables the
+locating-mechanism for more robust results.
 
 ```javascript
 Quagga.decodeSingle({
@@ -256,7 +277,9 @@ Quagga.decodeSingle({
 
 ## Tests
 
-Unit Tests can be run with [Karma][karmaUrl] and written using [Mocha][mochaUrl], [Chai][chaiUrl] and [SinonJS][sinonUrl]. Coverage reports are automatically generated in the coverage/ folder.
+Unit Tests can be run with [Karma][karmaUrl] and written using
+[Mocha][mochaUrl], [Chai][chaiUrl] and [SinonJS][sinonUrl]. Coverage reports are
+automatically generated in the coverage/ folder.
 
 ```console
 > npm install
@@ -264,9 +287,20 @@ Unit Tests can be run with [Karma][karmaUrl] and written using [Mocha][mochaUrl]
 ```
 ## Image Debugging
 
-In case you want to take a deeper dive into the inner workings of Quagga, get to know the _debugging_ capabilities of the current implementation. The various flags exposed through the `config` object give you the abilily to visualize almost every step in the processing. Because of the introduction of the web-workers, and their restriction not to have access to the DOM, the configuration must be explicitly set to `config.numOfWorkers = 0` in order to work.
+In case you want to take a deeper dive into the inner workings of Quagga, get to
+know the _debugging_ capabilities of the current implementation. The various
+flags exposed through the `config` object give you the abilily to visualize
+almost every step in the processing. Because of the introduction of the
+web-workers, and their restriction not to have access to the DOM, the
+configuration must be explicitly set to `config.numOfWorkers = 0` in order to
+work.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-03-16
+- Improvements
+  - now includes minified version (23.3KB gzipped)
+  - No need for configuration of script-name any more
 
 ### 2015-03-12
 - Improvements
@@ -278,17 +312,25 @@ In case you want to take a deeper dive into the inner workings of Quagga, get to
 
 ### 2015-01-21
 - Features
-  - Added support for web-worker (using 4 workers as default, can be changed through `config.numOfWorkers`)
-  - Due to the way how web-workers are created, the name of the script file (`config.scriptName`) should be kept in sync with your actual filename
-  - Removed canvas-overlay for decoding (boxes & scanline) which can now be easily implemented using the existing API (see example)
+  - Added support for web-worker (using 4 workers as default, can be changed
+  through `config.numOfWorkers`)
+  - Due to the way how web-workers are created, the name of the script file
+  (`config.scriptName`) should be kept in sync with your actual filename
+  - Removed canvas-overlay for decoding (boxes & scanline) which can now be
+  easily implemented using the existing API (see example)
 - API Changes
-In the course of implementing web-workers some breaking changes were introduced to the API.
-  - The `Quagga.init` function no longer receives the callback as part of the config but rather as a second argument: `Quagga.init(config, cb)`
-  - The callback to `Quagga.onDetected` now receives an object containing much more information in addition to the decoded code. (see [data](#resultobject))
-  - Added `Quagga.onProcessed(callback)` which provides a way to get information for each image processed.
-  The callback receives the same `data` object as `Quagga.onDetected` does. Depending on the success of the process the `data` object
-  might not contain any `resultCode` and/or `box` properties.
-  
+In the course of implementing web-workers some breaking changes were
+introduced to the API.
+  - The `Quagga.init` function no longer receives the callback as part of the
+   config but rather as a second argument: `Quagga.init(config, cb)`
+  - The callback to `Quagga.onDetected` now receives an object containing
+  much more information in addition to the decoded code.(see
+  [data](#resultobject))
+  - Added `Quagga.onProcessed(callback)` which provides a way to get information
+  for each image processed. The callback receives the same `data` object as
+  `Quagga.onDetected` does. Depending on the success of the process the `data`
+  object might not contain any `resultCode` and/or `box` properties.
+
 [zxing_github]: https://github.com/zxing/zxing
 [teaser_left]: {{ site.baseurl }}/assets/mobile-located.jpg
 [teaser_right]: {{ site.baseurl }}/assets/mobile-detected.jpg
@@ -298,3 +340,5 @@ In the course of implementing web-workers some breaking changes were introduced 
 [mochaUrl]: https://github.com/mochajs/mocha
 [karmaUrl]: http://karma-runner.github.io/
 [code39_wiki]: http://en.wikipedia.org/wiki/Code_39
+[oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
+[github_examples]: http://serratus.github.io/quaggaJS/examples
