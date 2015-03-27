@@ -363,6 +363,9 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 CameraAccess.release();
             }
         },
+        pause: function() {
+            _stopped = true;
+        },
         onDetected : function(callback) {
             Events.subscribe("detected", callback);
         },
