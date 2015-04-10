@@ -139,7 +139,7 @@ define(
                     for (i = 0; i < numCounters && numWideBars > 0; i++) {
                         if (counters[i] > maxNarrowWidth) {
                             numWideBars--;
-                            if ((counters[i] * 3) >= wideBarWidth) {
+                            if ((counters[i] * 2) >= wideBarWidth) {
                                 return -1;
                             }
                         }
