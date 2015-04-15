@@ -1,10 +1,9 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define, mat2, vec2 */
 
-define(["image_wrapper", "cv_utils", "rasterizer", "tracer", "skeletonizer", "array_helper", "image_debug"],
+define("barcode_locator", ["image_wrapper", "cv_utils", "rasterizer", "tracer", "skeletonizer", "array_helper", "image_debug"],
 function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, ImageDebug) {
-    "use strict";
-    
+
     var _config,
         _currentImageWrapper,
         _skelImageWrapper,
@@ -26,7 +25,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         _numPatches = {x: 0, y: 0},
         _inputImageWrapper,
         _skeletonizer,
-        self = window;
+        self = this;
 
     function initBuffers() {
         var skeletonImageData;
