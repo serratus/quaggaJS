@@ -26,7 +26,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         _numPatches = {x: 0, y: 0},
         _inputImageWrapper,
         _skeletonizer,
-        self = this;
+        self = window;
 
     function initBuffers() {
         var skeletonImageData;
@@ -500,7 +500,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 
             // rasterrize area by comparing angular similarity;
             var maxLabel = rasterizeAngularSimilarity(patchesFound);
-            if (maxLabel <= 1) {
+            if (maxLabel < 1) {
                 return null;
             }
 

@@ -16,7 +16,7 @@ define(function(){
       debug: false,
       controls: false,
       locate: true,
-      numOfWorkers: 4,
+      numOfWorkers: 0,
       visual: {
         show: true
       },

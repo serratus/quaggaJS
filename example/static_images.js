@@ -16,8 +16,8 @@ $(function() {
             });
         },
         config: {
-            reader: "code_39",
-            length: 10
+            reader: "codabar",
+            length: 1
         },
         attachListeners: function() {
             $(".controls").on("click", "button.next", function(e) {

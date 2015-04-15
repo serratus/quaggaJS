@@ -31,8 +31,10 @@
       <div class="controls">
         <button class="next">Next</button>
         <fieldset class="reader-group">
+            <label>Codabar</label>
+            <input type="radio" name="reader" value="codabar" checked />
             <label>Code39</label>
-            <input type="radio" name="reader" value="code_39" checked />
+            <input type="radio" name="reader" value="code_39" />
             <label>Code128</label>
             <input type="radio" name="reader" value="code_128" />
             <label>EAN</label>
@@ -51,7 +53,7 @@
         </p>
       </footer>
     <script src="../src/vendor/jquery-1.9.0.min.js" type="text/javascript"></script>
-    <script src="../dist/quagga.min.js" type="text/javascript"></script>
+    <script src="../dist/quagga.js" type="text/javascript"></script>
     <script src="static_images.js" type="text/javascript"></script>
   </body>
 </html>
