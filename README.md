@@ -1,13 +1,13 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-03-16)
+- [Changelog](#changelog) (2015-04-16)
 
 ## What is QuaggaJS?
 
 QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-
 time localization and decoding of various types of barcodes such as __EAN__,
-__CODE128__ and __CODE39__. The library is also capable of using `getUserMedia`
+__CODE128__, __CODE39__ and __CODABAR__. The library is also capable of using `getUserMedia`
 to get direct access to the user's camera stream. Although the code relies on
 heavy image-processing even recent smartphones are capable of locating and
 decoding barcodes in real-time.
@@ -291,6 +291,10 @@ work.
 
 ## <a name="changelog">Changelog</a>
 
+### 2015-04-16
+- Features
+  - Added support for [Codabar][codabar_wiki] barcodes
+
 ### 2015-03-16
 - Improvements
   - now includes minified version (23.3KB gzipped)
@@ -334,5 +338,6 @@ introduced to the API.
 [mochaUrl]: https://github.com/mochajs/mocha
 [karmaUrl]: http://karma-runner.github.io/
 [code39_wiki]: http://en.wikipedia.org/wiki/Code_39
+[codabar_wiki]: http://en.wikipedia.org/wiki/Codabar
 [oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
 [github_examples]: http://serratus.github.io/quaggaJS/examples

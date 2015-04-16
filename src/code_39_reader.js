@@ -72,6 +72,9 @@ define(
                     return null;
                 }
                 decodedChar = self._patternToChar(pattern);
+                if (decodedChar < 0){
+                    return null;
+                }
                 result.push(decodedChar);
                 lastStart = nextStart;
                 nextStart += ArrayHelper.sum(counters);
