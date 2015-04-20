@@ -437,7 +437,7 @@ define("almond", function(){});
 
 define(
     'barcode_reader',[],function() {
-        "use strict";
+        
         
         function BarcodeReader() {
             this._row = [];
@@ -631,7 +631,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
         
         function Code128Reader() {
             BarcodeReader.call(this);
@@ -1079,7 +1079,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
         
         function EANReader() {
             BarcodeReader.call(this);
@@ -1329,7 +1329,7 @@ define(
 /* global define */
 
 define('image_loader',[],function() {
-    "use strict";
+    
 
     var ImageLoader = {};
     ImageLoader.load = function(directory, callback, offset, size, sequence) {
@@ -1393,7 +1393,7 @@ define('image_loader',[],function() {
 /* global define */
 
 define('input_stream',["image_loader"], function(ImageLoader) {
-    "use strict";
+    
 
     var InputStream = {};
     InputStream.createVideoStream = function(video) {
@@ -1659,7 +1659,7 @@ define("typedefs", (function (global) {
 /* global define */
 
 define('subImage',["typedefs"], function() {
-    "use strict";
+    
 
     /**
      * Construct representing a part of another {ImageWrapper}. Shares data
@@ -1756,7 +1756,7 @@ define('subImage',["typedefs"], function() {
 /* global define, vec2 */
 
 define('cluster',[],function() {
-    "use strict";
+    
     
     /**
      * Creates a cluster for grouping similar orientations of datapoints 
@@ -4101,7 +4101,7 @@ define("glMatrixAddon", ["glMatrix"], (function (global) {
 /* global define */
 
 define('array_helper',[],function() {
-    "use strict";
+    
 
     return {
         init : function(arr, val) {
@@ -4188,7 +4188,7 @@ define('array_helper',[],function() {
 
 define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrixAddon, ArrayHelper) {
 
-    "use strict";
+    
     /*
     * cv_utils.js
     * Collection of CV functions and libraries
@@ -4738,7 +4738,7 @@ define('image_wrapper',[
     ], 
     function(SubImage, CVUtils, ArrayHelper) {
     
-    'use strict';
+    
 
     /**
      * Represents a basic image combining the data and size.
@@ -5159,7 +5159,7 @@ define('image_wrapper',[
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('tracer',[],function() {
-    "use strict";
+    
     
     var Tracer = {
         searchDirections : [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
@@ -5268,7 +5268,7 @@ define('tracer',[],function() {
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('rasterizer',["tracer"], function(Tracer) {
-    "use strict";
+    
 
     var Rasterizer = {
         createContour2D : function() {
@@ -5464,7 +5464,7 @@ define('rasterizer',["tracer"], function(Tracer) {
 /* global define */
 
 define('skeletonizer',[],function() {
-    "use strict";
+    
 
     /* @preserve ASM BEGIN */
     function Skeletonizer(stdlib, foreign, buffer) {
@@ -5669,7 +5669,7 @@ define('skeletonizer',[],function() {
 /* global define */
 
 define('image_debug',[],function() {
-    "use strict";
+    
     
     return {
         drawRect: function(pos, size, ctx, style){
@@ -5737,8 +5737,8 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         }
 
         _patchSize = {
-            x : 16 * ( _config.halfSample ? 1 : 2),
-            y : 16 * ( _config.halfSample ? 1 : 2)
+            x : _config.patchSize * ( _config.halfSample ? 0.5 : 1),
+            y : _config.patchSize * ( _config.halfSample ? 0.5 : 1)
         };
 
         _numPatches.x = _currentImageWrapper.size.x / _patchSize.x | 0;
@@ -6217,7 +6217,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 /* global define */
 
 define('bresenham',[],function() {
-    "use strict";
+    
     var Bresenham = {};
 
     var Slope = {
@@ -6423,7 +6423,7 @@ define(
         "./array_helper"
     ],
     function(BarcodeReader, ArrayHelper) {
-        "use strict";
+        
 
         function Code39Reader() {
             BarcodeReader.call(this);
@@ -6625,7 +6625,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
 
         function CodabarReader() {
             BarcodeReader.call(this);
@@ -6934,7 +6934,7 @@ define(
 /* global define */
 
 define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_reader', 'codabar_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader, Code39Reader, CodabarReader) {
-    "use strict";
+    
     
     var readers = {
         code_128_reader: Code128Reader,
@@ -7193,7 +7193,7 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
 /* global define */
 
 define('frame_grabber',["cv_utils"], function(CVUtils) {
-    "use strict";
+    
 
     var FrameGrabber = {};
 
@@ -7286,7 +7286,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
 /* global define */
 
 define('html_utils',[], function() {
-    "use strict";
+    
 
     function createNode(htmlStr) {
         var temp = document.createElement('div');
@@ -7355,6 +7355,7 @@ define('config',[],function(){
       },
       locator: {
         halfSample: true,
+        patchSize: 32,
         showCanvas: false,
         showPatches: false,
         showFoundPatches: false,
@@ -7376,7 +7377,7 @@ define('config',[],function(){
 /* global define */
 
 define('events',[],function() {
-    "use strict";
+    
 
     var _events = function() {
         var events = {};
@@ -7467,7 +7468,7 @@ define('events',[],function() {
 /* global define, MediaStreamTrack */
 
 define('camera_access',["html_utils"], function(HtmlUtils) {
-    "use strict";
+    
     var streamRef;
     
     /**
@@ -7598,7 +7599,7 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
 
 define('quagga',["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "image_debug"],
 function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, ImageDebug) {
-    "use strict";
+    
     
     var _inputStream,
         _framegrabber,
@@ -7676,7 +7677,24 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
     }
 
+    function checkImageConstraints() {
+        var patchSize,
+            width = _inputStream.getWidth(),
+            height = _inputStream.getHeight();
+
+        if (_config.locate) {
+            patchSize = _config.locator.patchSize * ( _config.locator.halfSample ? 0.5 : 1);
+            if ((width % patchSize) === 0 && (height % patchSize) === 0) {
+                return true;
+            }
+        }
+        throw new Error("Image dimensions do not comply with the current settings: Width (" +
+                            width + " )and height (" + height +
+                            ") must a multiple of " + patchSize);
+    }
+
     function canRecord(cb) {
+        checkImageConstraints();
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();
@@ -7978,6 +7996,10 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 size: 800
             };
             config.numOfWorkers = 1;
+            config.locator = {
+                halfSample: false,
+                patchSize: 25
+            };
             this.init(config, function() {
                 Events.once("detected", function(result) {
                     _stopped = true;
