@@ -82,7 +82,24 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
     }
 
+    function checkImageConstraints() {
+        var patchSize,
+            width = _inputStream.getWidth(),
+            height = _inputStream.getHeight();
+
+        if (_config.locate) {
+            patchSize = _config.locator.patchSize * ( _config.locator.halfSample ? 0.5 : 1);
+            if ((width % patchSize) === 0 && (height % patchSize) === 0) {
+                return true;
+            }
+        }
+        throw new Error("Image dimensions do not comply with the current settings: Width (" +
+                            width + " )and height (" + height +
+                            ") must a multiple of " + patchSize);
+    }
+
     function canRecord(cb) {
+        checkImageConstraints();
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();
@@ -384,6 +401,10 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 size: 800
             };
             config.numOfWorkers = 1;
+            config.locator = {
+                halfSample: false,
+                patchSize: 25
+            };
             this.init(config, function() {
                 Events.once("detected", function(result) {
                     _stopped = true;

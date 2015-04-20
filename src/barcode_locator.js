@@ -40,8 +40,8 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         }
 
         _patchSize = {
-            x : 16 * ( _config.halfSample ? 1 : 2),
-            y : 16 * ( _config.halfSample ? 1 : 2)
+            x : _config.patchSize * ( _config.halfSample ? 0.5 : 1),
+            y : _config.patchSize * ( _config.halfSample ? 0.5 : 1)
         };
 
         _numPatches.x = _currentImageWrapper.size.x / _patchSize.x | 0;

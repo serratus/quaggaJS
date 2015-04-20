@@ -31,6 +31,7 @@ define(function(){
       },
       locator: {
         halfSample: true,
+        patchSize: 32,
         showCanvas: false,
         showPatches: false,
         showFoundPatches: false,
