@@ -16,7 +16,7 @@ $(function() {
             });
         },
         config: {
-            reader: "codabar",
+            reader: "upc",
             length: 10
         },
         attachListeners: function() {

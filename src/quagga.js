@@ -400,10 +400,10 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 sequence : false,
                 size: 800
             };
-            config.numOfWorkers = 1;
+            config.numOfWorkers = 0;
             config.locator = {
                 halfSample: false,
-                patchSize: 25
+                patchSize: 40
             };
             this.init(config, function() {
                 Events.once("detected", function(result) {

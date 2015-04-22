@@ -4,8 +4,7 @@ $(function() {
             App.attachListeners();
         },
         config: {
-            reader: "code_39",
-            length: 10
+            reader: "upc"
         },
         attachListeners: function() {
             $(".controls input[type=file]").on("change", function(e) {

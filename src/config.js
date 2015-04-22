@@ -23,18 +23,18 @@ define(function(){
       decoder:{
         drawBoundingBox: false,
         showFrequency: false,
-        drawScanline: false,
-        showPattern: false,
+        drawScanline: true,
+        showPattern: true,
         readers: [
           'code_128_reader'
         ]
       },
       locator: {
         halfSample: true,
-        patchSize: 32,
-        showCanvas: false,
+        patchSize: 64,
+        showCanvas: true,
         showPatches: false,
-        showFoundPatches: false,
+        showFoundPatches: true,
         showSkeleton: false,
         showLabels: false,
         showPatchLabels: false,

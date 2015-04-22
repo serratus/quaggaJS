@@ -6933,14 +6933,46 @@ define(
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_reader', 'codabar_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader, Code39Reader, CodabarReader) {
+define(
+    'upc_reader',[
+        "./ean_reader"
+    ],
+    function(EANReader) {
+        
+
+        function UPCReader() {
+            EANReader.call(this);
+        }
+
+        UPCReader.prototype = Object.create(EANReader.prototype);
+        UPCReader.prototype.constructor = UPCReader;
+
+        UPCReader.prototype._decode = function() {
+            var result = EANReader.prototype._decode.call(this);
+
+            if (result && result.code && result.code.length === 13 && result.code.charAt(0) === "0") {
+
+                result.code = result.code.substring(1);
+                return result;
+            }
+            return null;
+        };
+
+        return (UPCReader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_reader', 'codabar_reader', 'upc_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader, Code39Reader, CodabarReader, UPCReader) {
     
     
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
         code_39_reader: Code39Reader,
-        codabar_reader: CodabarReader
+        codabar_reader: CodabarReader,
+        upc_reader: UPCReader
     };
     var BarcodeDecoder = {
         create : function(config, inputImageWrapper) {
@@ -7347,18 +7379,18 @@ define('config',[],function(){
       decoder:{
         drawBoundingBox: false,
         showFrequency: false,
-        drawScanline: false,
-        showPattern: false,
+        drawScanline: true,
+        showPattern: true,
         readers: [
           'code_128_reader'
         ]
       },
       locator: {
         halfSample: true,
-        patchSize: 32,
-        showCanvas: false,
+        patchSize: 64,
+        showCanvas: true,
         showPatches: false,
-        showFoundPatches: false,
+        showFoundPatches: true,
         showSkeleton: false,
         showLabels: false,
         showPatchLabels: false,
@@ -7995,10 +8027,10 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
                 sequence : false,
                 size: 800
             };
-            config.numOfWorkers = 1;
+            config.numOfWorkers = 0;
             config.locator = {
                 halfSample: false,
-                patchSize: 25
+                patchSize: 40
             };
             this.init(config, function() {
                 Events.once("detected", function(result) {

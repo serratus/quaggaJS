@@ -7,7 +7,7 @@ $(function() {
                     type : "LiveStream"
                 },
                 decoder : {
-                    readers : ["code_128_reader"]
+                    readers : ["upc_reader"]
                 }
             }, function() {
                 App.attachListeners();

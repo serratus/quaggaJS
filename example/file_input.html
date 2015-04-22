@@ -36,12 +36,16 @@
     <div class="controls">
         <input type="file" capture/>
         <fieldset class="reader-group">
+            <label>UPC</label>
+            <input type="radio" name="reader" value="upc" checked />
+            <label>Code39</label>
+            <input type="radio" name="reader" value="codabar" />
             <label>Code128</label>
             <input type="radio" name="reader" value="code_128"/>
             <label>EAN</label>
             <input type="radio" name="reader" value="ean"/>
             <label>Code39</label>
-            <input type="radio" name="reader" value="code_39" checked/>
+            <input type="radio" name="reader" value="code_39"/>
         </fieldset>
     </div>
     <div id="result_strip">
