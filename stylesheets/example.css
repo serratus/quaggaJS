@@ -31,9 +31,36 @@
 }
 
 /* line 16, ../sass/_viewport.scss */
-.controls .reader-group {
-  float: right;
+.controls fieldset {
   border: none;
+}
+/* line 19, ../sass/_viewport.scss */
+.controls .input-group {
+  float: left;
+}
+/* line 21, ../sass/_viewport.scss */
+.controls .input-group input, .controls .input-group button {
+  display: block;
+}
+/* line 25, ../sass/_viewport.scss */
+.controls .reader-config-group {
+  float: right;
+}
+/* line 28, ../sass/_viewport.scss */
+.controls .reader-config-group label {
+  display: block;
+}
+/* line 30, ../sass/_viewport.scss */
+.controls .reader-config-group label span {
+  width: 11rem;
+  display: inline-block;
+  text-align: right;
+}
+/* line 37, ../sass/_viewport.scss */
+.controls:after {
+  content: '';
+  display: block;
+  clear: both;
 }
 
 /* line 22, ../sass/_viewport.scss */

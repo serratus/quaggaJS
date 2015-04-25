@@ -8,31 +8,104 @@ $(function() {
             length: 10
         },
         attachListeners: function() {
+            var self = this;
+
             $(".controls input[type=file]").on("change", function(e) {
                 if (e.target.files && e.target.files.length) {
                     App.decode(URL.createObjectURL(e.target.files[0]));
                 }
             });
-            
-            $(".controls .reader-group").on("change", "input", function(e) {
+
+            $(".controls button").on("click", function(e) {
+                var input = document.querySelector(".controls input[type=file]");
+                if (input.files && input.files.length) {
+                    App.decode(URL.createObjectURL(input.files[0]));
+                }
+            });
+
+            $(".controls .reader-config-group").on("change", "input, select", function(e) {
                 e.preventDefault();
-                App.detachListeners();
-                App.config.reader = e.target.value;
-                App.init();
+                var $target = $(e.target),
+                    value = $target.attr("type") === "checkbox" ? $target.prop("checked") : $target.val(),
+                    name = $target.attr("name"),
+                    state = self._convertNameToState(name);
+
+                console.log("Value of "+ state + " changed to " + value);
+                self.setState(state, value);
+            });
+
+        },
+        _accessByPath: function(obj, path, val) {
+            var parts = path.split('.'),
+                depth = parts.length,
+                setter = (typeof val !== "undefined") ? true : false;
+
+            return parts.reduce(function(o, key, i) {
+                if (setter && (i + 1) === depth) {
+                    o[key] = val;
+                }
+                return key in o ? o[key] : {};
+            }, obj);
+        },
+        _convertNameToState: function(name) {
+            return name.replace("_", ".").split("-").reduce(function(result, value) {
+                return result + value.charAt(0).toUpperCase() + value.substring(1);
             });
         },
         detachListeners: function() {
             $(".controls input[type=file]").off("change");
-            $(".controls .reader-group").off("change", "input");
+            $(".controls .reader-config-group").off("change", "input, select");
+            $(".controls button").off("click");
+
         },
         decode: function(src) {
-            Quagga.decodeSingle({
-                decoder: {
-                    readers : [App.config.reader + '_reader']
-                },
-                locate : true,
-                src : src
-            }, function(result) {});
+            var self = this,
+                config = $.extend({}, self.state, {src: src});
+
+            Quagga.decodeSingle(config, function(result) {});
+        },
+        setState: function(path, value) {
+            var self = this;
+
+            if (typeof self._accessByPath(self.inputMapper, path) === "function") {
+                value = self._accessByPath(self.inputMapper, path)(value);
+            }
+
+            self._accessByPath(self.state, path, value);
+
+            console.log(JSON.stringify(self.state));
+            App.detachListeners();
+            App.init();
+        },
+        inputMapper: {
+            inputStream: {
+                size: function(value){
+                    return parseInt(value);
+                }
+            },
+            numOfWorkers: function(value) {
+                return parseInt(value);
+            },
+            decoder: {
+                readers: function(value) {
+                    return [value + "_reader"];
+                }
+            }
+        },
+        state: {
+            inputStream: {
+                size: 800
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: false
+            },
+            numOfWorkers: 1,
+            decoder: {
+                readers: ["code_128_reader"]
+            },
+            locate: true,
+            src: null
         }
     };
     
