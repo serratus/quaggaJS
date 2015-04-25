@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-04-16)
+- [Changelog](#changelog) (2015-04-25)
 
 ## What is QuaggaJS?
 
@@ -237,6 +237,7 @@ The default `config` object is set as followed:
   },
   locator: {
     halfSample: true,
+    patchSize: "medium", // x-small, small, medium, large, x-large
     showCanvas: false,
     showPatches: false,
     showFoundPatches: false,
@@ -290,6 +291,12 @@ configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-04-25
+- Improvements
+  - Added extended configuration to the file-input example
+  - Configurable ``patchSize`` for better adjustment to small/medium/large
+      barcodes
 
 ### 2015-04-16
 - Features

@@ -4724,6 +4724,71 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         return rgb;
     };
 
+    CVUtils._computeDivisors = function(n) {
+        var largeDivisors = [],
+            divisors = [],
+            i;
+
+        for (i = 1; i < Math.sqrt(n) + 1; i++) {
+            if (n % i === 0) {
+                divisors.push(i);
+                if (i !== n/i) {
+                    largeDivisors.unshift(Math.floor(n/i));
+                }
+            }
+        }
+        return divisors.concat(largeDivisors);
+    };
+
+    CVUtils._computeIntersection = function(arr1, arr2) {
+        var i = 0,
+            j = 0,
+            result = [];
+
+        while (i < arr1.length && j < arr2.length) {
+            if (arr1[i] === arr2[j]) {
+                result.push(arr1[i]);
+                i++;
+                j++;
+            } else if (arr1[i] > arr2[j]) {
+                j++;
+            } else {
+                i++;
+            }
+        }
+        return result;
+    };
+
+    CVUtils.calculatePatchSize = function(patchSize, imgSize) {
+        var divisorsX = this._computeDivisors(imgSize.x),
+            divisorsY = this._computeDivisors(imgSize.y),
+            wideSide = Math.max(imgSize.x, imgSize.y),
+            common = this._computeIntersection(divisorsX, divisorsY),
+            nrOfPatchesMap = {
+                "x-small": 60,
+                "small": 32,
+                "medium": 20,
+                "large": 15,
+                "x-large": 10
+            },
+            nrOfPatches = nrOfPatchesMap[patchSize] || nrOfPatchesMap.medium,
+            i = 0,
+            found = common[Math.floor(common.length/2)],
+            desiredPatchSize = wideSide/nrOfPatches;
+
+        while(i < (common.length - 1) && common[i] < desiredPatchSize) {
+            i++;
+        }
+        if (i > 0) {
+            if (Math.abs(common[i] - desiredPatchSize) > Math.abs(common[i-1] - desiredPatchSize)) {
+                found = common[i-1];
+            } else {
+                found = common[i];
+            }
+        }
+        return {x: found, y: found};
+    };
+
     return (CVUtils);
 });
 
@@ -5736,10 +5801,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             _currentImageWrapper = _inputImageWrapper;
         }
 
-        _patchSize = {
-            x : _config.patchSize * ( _config.halfSample ? 0.5 : 1),
-            y : _config.patchSize * ( _config.halfSample ? 0.5 : 1)
-        };
+        _patchSize = CVUtils.calculatePatchSize(_config.patchSize, _currentImageWrapper.size);
 
         _numPatches.x = _currentImageWrapper.size.x / _patchSize.x | 0;
         _numPatches.y = _currentImageWrapper.size.y / _patchSize.y | 0;
@@ -7355,7 +7417,7 @@ define('config',[],function(){
       },
       locator: {
         halfSample: true,
-        patchSize: 32,
+        patchSize: "medium", // x-small, small, medium, large, x-large
         showCanvas: false,
         showPatches: false,
         showFoundPatches: false,
@@ -7597,8 +7659,33 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
 /* global define,  vec2 */
 
 
-define('quagga',["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "image_debug"],
-function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, ImageDebug) {
+define('quagga',[
+        "code_128_reader",
+        "ean_reader",
+        "input_stream",
+        "image_wrapper",
+        "barcode_locator",
+        "barcode_decoder",
+        "frame_grabber",
+        "html_utils",
+        "config",
+        "events",
+        "camera_access",
+        "image_debug",
+        "cv_utils"],
+function(Code128Reader,
+         EANReader,
+         InputStream,
+         ImageWrapper,
+         BarcodeLocator,
+         BarcodeDecoder,
+         FrameGrabber,
+         HtmlUtils,
+         _config,
+         Events,
+         CameraAccess,
+         ImageDebug,
+         CVUtils) {
     
     
     var _inputStream,
@@ -7680,17 +7767,23 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     function checkImageConstraints() {
         var patchSize,
             width = _inputStream.getWidth(),
-            height = _inputStream.getHeight();
+            height = _inputStream.getHeight(),
+            halfSample = _config.locator.halfSample,
+            size = {
+                x: Math.floor(width * (halfSample ? 0.5 : 1)),
+                y: Math.floor(height * (halfSample ? 0.5 : 1))
+            };
 
         if (_config.locate) {
-            patchSize = _config.locator.patchSize * ( _config.locator.halfSample ? 0.5 : 1);
-            if ((width % patchSize) === 0 && (height % patchSize) === 0) {
+            patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+            if ((width % patchSize.x) === 0 && (height % patchSize.y) === 0) {
                 return true;
             }
         }
         throw new Error("Image dimensions do not comply with the current settings: Width (" +
                             width + " )and height (" + height +
-                            ") must a multiple of " + patchSize);
+                            ") must a multiple of " + patchSize.x);
     }
 
     function canRecord(cb) {
@@ -7989,17 +8082,18 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
-            config.inputStream = {
-                type : "ImageStream",
-                src : config.src,
-                sequence : false,
-                size: 800
-            };
-            config.numOfWorkers = 1;
-            config.locator = {
-                halfSample: false,
-                patchSize: 25
-            };
+            config = HtmlUtils.mergeObjects({
+                inputStream: {
+                    type : "ImageStream",
+                    sequence : false,
+                    size: 800,
+                    src: config.src
+                },
+                numOfWorkers: 1,
+                locator: {
+                    halfSample: false
+                }
+            }, config);
             this.init(config, function() {
                 Events.once("detected", function(result) {
                     _stopped = true;

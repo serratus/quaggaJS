@@ -2,8 +2,33 @@
 /* global define,  vec2 */
 
 
-define(["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "image_debug"],
-function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, ImageDebug) {
+define([
+        "code_128_reader",
+        "ean_reader",
+        "input_stream",
+        "image_wrapper",
+        "barcode_locator",
+        "barcode_decoder",
+        "frame_grabber",
+        "html_utils",
+        "config",
+        "events",
+        "camera_access",
+        "image_debug",
+        "cv_utils"],
+function(Code128Reader,
+         EANReader,
+         InputStream,
+         ImageWrapper,
+         BarcodeLocator,
+         BarcodeDecoder,
+         FrameGrabber,
+         HtmlUtils,
+         _config,
+         Events,
+         CameraAccess,
+         ImageDebug,
+         CVUtils) {
     "use strict";
     
     var _inputStream,
@@ -85,17 +110,23 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     function checkImageConstraints() {
         var patchSize,
             width = _inputStream.getWidth(),
-            height = _inputStream.getHeight();
+            height = _inputStream.getHeight(),
+            halfSample = _config.locator.halfSample,
+            size = {
+                x: Math.floor(width * (halfSample ? 0.5 : 1)),
+                y: Math.floor(height * (halfSample ? 0.5 : 1))
+            };
 
         if (_config.locate) {
-            patchSize = _config.locator.patchSize * ( _config.locator.halfSample ? 0.5 : 1);
-            if ((width % patchSize) === 0 && (height % patchSize) === 0) {
+            patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+            if ((width % patchSize.x) === 0 && (height % patchSize.y) === 0) {
                 return true;
             }
         }
         throw new Error("Image dimensions do not comply with the current settings: Width (" +
                             width + " )and height (" + height +
-                            ") must a multiple of " + patchSize);
+                            ") must a multiple of " + patchSize.x);
     }
 
     function canRecord(cb) {
@@ -394,17 +425,18 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
-            config.inputStream = {
-                type : "ImageStream",
-                src : config.src,
-                sequence : false,
-                size: 800
-            };
-            config.numOfWorkers = 1;
-            config.locator = {
-                halfSample: false,
-                patchSize: 25
-            };
+            config = HtmlUtils.mergeObjects({
+                inputStream: {
+                    type : "ImageStream",
+                    sequence : false,
+                    size: 800,
+                    src: config.src
+                },
+                numOfWorkers: 1,
+                locator: {
+                    halfSample: false
+                }
+            }, config);
             this.init(config, function() {
                 Events.once("detected", function(result) {
                     _stopped = true;
