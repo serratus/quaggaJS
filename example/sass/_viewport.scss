@@ -13,9 +13,31 @@
 }
 
 .controls {
-  .reader-group {
-    float: right;
+  fieldset {
     border: none;
+  }
+  .input-group {
+    float: left;
+    input, button {
+      display: block;
+    }
+  }
+  .reader-config-group {
+    float: right;
+
+    label {
+      display: block;
+      span {
+        width: 11rem;
+        display: inline-block;
+        text-align: right;
+      }
+    }
+  }
+  &:after {
+    content:'';
+    display: block;
+    clear: both;
   }
 }
 

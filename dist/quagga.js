@@ -1240,6 +1240,39 @@ define(
             throw BarcodeReader.PatternNotFoundException;
         };
 
+        EANReader.prototype._findStart = function() {
+            var self = this,
+                leadingWhitespaceStart,
+                offset = self._nextSet(self._row),
+                startInfo;
+
+            while(!startInfo) {
+                startInfo = self._findPattern(self.START_PATTERN, offset);
+                leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
+                if (leadingWhitespaceStart >= 0) {
+                    if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
+                        return startInfo;
+                    }
+                }
+                offset = startInfo.end;
+                startInfo = null;
+            }
+        };
+
+        EANReader.prototype._findEnd = function(offset) {
+            var self = this,
+                trailingWhitespaceEnd,
+                endInfo = self._findPattern(self.STOP_PATTERN, offset);
+
+            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
+        };
+
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
@@ -1250,7 +1283,7 @@ define(
                 decodedCodes = [];
 
             try {
-                startInfo = self._findPattern(self.START_PATTERN);
+                startInfo = self._findStart();
                 code = {
                     code : startInfo.code,
                     start : startInfo.start,
@@ -1288,7 +1321,11 @@ define(
                     result.push(code.code);
                 }
 
-                code = self._findPattern(self.STOP_PATTERN, code.end);
+                code = self._findEnd(code.end);
+                if (code === null){
+                    return null;
+                }
+
                 decodedCodes.push(code);
 
                 // Checksum
@@ -4724,6 +4761,71 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         return rgb;
     };
 
+    CVUtils._computeDivisors = function(n) {
+        var largeDivisors = [],
+            divisors = [],
+            i;
+
+        for (i = 1; i < Math.sqrt(n) + 1; i++) {
+            if (n % i === 0) {
+                divisors.push(i);
+                if (i !== n/i) {
+                    largeDivisors.unshift(Math.floor(n/i));
+                }
+            }
+        }
+        return divisors.concat(largeDivisors);
+    };
+
+    CVUtils._computeIntersection = function(arr1, arr2) {
+        var i = 0,
+            j = 0,
+            result = [];
+
+        while (i < arr1.length && j < arr2.length) {
+            if (arr1[i] === arr2[j]) {
+                result.push(arr1[i]);
+                i++;
+                j++;
+            } else if (arr1[i] > arr2[j]) {
+                j++;
+            } else {
+                i++;
+            }
+        }
+        return result;
+    };
+
+    CVUtils.calculatePatchSize = function(patchSize, imgSize) {
+        var divisorsX = this._computeDivisors(imgSize.x),
+            divisorsY = this._computeDivisors(imgSize.y),
+            wideSide = Math.max(imgSize.x, imgSize.y),
+            common = this._computeIntersection(divisorsX, divisorsY),
+            nrOfPatchesMap = {
+                "x-small": 60,
+                "small": 32,
+                "medium": 20,
+                "large": 15,
+                "x-large": 10
+            },
+            nrOfPatches = nrOfPatchesMap[patchSize] || nrOfPatchesMap.medium,
+            i = 0,
+            found = common[Math.floor(common.length/2)],
+            desiredPatchSize = wideSide/nrOfPatches;
+
+        while(i < (common.length - 1) && common[i] < desiredPatchSize) {
+            i++;
+        }
+        if (i > 0) {
+            if (Math.abs(common[i] - desiredPatchSize) > Math.abs(common[i-1] - desiredPatchSize)) {
+                found = common[i-1];
+            } else {
+                found = common[i];
+            }
+        }
+        return {x: found, y: found};
+    };
+
     return (CVUtils);
 });
 
@@ -5736,10 +5838,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             _currentImageWrapper = _inputImageWrapper;
         }
 
-        _patchSize = {
-            x : _config.patchSize * ( _config.halfSample ? 0.5 : 1),
-            y : _config.patchSize * ( _config.halfSample ? 0.5 : 1)
-        };
+        _patchSize = CVUtils.calculatePatchSize(_config.patchSize, _currentImageWrapper.size);
 
         _numPatches.x = _currentImageWrapper.size.x / _patchSize.x | 0;
         _numPatches.y = _currentImageWrapper.size.y / _patchSize.y | 0;
@@ -6322,23 +6421,23 @@ define('bresenham',[],function() {
             extrema = [],
             currentDir,
             dir,
-            threshold = (max - min) / 8,
+            threshold = (max - min) / 12,
             rThreshold = -threshold,
             i,
             j;
 
         // 1. find extrema
-        currentDir = line[0] > center ? Slope.DIR.DOWN : Slope.DIR.UP;
+        currentDir = line[0] > center ? Slope.DIR.UP : Slope.DIR.DOWN;
         extrema.push({
             pos : 0,
             val : line[0]
         });
         for ( i = 0; i < line.length - 1; i++) {
             slope = (line[i + 1] - line[i]);
-            if (slope < rThreshold) {
-                dir = Slope.DIR.UP;
-            } else if (slope > threshold) {
+            if (slope < rThreshold && line[i + 1] < (center*1.5)) {
                 dir = Slope.DIR.DOWN;
+            } else if (slope > threshold && line[i + 1] > (center*0.5)) {
+                dir = Slope.DIR.UP;
             } else {
                 dir = currentDir;
             }
@@ -7060,18 +7159,25 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
              * @param {Number} angle 
              */
             function getExtendedLine(line, angle, ext) {
-                var extension = {
-                        y : ext * Math.sin(angle),
-                        x : ext * Math.cos(angle)
+                function extendLine(amount) {
+                    var extension = {
+                        y : amount * Math.sin(angle),
+                        x : amount * Math.cos(angle)
                     };
-                    
-                line[0].y -= extension.y;
-                line[0].x -= extension.x;
-                line[1].y += extension.y;
-                line[1].x += extension.x;
+
+                    line[0].y -= extension.y;
+                    line[0].x -= extension.x;
+                    line[1].y += extension.y;
+                    line[1].x += extension.x;
+                }
 
                 // check if inside image
-                if (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                extendLine(ext);
+                while (ext > 1 && !inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                    ext -= Math.floor(ext/2);
+                    extendLine(-ext);
+                }
+                if (ext <= 1) {
                     return null;
                 }
                 return line;
@@ -7151,6 +7257,12 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                 return result;
             }
 
+            function getLineLength(line) {
+                return Math.sqrt(
+                    Math.pow(Math.abs(line[1].y - line[0].y), 2) +
+                    Math.pow(Math.abs(line[1].x - line[0].x), 2));
+            }
+
             /**
              * With the help of the configured readers (Code128 or EAN) this function tries to detect a 
              * valid barcode pattern within the given area.
@@ -7161,15 +7273,17 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                 var line,
                     lineAngle,
                     ctx = _canvas.ctx.overlay,
-                    result;
+                    result,
+                    lineLength;
 
                 if (config.drawBoundingBox && ctx) {
                     ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
                 }
 
                 line = getLine(box);
+                lineLength = getLineLength(line);
                 lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-                line = getExtendedLine(line, lineAngle, 10);
+                line = getExtendedLine(line, lineAngle, Math.floor(lineLength*0.07));
                 if(line === null){
                     return null;
                 }
@@ -7379,18 +7493,18 @@ define('config',[],function(){
       decoder:{
         drawBoundingBox: false,
         showFrequency: false,
-        drawScanline: true,
-        showPattern: true,
+        drawScanline: false,
+        showPattern: false,
         readers: [
           'code_128_reader'
         ]
       },
       locator: {
         halfSample: true,
-        patchSize: 64,
-        showCanvas: true,
+        patchSize: "medium", // x-small, small, medium, large, x-large
+        showCanvas: false,
         showPatches: false,
-        showFoundPatches: true,
+        showFoundPatches: false,
         showSkeleton: false,
         showLabels: false,
         showPatchLabels: false,
@@ -7629,8 +7743,33 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
 /* global define,  vec2 */
 
 
-define('quagga',["code_128_reader", "ean_reader", "input_stream", "image_wrapper", "barcode_locator", "barcode_decoder", "frame_grabber", "html_utils", "config", "events", "camera_access", "image_debug"],
-function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, BarcodeDecoder, FrameGrabber, HtmlUtils, _config, Events, CameraAccess, ImageDebug) {
+define('quagga',[
+        "code_128_reader",
+        "ean_reader",
+        "input_stream",
+        "image_wrapper",
+        "barcode_locator",
+        "barcode_decoder",
+        "frame_grabber",
+        "html_utils",
+        "config",
+        "events",
+        "camera_access",
+        "image_debug",
+        "cv_utils"],
+function(Code128Reader,
+         EANReader,
+         InputStream,
+         ImageWrapper,
+         BarcodeLocator,
+         BarcodeDecoder,
+         FrameGrabber,
+         HtmlUtils,
+         _config,
+         Events,
+         CameraAccess,
+         ImageDebug,
+         CVUtils) {
     
     
     var _inputStream,
@@ -7712,17 +7851,23 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
     function checkImageConstraints() {
         var patchSize,
             width = _inputStream.getWidth(),
-            height = _inputStream.getHeight();
+            height = _inputStream.getHeight(),
+            halfSample = _config.locator.halfSample,
+            size = {
+                x: Math.floor(width * (halfSample ? 0.5 : 1)),
+                y: Math.floor(height * (halfSample ? 0.5 : 1))
+            };
 
         if (_config.locate) {
-            patchSize = _config.locator.patchSize * ( _config.locator.halfSample ? 0.5 : 1);
-            if ((width % patchSize) === 0 && (height % patchSize) === 0) {
+            patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+            if ((width % patchSize.x) === 0 && (height % patchSize.y) === 0) {
                 return true;
             }
         }
         throw new Error("Image dimensions do not comply with the current settings: Width (" +
                             width + " )and height (" + height +
-                            ") must a multiple of " + patchSize);
+                            ") must a multiple of " + patchSize.x);
     }
 
     function canRecord(cb) {
@@ -8021,17 +8166,18 @@ function(Code128Reader, EANReader, InputStream, ImageWrapper, BarcodeLocator, Ba
         },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
-            config.inputStream = {
-                type : "ImageStream",
-                src : config.src,
-                sequence : false,
-                size: 800
-            };
-            config.numOfWorkers = 0;
-            config.locator = {
-                halfSample: false,
-                patchSize: 40
-            };
+            config = HtmlUtils.mergeObjects({
+                inputStream: {
+                    type : "ImageStream",
+                    sequence : false,
+                    size: 800,
+                    src: config.src
+                },
+                numOfWorkers: 1,
+                locator: {
+                    halfSample: false
+                }
+            }, config);
             this.init(config, function() {
                 Events.once("detected", function(result) {
                     _stopped = true;

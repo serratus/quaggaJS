@@ -34,18 +34,55 @@
         access through <code>getUserMedia</code> is still very limited.</p>
 
     <div class="controls">
-        <input type="file" capture/>
-        <fieldset class="reader-group">
-            <label>UPC</label>
-            <input type="radio" name="reader" value="upc" checked />
-            <label>Code39</label>
-            <input type="radio" name="reader" value="codabar" />
-            <label>Code128</label>
-            <input type="radio" name="reader" value="code_128"/>
-            <label>EAN</label>
-            <input type="radio" name="reader" value="ean"/>
-            <label>Code39</label>
-            <input type="radio" name="reader" value="code_39"/>
+        <fieldset class="input-group">
+            <input type="file" capture/>
+            <button>Rerun</button>
+        </fieldset>
+        <fieldset class="reader-config-group">
+            <label>
+                <span>Barcode-Type</span>
+                <select name="decoder_readers">
+                    <option value="code_128">Code 128</option>
+                    <option value="code_39">Code 39</option>
+                    <option value="ean" selected="selected">EAN</option>
+                    <option value="codabar">Codabar</option>
+                </select>
+            </label>
+            <label>
+                <span>Resolution (long side)</span>
+                <select name="input-stream_size">
+                    <option value="320">320px</option>
+                    <option selected="selected" value="640">640px</option>
+                    <option value="800">800px</option>
+                    <option value="1280">1280px</option>
+                    <option value="1600">1600px</option>
+                    <option value="1920">1920px</option>
+                </select>
+            </label>
+            <label>
+                <span>Patch-Size</span>
+                <select name="locator_patch-size">
+                    <option value="x-small">x-small</option>
+                    <option value="small">small</option>
+                    <option value="medium">medium</option>
+                    <option selected="selected" value="large">large</option>
+                    <option value="x-large">x-large</option>
+                </select>
+            </label>
+            <label>
+                <span>Half-Sample</span>
+                <input type="checkbox" name="locator_half-sample" />
+            </label>
+            <label>
+                <span>Workers</span>
+                <select name="numOfWorkers">
+                    <option selected="selected" value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="8">8</option>
+                </select>
+            </label>
         </fieldset>
     </div>
     <div id="result_strip">

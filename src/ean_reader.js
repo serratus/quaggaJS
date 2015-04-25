@@ -167,6 +167,39 @@ define(
             throw BarcodeReader.PatternNotFoundException;
         };
 
+        EANReader.prototype._findStart = function() {
+            var self = this,
+                leadingWhitespaceStart,
+                offset = self._nextSet(self._row),
+                startInfo;
+
+            while(!startInfo) {
+                startInfo = self._findPattern(self.START_PATTERN, offset);
+                leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
+                if (leadingWhitespaceStart >= 0) {
+                    if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
+                        return startInfo;
+                    }
+                }
+                offset = startInfo.end;
+                startInfo = null;
+            }
+        };
+
+        EANReader.prototype._findEnd = function(offset) {
+            var self = this,
+                trailingWhitespaceEnd,
+                endInfo = self._findPattern(self.STOP_PATTERN, offset);
+
+            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
+        };
+
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
@@ -177,7 +210,7 @@ define(
                 decodedCodes = [];
 
             try {
-                startInfo = self._findPattern(self.START_PATTERN);
+                startInfo = self._findStart();
                 code = {
                     code : startInfo.code,
                     start : startInfo.start,
@@ -215,7 +248,11 @@ define(
                     result.push(code.code);
                 }
 
-                code = self._findPattern(self.STOP_PATTERN, code.end);
+                code = self._findEnd(code.end);
+                if (code === null){
+                    return null;
+                }
+
                 decodedCodes.push(code);
 
                 // Checksum
