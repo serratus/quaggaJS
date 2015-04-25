@@ -107,23 +107,23 @@ define(function() {
             extrema = [],
             currentDir,
             dir,
-            threshold = (max - min) / 8,
+            threshold = (max - min) / 12,
             rThreshold = -threshold,
             i,
             j;
 
         // 1. find extrema
-        currentDir = line[0] > center ? Slope.DIR.DOWN : Slope.DIR.UP;
+        currentDir = line[0] > center ? Slope.DIR.UP : Slope.DIR.DOWN;
         extrema.push({
             pos : 0,
             val : line[0]
         });
         for ( i = 0; i < line.length - 1; i++) {
             slope = (line[i + 1] - line[i]);
-            if (slope < rThreshold) {
-                dir = Slope.DIR.UP;
-            } else if (slope > threshold) {
+            if (slope < rThreshold && line[i + 1] < (center*1.5)) {
                 dir = Slope.DIR.DOWN;
+            } else if (slope > threshold && line[i + 1] > (center*0.5)) {
+                dir = Slope.DIR.UP;
             } else {
                 dir = currentDir;
             }

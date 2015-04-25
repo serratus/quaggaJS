@@ -1240,6 +1240,39 @@ define(
             throw BarcodeReader.PatternNotFoundException;
         };
 
+        EANReader.prototype._findStart = function() {
+            var self = this,
+                leadingWhitespaceStart,
+                offset = self._nextSet(self._row),
+                startInfo;
+
+            while(!startInfo) {
+                startInfo = self._findPattern(self.START_PATTERN, offset);
+                leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
+                if (leadingWhitespaceStart >= 0) {
+                    if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
+                        return startInfo;
+                    }
+                }
+                offset = startInfo.end;
+                startInfo = null;
+            }
+        };
+
+        EANReader.prototype._findEnd = function(offset) {
+            var self = this,
+                trailingWhitespaceEnd,
+                endInfo = self._findPattern(self.STOP_PATTERN, offset);
+
+            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
+        };
+
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
@@ -1250,7 +1283,7 @@ define(
                 decodedCodes = [];
 
             try {
-                startInfo = self._findPattern(self.START_PATTERN);
+                startInfo = self._findStart();
                 code = {
                     code : startInfo.code,
                     start : startInfo.start,
@@ -1288,7 +1321,11 @@ define(
                     result.push(code.code);
                 }
 
-                code = self._findPattern(self.STOP_PATTERN, code.end);
+                code = self._findEnd(code.end);
+                if (code === null){
+                    return null;
+                }
+
                 decodedCodes.push(code);
 
                 // Checksum
@@ -6384,23 +6421,23 @@ define('bresenham',[],function() {
             extrema = [],
             currentDir,
             dir,
-            threshold = (max - min) / 8,
+            threshold = (max - min) / 12,
             rThreshold = -threshold,
             i,
             j;
 
         // 1. find extrema
-        currentDir = line[0] > center ? Slope.DIR.DOWN : Slope.DIR.UP;
+        currentDir = line[0] > center ? Slope.DIR.UP : Slope.DIR.DOWN;
         extrema.push({
             pos : 0,
             val : line[0]
         });
         for ( i = 0; i < line.length - 1; i++) {
             slope = (line[i + 1] - line[i]);
-            if (slope < rThreshold) {
-                dir = Slope.DIR.UP;
-            } else if (slope > threshold) {
+            if (slope < rThreshold && line[i + 1] < (center*1.5)) {
                 dir = Slope.DIR.DOWN;
+            } else if (slope > threshold && line[i + 1] > (center*0.5)) {
+                dir = Slope.DIR.UP;
             } else {
                 dir = currentDir;
             }
@@ -7090,18 +7127,25 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
              * @param {Number} angle 
              */
             function getExtendedLine(line, angle, ext) {
-                var extension = {
-                        y : ext * Math.sin(angle),
-                        x : ext * Math.cos(angle)
+                function extendLine(amount) {
+                    var extension = {
+                        y : amount * Math.sin(angle),
+                        x : amount * Math.cos(angle)
                     };
-                    
-                line[0].y -= extension.y;
-                line[0].x -= extension.x;
-                line[1].y += extension.y;
-                line[1].x += extension.x;
+
+                    line[0].y -= extension.y;
+                    line[0].x -= extension.x;
+                    line[1].y += extension.y;
+                    line[1].x += extension.x;
+                }
 
                 // check if inside image
-                if (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                extendLine(ext);
+                while (ext > 1 && !inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                    ext -= Math.floor(ext/2);
+                    extendLine(-ext);
+                }
+                if (ext <= 1) {
                     return null;
                 }
                 return line;
@@ -7181,6 +7225,12 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                 return result;
             }
 
+            function getLineLength(line) {
+                return Math.sqrt(
+                    Math.pow(Math.abs(line[1].y - line[0].y), 2) +
+                    Math.pow(Math.abs(line[1].x - line[0].x), 2));
+            }
+
             /**
              * With the help of the configured readers (Code128 or EAN) this function tries to detect a 
              * valid barcode pattern within the given area.
@@ -7191,15 +7241,17 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                 var line,
                     lineAngle,
                     ctx = _canvas.ctx.overlay,
-                    result;
+                    result,
+                    lineLength;
 
                 if (config.drawBoundingBox && ctx) {
                     ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
                 }
 
                 line = getLine(box);
+                lineLength = getLineLength(line);
                 lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-                line = getExtendedLine(line, lineAngle, 10);
+                line = getExtendedLine(line, lineAngle, Math.floor(lineLength*0.07));
                 if(line === null){
                     return null;
                 }
@@ -7402,7 +7454,7 @@ define('config',[],function(){
       debug: false,
       controls: false,
       locate: true,
-      numOfWorkers: 4,
+      numOfWorkers: 0,
       visual: {
         show: true
       },

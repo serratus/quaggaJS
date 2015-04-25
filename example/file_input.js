@@ -92,15 +92,17 @@ $(function() {
         },
         state: {
             inputStream: {
-                size: 800
+                size: 640
             },
             locator: {
-                patchSize: "medium",
+                patchSize: "large",
                 halfSample: false
             },
-            numOfWorkers: 1,
+            numOfWorkers: 0,
             decoder: {
-                readers: ["code_128_reader"]
+                readers: ["ean_reader"],
+                showFrequency: true,
+                showPattern: true
             },
             locate: true,
             src: null

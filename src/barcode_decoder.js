@@ -96,18 +96,25 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_re
              * @param {Number} angle 
              */
             function getExtendedLine(line, angle, ext) {
-                var extension = {
-                        y : ext * Math.sin(angle),
-                        x : ext * Math.cos(angle)
+                function extendLine(amount) {
+                    var extension = {
+                        y : amount * Math.sin(angle),
+                        x : amount * Math.cos(angle)
                     };
-                    
-                line[0].y -= extension.y;
-                line[0].x -= extension.x;
-                line[1].y += extension.y;
-                line[1].x += extension.x;
+
+                    line[0].y -= extension.y;
+                    line[0].x -= extension.x;
+                    line[1].y += extension.y;
+                    line[1].x += extension.x;
+                }
 
                 // check if inside image
-                if (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                extendLine(ext);
+                while (ext > 1 && !inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                    ext -= Math.floor(ext/2);
+                    extendLine(-ext);
+                }
+                if (ext <= 1) {
                     return null;
                 }
                 return line;
@@ -187,6 +194,12 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_re
                 return result;
             }
 
+            function getLineLength(line) {
+                return Math.sqrt(
+                    Math.pow(Math.abs(line[1].y - line[0].y), 2) +
+                    Math.pow(Math.abs(line[1].x - line[0].x), 2));
+            }
+
             /**
              * With the help of the configured readers (Code128 or EAN) this function tries to detect a 
              * valid barcode pattern within the given area.
@@ -197,15 +210,17 @@ define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_re
                 var line,
                     lineAngle,
                     ctx = _canvas.ctx.overlay,
-                    result;
+                    result,
+                    lineLength;
 
                 if (config.drawBoundingBox && ctx) {
                     ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
                 }
 
                 line = getLine(box);
+                lineLength = getLineLength(line);
                 lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-                line = getExtendedLine(line, lineAngle, 10);
+                line = getExtendedLine(line, lineAngle, Math.floor(lineLength*0.07));
                 if(line === null){
                     return null;
                 }
