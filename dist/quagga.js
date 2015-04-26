@@ -1273,13 +1273,50 @@ define(
             return null;
         };
 
+        EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this,
+                codeFrequency = 0x0;
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end);
+                if (code.code >= self.CODE_G_START) {
+                    code.code = code.code - self.CODE_G_START;
+                    codeFrequency |= 1 << (5 - i);
+                } else {
+                    codeFrequency |= 0 << (5 - i);
+                }
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+
+            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
+                if (codeFrequency === self.CODE_FREQUENCY[i]) {
+                    result.unshift(i);
+                    break;
+                }
+            }
+
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            if (code === null) {
+                return null;
+            }
+            decodedCodes.push(code);
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end, self.CODE_G_START);
+                decodedCodes.push(code);
+                result.push(code.code);
+            }
+
+            return code;
+        };
+
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
                 code = null, 
                 result = [],
-                i,
-                codeFrequency = 0x0,
                 decodedCodes = [];
 
             try {
@@ -1290,37 +1327,7 @@ define(
                     end : startInfo.end
                 };
                 decodedCodes.push(code);
-                for ( i = 0; i < 6; i++) {
-                    code = self._decodeCode(code.end);
-                    if (code.code >= self.CODE_G_START) {
-                        code.code = code.code - self.CODE_G_START;
-                        codeFrequency |= 1 << (5 - i);
-                    } else {
-                        codeFrequency |= 0 << (5 - i);
-                    }
-                    result.push(code.code);
-                    decodedCodes.push(code);
-                }
-
-                for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
-                    if (codeFrequency === self.CODE_FREQUENCY[i]) {
-                        result.unshift(i);
-                        break;
-                    }
-                }
-
-                code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
-                if (code === null) {
-                    return null;
-                }
-                decodedCodes.push(code);
-
-                for ( i = 0; i < 6; i++) {
-                    code = self._decodeCode(code.end, self.CODE_G_START);
-                    decodedCodes.push(code);
-                    result.push(code.code);
-                }
-
+                code = self._decodePayload(code, result, decodedCodes);
                 code = self._findEnd(code.end);
                 if (code === null){
                     return null;
@@ -7063,12 +7070,75 @@ define(
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_reader', 'codabar_reader', 'upc_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader, Code39Reader, CodabarReader, UPCReader) {
+define(
+    'ean_8_reader',[
+        "./ean_reader"
+    ],
+    function(EANReader) {
+        
+
+        function EAN8Reader() {
+            EANReader.call(this);
+        }
+
+        EAN8Reader.prototype = Object.create(EANReader.prototype);
+        EAN8Reader.prototype.constructor = EAN8Reader;
+
+        EAN8Reader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this;
+
+            for ( i = 0; i < 4; i++) {
+                code = self._decodeCode(code.end);
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            if (code === null) {
+                return null;
+            }
+            decodedCodes.push(code);
+
+            for ( i = 0; i < 4; i++) {
+                code = self._decodeCode(code.end, self.CODE_G_START);
+                decodedCodes.push(code);
+                result.push(code.code);
+            }
+
+            return code;
+        };
+
+        return (EAN8Reader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define('barcode_decoder',[
+    "bresenham",
+    "image_debug",
+    'code_128_reader',
+    'ean_reader',
+    'code_39_reader',
+    'codabar_reader',
+    'upc_reader',
+    'ean_8_reader'
+], function(
+    Bresenham,
+    ImageDebug,
+    Code128Reader,
+    EANReader,
+    Code39Reader,
+    CodabarReader,
+    UPCReader,
+    EAN8Reader) {
     
     
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
+        ean_8_reader: EAN8Reader,
         code_39_reader: Code39Reader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader

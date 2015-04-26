@@ -200,13 +200,50 @@ define(
             return null;
         };
 
+        EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this,
+                codeFrequency = 0x0;
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end);
+                if (code.code >= self.CODE_G_START) {
+                    code.code = code.code - self.CODE_G_START;
+                    codeFrequency |= 1 << (5 - i);
+                } else {
+                    codeFrequency |= 0 << (5 - i);
+                }
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+
+            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
+                if (codeFrequency === self.CODE_FREQUENCY[i]) {
+                    result.unshift(i);
+                    break;
+                }
+            }
+
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            if (code === null) {
+                return null;
+            }
+            decodedCodes.push(code);
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end, self.CODE_G_START);
+                decodedCodes.push(code);
+                result.push(code.code);
+            }
+
+            return code;
+        };
+
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
                 code = null, 
                 result = [],
-                i,
-                codeFrequency = 0x0,
                 decodedCodes = [];
 
             try {
@@ -217,37 +254,7 @@ define(
                     end : startInfo.end
                 };
                 decodedCodes.push(code);
-                for ( i = 0; i < 6; i++) {
-                    code = self._decodeCode(code.end);
-                    if (code.code >= self.CODE_G_START) {
-                        code.code = code.code - self.CODE_G_START;
-                        codeFrequency |= 1 << (5 - i);
-                    } else {
-                        codeFrequency |= 0 << (5 - i);
-                    }
-                    result.push(code.code);
-                    decodedCodes.push(code);
-                }
-
-                for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
-                    if (codeFrequency === self.CODE_FREQUENCY[i]) {
-                        result.unshift(i);
-                        break;
-                    }
-                }
-
-                code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
-                if (code === null) {
-                    return null;
-                }
-                decodedCodes.push(code);
-
-                for ( i = 0; i < 6; i++) {
-                    code = self._decodeCode(code.end, self.CODE_G_START);
-                    decodedCodes.push(code);
-                    result.push(code.code);
-                }
-
+                code = self._decodePayload(code, result, decodedCodes);
                 code = self._findEnd(code.end);
                 if (code === null){
                     return null;

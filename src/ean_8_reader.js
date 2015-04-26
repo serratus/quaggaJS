@@ -1,0 +1,45 @@
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
+    [
+        "./ean_reader"
+    ],
+    function(EANReader) {
+        "use strict";
+
+        function EAN8Reader() {
+            EANReader.call(this);
+        }
+
+        EAN8Reader.prototype = Object.create(EANReader.prototype);
+        EAN8Reader.prototype.constructor = EAN8Reader;
+
+        EAN8Reader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this;
+
+            for ( i = 0; i < 4; i++) {
+                code = self._decodeCode(code.end);
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            if (code === null) {
+                return null;
+            }
+            decodedCodes.push(code);
+
+            for ( i = 0; i < 4; i++) {
+                code = self._decodeCode(code.end, self.CODE_G_START);
+                decodedCodes.push(code);
+                result.push(code.code);
+            }
+
+            return code;
+        };
+
+        return (EAN8Reader);
+    }
+);

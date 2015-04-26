@@ -7,7 +7,7 @@ $(function() {
                     type : "LiveStream"
                 },
                 decoder : {
-                    readers : ["upc_reader"]
+                    readers : ["ean_8_reader"]
                 }
             }, function() {
                 App.attachListeners();

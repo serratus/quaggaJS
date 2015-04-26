@@ -1,12 +1,30 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define(["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_reader', 'codabar_reader', 'upc_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader, Code39Reader, CodabarReader, UPCReader) {
+define([
+    "bresenham",
+    "image_debug",
+    'code_128_reader',
+    'ean_reader',
+    'code_39_reader',
+    'codabar_reader',
+    'upc_reader',
+    'ean_8_reader'
+], function(
+    Bresenham,
+    ImageDebug,
+    Code128Reader,
+    EANReader,
+    Code39Reader,
+    CodabarReader,
+    UPCReader,
+    EAN8Reader) {
     "use strict";
     
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
+        ean_8_reader: EAN8Reader,
         code_39_reader: Code39Reader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader

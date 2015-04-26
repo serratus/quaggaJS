@@ -99,7 +99,7 @@ $(function() {
             },
             numOfWorkers: 0,
             decoder: {
-                readers: ["ean_reader"],
+                readers: ["ean_8_reader"],
                 showFrequency: true,
                 showPattern: true
             },
