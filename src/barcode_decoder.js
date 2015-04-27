@@ -9,7 +9,8 @@ define([
     'code_39_reader',
     'codabar_reader',
     'upc_reader',
-    'ean_8_reader'
+    'ean_8_reader',
+    'upc_e_reader'
 ], function(
     Bresenham,
     ImageDebug,
@@ -18,7 +19,8 @@ define([
     Code39Reader,
     CodabarReader,
     UPCReader,
-    EAN8Reader) {
+    EAN8Reader,
+    UPCEReader) {
     "use strict";
     
     var readers = {
@@ -27,7 +29,8 @@ define([
         ean_8_reader: EAN8Reader,
         code_39_reader: Code39Reader,
         codabar_reader: CodabarReader,
-        upc_reader: UPCReader
+        upc_reader: UPCReader,
+        upc_e_reader: UPCEReader
     };
     var BarcodeDecoder = {
         create : function(config, inputImageWrapper) {
@@ -239,7 +242,7 @@ define([
                 line = getLine(box);
                 lineLength = getLineLength(line);
                 lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-                line = getExtendedLine(line, lineAngle, Math.floor(lineLength*0.07));
+                line = getExtendedLine(line, lineAngle, Math.floor(lineLength*0.1));
                 if(line === null){
                     return null;
                 }

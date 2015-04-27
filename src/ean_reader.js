@@ -186,10 +186,9 @@ define(
             }
         };
 
-        EANReader.prototype._findEnd = function(offset) {
+        EANReader.prototype._verifyTrailingWhitespace = function(endInfo) {
             var self = this,
-                trailingWhitespaceEnd,
-                endInfo = self._findPattern(self.STOP_PATTERN, offset);
+                trailingWhitespaceEnd;
 
             trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
             if (trailingWhitespaceEnd < self._row.length) {
@@ -197,7 +196,13 @@ define(
                     return endInfo;
                 }
             }
-            return null;
+        };
+
+        EANReader.prototype._findEnd = function(offset, isWhite) {
+            var self = this,
+                endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite);
+
+            return self._verifyTrailingWhitespace(endInfo);
         };
 
         EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
@@ -255,7 +260,7 @@ define(
                 };
                 decodedCodes.push(code);
                 code = self._decodePayload(code, result, decodedCodes);
-                code = self._findEnd(code.end);
+                code = self._findEnd(code.end, false);
                 if (code === null){
                     return null;
                 }

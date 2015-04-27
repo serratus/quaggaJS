@@ -99,7 +99,7 @@ $(function() {
             },
             numOfWorkers: 0,
             decoder: {
-                readers: ["ean_8_reader"],
+                readers: ["upc_e_reader"],
                 showFrequency: true,
                 showPattern: true
             },
