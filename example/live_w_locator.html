@@ -26,24 +26,60 @@
             and <strong>EAN</strong> to test different scenarios.
             It works best if your camera has built-in auto-focus.
             </p>
-      <div class="controls">
-        <button class="stop">Stop</button>
-        <fieldset class="reader-group">
-            <label>EAN-8</label>
-            <input type="radio" name="reader" value="ean_8" checked />
-            <label>UPC</label>
-            <input type="radio" name="reader" value="upc" />
-            <label>Code39</label>
-            <input type="radio" name="reader" value="codabar" />
-            <label>Code128</label>
-            <input type="radio" name="reader" value="code_128" />
-            <label>EAN</label>
-            <input type="radio" name="reader" value="ean" />
-            <label>Code39</label>
-            <input type="radio" name="reader" value="code_39" />
-        </fieldset>
-        <br clear="all" />
-      </div>
+        <div class="controls">
+            <fieldset class="input-group">
+                <button class="stop">Stop</button>
+            </fieldset>
+            <fieldset class="reader-config-group">
+                <label>
+                    <span>Barcode-Type</span>
+                    <select name="decoder_readers">
+                        <option value="code_128">Code 128</option>
+                        <option value="code_39">Code 39</option>
+                        <option value="ean" selected="selected">EAN</option>
+                        <option value="ean_8">EAN-8</option>
+                        <option value="upc">UPC</option>
+                        <option value="upc_e">UPC-E</option>
+                        <option value="codabar">Codabar</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Resolution (long side)</span>
+                    <select name="input-stream_constraints">
+                        <option value="320x240">320px</option>
+                        <option selected="selected" value="640x480">640px</option>
+                        <option value="800x600">800px</option>
+                        <option value="1280x720">1280px</option>
+                        <option value="1600x960">1600px</option>
+                        <option value="1920x1080">1920px</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Patch-Size</span>
+                    <select name="locator_patch-size">
+                        <option value="x-small">x-small</option>
+                        <option value="small">small</option>
+                        <option selected="selected" value="medium">medium</option>
+                        <option value="large">large</option>
+                        <option value="x-large">x-large</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Half-Sample</span>
+                    <input type="checkbox" checked="checked" name="locator_half-sample" />
+                </label>
+                <label>
+                    <span>Workers</span>
+                    <select name="numOfWorkers">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option selected="selected" value="4">4</option>
+                        <option value="8">8</option>
+                    </select>
+                </label>
+            </fieldset>
+        </div>
       <div id="result_strip">
         <ul class="thumbnails"></ul>
       </div>

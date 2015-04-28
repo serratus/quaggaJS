@@ -1274,7 +1274,7 @@ define(
 
         EANReader.prototype._findEnd = function(offset, isWhite) {
             var self = this,
-                endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite);
+                endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite, false);
 
             return self._verifyTrailingWhitespace(endInfo);
         };
@@ -1303,7 +1303,7 @@ define(
                 }
             }
 
-            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {
                 return null;
             }

@@ -3,9 +3,6 @@ $(function() {
         init: function() {
             App.attachListeners();
         },
-        config: {
-            reader: "upc"
-        },
         attachListeners: function() {
             var self = this;
 
