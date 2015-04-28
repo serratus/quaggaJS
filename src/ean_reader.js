@@ -196,6 +196,7 @@ define(
                     return endInfo;
                 }
             }
+            return null;
         };
 
         EANReader.prototype._findEnd = function(offset, isWhite) {
@@ -261,7 +262,7 @@ define(
                 decodedCodes.push(code);
                 code = self._decodePayload(code, result, decodedCodes);
                 code = self._findEnd(code.end, false);
-                if (code === null){
+                if (!code){
                     return null;
                 }
 

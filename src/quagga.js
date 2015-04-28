@@ -407,8 +407,14 @@ function(Code128Reader,
         },
         stop : function() {
             _stopped = true;
+            _workerPool.forEach(function(workerThread) {
+                workerThread.worker.terminate();
+                console.log("Worker terminated!");
+            });
+            _workerPool.length = 0;
             if (_config.inputStream.type === "LiveStream") {
                 CameraAccess.release();
+                _inputStream.clearEventHandlers();
             }
         },
         pause: function() {
