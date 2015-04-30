@@ -96,7 +96,7 @@ $(function() {
             },
             numOfWorkers: 0,
             decoder: {
-                readers: ["upc_e_reader"],
+                readers: ["code_128_reader"],
                 showFrequency: true,
                 showPattern: true
             },
