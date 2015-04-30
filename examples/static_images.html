@@ -7,25 +7,29 @@ showInMenu: false
 
 <section id="container" class="container">
     <h3>Working with static images</h3>
-    <p>This examples uses static image files as input which are loaded from the server on startup.
-        The locating and decoding process takes place inside the browser.
-        Hit the <strong>next</strong> button to try a different image. You can also switch between
-        two different test-sets. Each of those contains 10 images, demonstrating the capabilities of decoding
-        <strong>Code128</strong> and <strong>EAN</strong> encoded barcodes.
+    <p>This examples uses static image files as input which are loaded from
+        the server on startup. The locating and decoding process takes place
+        inside the browser. Hit the <strong>next</strong> button to try a
+        different image. You can also switch between different test-sets,
+        depending on the barcode-type.
     </p>
-  <div class="controls">
-    <button class="next">Next</button>
-    <fieldset class="reader-group">
-        <label>Code128</label>
-        <input type="radio" name="reader" value="code_128" checked />
-        <label>EAN</label>
-        <input type="radio" name="reader" value="ean" />
-        <label>Code39</label>
-        <input type="radio" name="reader" value="code_39" />
-        <label>Codabar</label>
-        <input type="radio" name="reader" value="codabar" />
-    </fieldset>
-  </div>
+    <div class="controls">
+        <fieldset class="input-group">
+            <button class="next">Next</button>
+        </fieldset>
+        <fieldset class="reader-config-group">
+            <span>Barcode-Type</span>
+            <select name="decoder_readers;input-stream_src">
+                <option value="code_128" selected="selected">Code 128</option>
+                <option value="code_39">Code 39</option>
+                <option value="ean">EAN</option>
+                <option value="ean_8">EAN-8</option>
+                <option value="upc">UPC</option>
+                <option value="upc_e">UPC-E</option>
+                <option value="codabar">Codabar</option>
+            </select>
+        </fieldset>
+    </div>
   <div id="result_strip">
     <ul class="thumbnails"></ul>
   </div>

@@ -7,12 +7,15 @@ showInMenu: false
 
 <section id="container" class="container">
     <h3>Working with file-input</h3>
-    <p>This example let's you select an image from your local filesystem. QuaggaJS then tries to decode the barcode using
-        the preferred method (<strong>Code128</strong>, <strong>EAN
-        </strong>, <strong>Code 39</strong> or <strong>Codabar</strong>)
-                There is no server interaction needed as the file is simply
-                accessed through the <a href="http://www.w3.org/TR/file-upload/">File API</a>.</p>
-    <p>This also works great on a wide range of mobile-phones where the camera access through <code>getUserMedia</code> is still very limited.</p>
+    <p>This example let's you select an image from your local filesystem.
+        There is no server interaction needed as the file is
+        simply accessed through the
+        <a href="http://www.w3.org/TR/file-upload/">File API</a>.
+    <p>This also works great on a wide range of mobile-phones where the
+        camera access through <code>getUserMedia</code> is still very
+        limited. </p>
+    <p>If the default configuration does not suit your use-case, you can
+        adjust various parameters of the localization and decoding process.</p>
   <div class="controls">
       <fieldset class="input-group">
           <input type="file" accept="image/*;capture=camera"/>
@@ -25,6 +28,9 @@ showInMenu: false
                   <option value="code_128" selected="selected">Code 128</option>
                   <option value="code_39">Code 39</option>
                   <option value="ean">EAN</option>
+                  <option value="ean_8">EAN-8</option>
+                  <option value="upc">UPC</option>
+                  <option value="upc_e">UPC-E</option>
                   <option value="codabar">Codabar</option>
               </select>
           </label>

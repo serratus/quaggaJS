@@ -7,16 +7,17 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-04-25)
+- [Changelog](#changelog) (2015-04-30)
 
 ## What is QuaggaJS?
 
 QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-
 time localization and decoding of various types of barcodes such as __EAN__,
-__CODE128__, __CODE39__ and __CODABAR__. The library is also capable of using
-`getUserMedia` to get direct access to the user's camera stream. Although the
-code relies on heavy image-processing even recent smartphones are capable of
-locating and decoding barcodes in real-time.
+__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__ and  __CODABAR__.
+The library is also capable of using `getUserMedia` to get direct access to
+the user's camera stream. Although the code relies on heavy image-processing
+even recent smartphones are capable of locating and decoding barcodes in
+real-time.
 
 Try some [examples](http://serratus.github.io/quaggaJS/examples) and check out
 the blog post ([How barcode-localization works in QuaggaJS][oberhofer_co_how])
@@ -298,6 +299,15 @@ work.
 
 ## <a name="changelog">Changelog</a>
 
+### 2015-04-30
+- Features
+  - Added support for [UPC-A and UPC-E][upc_wiki] barcodes
+  - Added support for [EAN-8][ean_8_wiki] barcodes
+- Improvements
+  - Added extended configuration to the
+    [live-video example]({{ site.baseurl }}/examples/live_w_locator.html)
+  - Releasing resources when calling ``Quagga.stop()``
+
 ### 2015-04-25
 - Improvements
   - Added extended configuration to the
@@ -353,5 +363,7 @@ introduced to the API.
 [karmaUrl]: http://karma-runner.github.io/
 [code39_wiki]: http://en.wikipedia.org/wiki/Code_39
 [codabar_wiki]: http://en.wikipedia.org/wiki/Codabar
+[upc_wiki]: http://en.wikipedia.org/wiki/Universal_Product_Code
+[ean_8_wiki]: http://en.wikipedia.org/wiki/EAN-8
 [oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
 [github_examples]: http://serratus.github.io/quaggaJS/examples

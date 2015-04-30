@@ -1240,55 +1240,105 @@ define(
             throw BarcodeReader.PatternNotFoundException;
         };
 
+        EANReader.prototype._findStart = function() {
+            var self = this,
+                leadingWhitespaceStart,
+                offset = self._nextSet(self._row),
+                startInfo;
+
+            while(!startInfo) {
+                startInfo = self._findPattern(self.START_PATTERN, offset);
+                leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
+                if (leadingWhitespaceStart >= 0) {
+                    if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
+                        return startInfo;
+                    }
+                }
+                offset = startInfo.end;
+                startInfo = null;
+            }
+        };
+
+        EANReader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
+        };
+
+        EANReader.prototype._findEnd = function(offset, isWhite) {
+            var self = this,
+                endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite, false);
+
+            return self._verifyTrailingWhitespace(endInfo);
+        };
+
+        EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this,
+                codeFrequency = 0x0;
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end);
+                if (code.code >= self.CODE_G_START) {
+                    code.code = code.code - self.CODE_G_START;
+                    codeFrequency |= 1 << (5 - i);
+                } else {
+                    codeFrequency |= 0 << (5 - i);
+                }
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+
+            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
+                if (codeFrequency === self.CODE_FREQUENCY[i]) {
+                    result.unshift(i);
+                    break;
+                }
+            }
+
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
+            if (code === null) {
+                return null;
+            }
+            decodedCodes.push(code);
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end, self.CODE_G_START);
+                decodedCodes.push(code);
+                result.push(code.code);
+            }
+
+            return code;
+        };
+
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
                 code = null, 
                 result = [],
-                i,
-                codeFrequency = 0x0,
                 decodedCodes = [];
 
             try {
-                startInfo = self._findPattern(self.START_PATTERN);
+                startInfo = self._findStart();
                 code = {
                     code : startInfo.code,
                     start : startInfo.start,
                     end : startInfo.end
                 };
                 decodedCodes.push(code);
-                for ( i = 0; i < 6; i++) {
-                    code = self._decodeCode(code.end);
-                    if (code.code >= self.CODE_G_START) {
-                        code.code = code.code - self.CODE_G_START;
-                        codeFrequency |= 1 << (5 - i);
-                    } else {
-                        codeFrequency |= 0 << (5 - i);
-                    }
-                    result.push(code.code);
-                    decodedCodes.push(code);
-                }
-
-                for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
-                    if (codeFrequency === self.CODE_FREQUENCY[i]) {
-                        result.unshift(i);
-                        break;
-                    }
-                }
-
-                code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
-                if (code === null) {
+                code = self._decodePayload(code, result, decodedCodes);
+                code = self._findEnd(code.end, false);
+                if (!code){
                     return null;
                 }
-                decodedCodes.push(code);
 
-                for ( i = 0; i < 6; i++) {
-                    code = self._decodeCode(code.end, self.CODE_G_START);
-                    decodedCodes.push(code);
-                    result.push(code.code);
-                }
-
-                code = self._findPattern(self.STOP_PATTERN, code.end);
                 decodedCodes.push(code);
 
                 // Checksum
@@ -1457,6 +1507,17 @@ define('input_stream',["image_loader"], function(ImageLoader) {
             } else {
                 video.addEventListener(event, f, bool);
             }
+        };
+
+        that.clearEventHandlers = function() {
+            _eventNames.forEach(function(eventName) {
+                var handlers = _eventHandlers[eventName];
+                if (handlers && handlers.length > 0) {
+                    handlers.forEach(function(handler) {
+                        video.removeEventListener(eventName, handler);
+                    });
+                }
+            });
         };
 
         that.trigger = function(eventName, args) {
@@ -6384,23 +6445,23 @@ define('bresenham',[],function() {
             extrema = [],
             currentDir,
             dir,
-            threshold = (max - min) / 8,
+            threshold = (max - min) / 12,
             rThreshold = -threshold,
             i,
             j;
 
         // 1. find extrema
-        currentDir = line[0] > center ? Slope.DIR.DOWN : Slope.DIR.UP;
+        currentDir = line[0] > center ? Slope.DIR.UP : Slope.DIR.DOWN;
         extrema.push({
             pos : 0,
             val : line[0]
         });
         for ( i = 0; i < line.length - 1; i++) {
             slope = (line[i + 1] - line[i]);
-            if (slope < rThreshold) {
-                dir = Slope.DIR.UP;
-            } else if (slope > threshold) {
+            if (slope < rThreshold && line[i + 1] < (center*1.5)) {
                 dir = Slope.DIR.DOWN;
+            } else if (slope > threshold && line[i + 1] > (center*0.5)) {
+                dir = Slope.DIR.UP;
             } else {
                 dir = currentDir;
             }
@@ -6995,14 +7056,221 @@ define(
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_reader', 'code_39_reader', 'codabar_reader'], function(Bresenham, ImageDebug, Code128Reader, EANReader, Code39Reader, CodabarReader) {
+define(
+    'upc_reader',[
+        "./ean_reader"
+    ],
+    function(EANReader) {
+        
+
+        function UPCReader() {
+            EANReader.call(this);
+        }
+
+        UPCReader.prototype = Object.create(EANReader.prototype);
+        UPCReader.prototype.constructor = UPCReader;
+
+        UPCReader.prototype._decode = function() {
+            var result = EANReader.prototype._decode.call(this);
+
+            if (result && result.code && result.code.length === 13 && result.code.charAt(0) === "0") {
+
+                result.code = result.code.substring(1);
+                return result;
+            }
+            return null;
+        };
+
+        return (UPCReader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
+    'ean_8_reader',[
+        "./ean_reader"
+    ],
+    function(EANReader) {
+        
+
+        function EAN8Reader() {
+            EANReader.call(this);
+        }
+
+        EAN8Reader.prototype = Object.create(EANReader.prototype);
+        EAN8Reader.prototype.constructor = EAN8Reader;
+
+        EAN8Reader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this;
+
+            for ( i = 0; i < 4; i++) {
+                code = self._decodeCode(code.end);
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            if (code === null) {
+                return null;
+            }
+            decodedCodes.push(code);
+
+            for ( i = 0; i < 4; i++) {
+                code = self._decodeCode(code.end, self.CODE_G_START);
+                decodedCodes.push(code);
+                result.push(code.code);
+            }
+
+            return code;
+        };
+
+        return (EAN8Reader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
+    'upc_e_reader',[
+        "./ean_reader"
+    ],
+    function(EANReader) {
+        
+
+        function UPCEReader() {
+            EANReader.call(this);
+        }
+
+        var properties = {
+            CODE_FREQUENCY : {value: [
+                [ 56, 52, 50, 49, 44, 38, 35, 42, 41, 37 ],
+                [7, 11, 13, 14, 19, 25, 28, 21, 22, 26]]},
+            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]}
+        };
+
+        UPCEReader.prototype = Object.create(EANReader.prototype, properties);
+        UPCEReader.prototype.constructor = UPCEReader;
+
+        UPCEReader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this,
+                codeFrequency = 0x0;
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end);
+                if (code.code >= self.CODE_G_START) {
+                    code.code = code.code - self.CODE_G_START;
+                    codeFrequency |= 1 << (5 - i);
+                } else {
+                    codeFrequency |= 0 << (5 - i);
+                }
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+            self._determineParity(codeFrequency, result);
+
+            return code;
+        };
+
+        UPCEReader.prototype._determineParity = function(codeFrequency, result) {
+            var self =this,
+                i,
+                nrSystem;
+
+            for (nrSystem = 0; nrSystem < self.CODE_FREQUENCY.length; nrSystem++){
+                for ( i = 0; i < self.CODE_FREQUENCY[nrSystem].length; i++) {
+                    if (codeFrequency === self.CODE_FREQUENCY[nrSystem][i]) {
+                        result.unshift(nrSystem);
+                        result.push(i);
+                        return;
+                    }
+                }
+            }
+        };
+
+        UPCEReader.prototype._convertToUPCA = function(result) {
+            var upca = [result[0]],
+                lastDigit = result[result.length - 2];
+
+            if (lastDigit <= 2) {
+                upca = upca.concat(result.slice(1, 3))
+                    .concat([lastDigit, 0, 0, 0, 0])
+                    .concat(result.slice(3, 6));
+            } else if (lastDigit === 3) {
+                upca = upca.concat(result.slice(1, 4))
+                    .concat([0 ,0, 0, 0, 0])
+                    .concat(result.slice(4,6));
+            } else if (lastDigit === 4) {
+                upca = upca.concat(result.slice(1, 5))
+                    .concat([0, 0, 0, 0, 0, result[5]]);
+            } else {
+                upca = upca.concat(result.slice(1, 6))
+                    .concat([0, 0, 0, 0, lastDigit]);
+            }
+
+            upca.push(result[result.length - 1]);
+            return upca;
+        };
+
+        UPCEReader.prototype._checksum = function(result) {
+            return EANReader.prototype._checksum.call(this, this._convertToUPCA(result));
+        };
+
+        UPCEReader.prototype._findEnd = function(offset, isWhite) {
+            isWhite = true;
+            return EANReader.prototype._findEnd.call(this, offset, isWhite);
+        };
+
+        UPCEReader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start)/2);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+        };
+
+        return (UPCEReader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define('barcode_decoder',[
+    "bresenham",
+    "image_debug",
+    'code_128_reader',
+    'ean_reader',
+    'code_39_reader',
+    'codabar_reader',
+    'upc_reader',
+    'ean_8_reader',
+    'upc_e_reader'
+], function(
+    Bresenham,
+    ImageDebug,
+    Code128Reader,
+    EANReader,
+    Code39Reader,
+    CodabarReader,
+    UPCReader,
+    EAN8Reader,
+    UPCEReader) {
     
     
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
+        ean_8_reader: EAN8Reader,
         code_39_reader: Code39Reader,
-        codabar_reader: CodabarReader
+        codabar_reader: CodabarReader,
+        upc_reader: UPCReader,
+        upc_e_reader: UPCEReader
     };
     var BarcodeDecoder = {
         create : function(config, inputImageWrapper) {
@@ -7090,18 +7358,25 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
              * @param {Number} angle 
              */
             function getExtendedLine(line, angle, ext) {
-                var extension = {
-                        y : ext * Math.sin(angle),
-                        x : ext * Math.cos(angle)
+                function extendLine(amount) {
+                    var extension = {
+                        y : amount * Math.sin(angle),
+                        x : amount * Math.cos(angle)
                     };
-                    
-                line[0].y -= extension.y;
-                line[0].x -= extension.x;
-                line[1].y += extension.y;
-                line[1].x += extension.x;
+
+                    line[0].y -= extension.y;
+                    line[0].x -= extension.x;
+                    line[1].y += extension.y;
+                    line[1].x += extension.x;
+                }
 
                 // check if inside image
-                if (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                extendLine(ext);
+                while (ext > 1 && !inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
+                    ext -= Math.floor(ext/2);
+                    extendLine(-ext);
+                }
+                if (ext <= 1) {
                     return null;
                 }
                 return line;
@@ -7181,6 +7456,12 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                 return result;
             }
 
+            function getLineLength(line) {
+                return Math.sqrt(
+                    Math.pow(Math.abs(line[1].y - line[0].y), 2) +
+                    Math.pow(Math.abs(line[1].x - line[0].x), 2));
+            }
+
             /**
              * With the help of the configured readers (Code128 or EAN) this function tries to detect a 
              * valid barcode pattern within the given area.
@@ -7191,15 +7472,17 @@ define('barcode_decoder',["bresenham", "image_debug", 'code_128_reader', 'ean_re
                 var line,
                     lineAngle,
                     ctx = _canvas.ctx.overlay,
-                    result;
+                    result,
+                    lineLength;
 
                 if (config.drawBoundingBox && ctx) {
                     ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
                 }
 
                 line = getLine(box);
+                lineLength = getLineLength(line);
                 lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-                line = getExtendedLine(line, lineAngle, 10);
+                line = getExtendedLine(line, lineAngle, Math.floor(lineLength*0.1));
                 if(line === null){
                     return null;
                 }
@@ -7531,7 +7814,8 @@ define('events',[],function() {
 
 define('camera_access',["html_utils"], function(HtmlUtils) {
     
-    var streamRef;
+    var streamRef,
+        loadedDataHandler;
     
     /**
      * Wraps browser-specific getUserMedia
@@ -7547,6 +7831,25 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
         }, failure);
     }
 
+    function loadedData(video, callback) {
+        var attempts = 10;
+
+        function checkVideo() {
+            if (attempts > 0) {
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    console.log(video.videoWidth + "px x " + video.videoHeight + "px");
+                    callback();
+                } else {
+                    window.setTimeout(checkVideo, 500);
+                }
+            } else {
+                callback('Unable to play video stream. Is webcam working?');
+            }
+            attempts--;
+        }
+        checkVideo();
+    }
+
     /**
      * Tries to attach the camera-stream to a given video-element
      * and calls the callback function when the content is ready
@@ -7557,25 +7860,11 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
     function initCamera(constraints, video, callback) {
         getUserMedia(constraints, function(src) {
             video.src = src;
-            video.addEventListener('loadeddata', function() {
-                var attempts = 10;
-
-                function checkVideo() {
-                    if (attempts > 0) {
-                        if (video.videoWidth > 0 && video.videoHeight > 0) {
-                            console.log(video.videoWidth + "px x " + video.videoHeight + "px");
-                            callback();
-                        } else {
-                            window.setTimeout(checkVideo, 500);
-                        }
-                    } else {
-                        callback('Unable to play video stream. Is webcam working?');
-                    }
-                    attempts--;
-                }
-
-                checkVideo();
-            }, false);
+            if (loadedDataHandler) {
+                video.removeEventListener("loadeddata", loadedDataHandler, false);
+            }
+            loadedDataHandler = loadedData.bind(null, video, callback);
+            video.addEventListener('loadeddata', loadedDataHandler, false);
             video.play();
         }, function(e) {
             console.log(e);
@@ -8064,8 +8353,14 @@ function(Code128Reader,
         },
         stop : function() {
             _stopped = true;
+            _workerPool.forEach(function(workerThread) {
+                workerThread.worker.terminate();
+                console.log("Worker terminated!");
+            });
+            _workerPool.length = 0;
             if (_config.inputStream.type === "LiveStream") {
                 CameraAccess.release();
+                _inputStream.clearEventHandlers();
             }
         },
         pause: function() {
