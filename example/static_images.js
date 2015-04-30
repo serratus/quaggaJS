@@ -16,7 +16,7 @@ $(function() {
             });
         },
         config: {
-            reader: "ean_8",
+            reader: "upc",
             length: 10
         },
         attachListeners: function() {
