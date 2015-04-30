@@ -16,7 +16,7 @@ $(function() {
             });
         },
         config: {
-            reader: "upc",
+            reader: "upc_e",
             length: 10
         },
         attachListeners: function() {
