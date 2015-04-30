@@ -7,10 +7,11 @@ quaggaJS
 
 QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-
 time localization and decoding of various types of barcodes such as __EAN__,
-__CODE128__, __CODE39__ and __CODABAR__. The library is also capable of using `getUserMedia`
-to get direct access to the user's camera stream. Although the code relies on
-heavy image-processing even recent smartphones are capable of locating and
-decoding barcodes in real-time.
+__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__ and  __CODABAR__.
+The library is also capable of using `getUserMedia` to get direct access to
+the user's camera stream. Although the code relies on heavy image-processing
+even recent smartphones are capable of locating and decoding barcodes in
+real-time.
 
 Try some [examples](http://serratus.github.io/quaggaJS/examples) and check out
 the blog post ([How barcode-localization works in QuaggaJS][oberhofer_co_how])
@@ -291,6 +292,14 @@ configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-04-30
+- Features
+  - Added support for [UPC-A and UPC-E][upc_wiki] barcodes
+  - Added support for [EAN-8][ean_8_wiki] barcodes
+- Improvements
+  - Added extended configuration to the live-video example
+  - Releasing resources when calling ``Quagga.stop()``
 
 ### 2015-04-25
 - Improvements
