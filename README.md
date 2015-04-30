@@ -355,5 +355,7 @@ introduced to the API.
 [karmaUrl]: http://karma-runner.github.io/
 [code39_wiki]: http://en.wikipedia.org/wiki/Code_39
 [codabar_wiki]: http://en.wikipedia.org/wiki/Codabar
+[upc_wiki]: http://en.wikipedia.org/wiki/Universal_Product_Code
+[ean_8_wiki]: http://en.wikipedia.org/wiki/EAN-8
 [oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
 [github_examples]: http://serratus.github.io/quaggaJS/examples
