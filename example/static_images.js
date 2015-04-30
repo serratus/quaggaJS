@@ -1,41 +1,95 @@
 $(function() {
     var App = {
         init: function() {
-            Quagga.init({
-                inputStream: { name: "Test",
-                   type: "ImageStream",
-                   src: "../test/fixtures/" + App.config.reader + "/",
-                   length: App.config.length
-                },
-                decoder : {
-                    readers : [App.config.reader + "_reader"]
-                }
-            }, function() {
+            Quagga.init(this.state, function() {
                 App.attachListeners();
                 Quagga.start();
             });
         },
         config: {
-            reader: "codabar",
+            reader: "code_128",
             length: 10
         },
         attachListeners: function() {
+            var self = this;
+
             $(".controls").on("click", "button.next", function(e) {
                 e.preventDefault();
                 Quagga.start();
             });
-            
-            $(".controls .reader-group").on("change", "input", function(e) {
+
+            $(".controls .reader-config-group").on("change", "input, select", function(e) {
                 e.preventDefault();
-                App.detachListeners();
-                Quagga.stop();
-                App.config.reader = e.target.value;
-                App.init();
+                var $target = $(e.target),
+                    value = $target.attr("type") === "checkbox" ? $target.prop("checked") : $target.val(),
+                    name = $target.attr("name"),
+                    states = self._convertNameToStates(name);
+
+                console.log("Value of "+ states + " changed to " + value);
+                self.setState(states, value);
             });
         },
         detachListeners: function() {
             $(".controls").off("click", "button.next");
-            $(".controls .reader-group").off("change", "input");
+            $(".controls .reader-config-group").off("change", "input, select");
+        },
+        _accessByPath: function(obj, path, val) {
+            var parts = path.split('.'),
+                depth = parts.length,
+                setter = (typeof val !== "undefined") ? true : false;
+
+            return parts.reduce(function(o, key, i) {
+                if (setter && (i + 1) === depth) {
+                    o[key] = val;
+                }
+                return key in o ? o[key] : {};
+            }, obj);
+        },
+        _convertNameToStates: function(names) {
+            return names.split(";").map(this._convertNameToState.bind(this));
+        },
+        _convertNameToState: function(name) {
+            return name.replace("_", ".").split("-").reduce(function(result, value) {
+                return result + value.charAt(0).toUpperCase() + value.substring(1);
+            });
+        },
+        setState: function(paths, value) {
+            var self = this;
+
+            paths.forEach(function(path) {
+                var mappedValue;
+                if (typeof self._accessByPath(self.inputMapper, path) === "function") {
+                    mappedValue = self._accessByPath(self.inputMapper, path)(value);
+                }
+                self._accessByPath(self.state, path, mappedValue);
+            });
+
+            console.log(JSON.stringify(self.state));
+            App.detachListeners();
+            Quagga.stop();
+            App.init();
+        },
+        inputMapper: {
+            decoder: {
+                readers: function(value) {
+                    return [value + "_reader"];
+                }
+            },
+            inputStream: {
+                src: function(value) {
+                    return "../test/fixtures/" + value + "/"
+                }
+            }
+        },
+        state: {
+            inputStream: { name: "Test",
+                type: "ImageStream",
+                src: "../test/fixtures/code_128/",
+                length: 10
+            },
+            decoder : {
+                readers : ["code_128_reader"]
+            }
         }
     };
     

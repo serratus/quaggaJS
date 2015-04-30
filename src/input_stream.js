@@ -68,6 +68,17 @@ define(["image_loader"], function(ImageLoader) {
             }
         };
 
+        that.clearEventHandlers = function() {
+            _eventNames.forEach(function(eventName) {
+                var handlers = _eventHandlers[eventName];
+                if (handlers && handlers.length > 0) {
+                    handlers.forEach(function(handler) {
+                        video.removeEventListener(eventName, handler);
+                    });
+                }
+            });
+        };
+
         that.trigger = function(eventName, args) {
             var j,
                 handlers = _eventHandlers[eventName];

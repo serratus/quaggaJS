@@ -29,17 +29,21 @@
             <strong>Code128</strong> and <strong>EAN</strong> encoded barcodes.
         </p>
       <div class="controls">
-        <button class="next">Next</button>
-        <fieldset class="reader-group">
-            <label>Codabar</label>
-            <input type="radio" name="reader" value="codabar" checked />
-            <label>Code39</label>
-            <input type="radio" name="reader" value="code_39" />
-            <label>Code128</label>
-            <input type="radio" name="reader" value="code_128" />
-            <label>EAN</label>
-            <input type="radio" name="reader" value="ean" />
-        </fieldset>
+          <fieldset class="input-group">
+              <button class="next">Next</button>
+          </fieldset>
+          <fieldset class="reader-config-group">
+              <span>Barcode-Type</span>
+              <select name="decoder_readers;input-stream_src">
+                  <option value="code_128" selected="selected">Code 128</option>
+                  <option value="code_39">Code 39</option>
+                  <option value="ean">EAN</option>
+                  <option value="ean_8">EAN-8</option>
+                  <option value="upc">UPC</option>
+                  <option value="upc_e">UPC-E</option>
+                  <option value="codabar">Codabar</option>
+              </select>
+          </fieldset>
       </div>
       <div id="result_strip">
         <ul class="thumbnails"></ul>

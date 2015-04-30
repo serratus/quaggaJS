@@ -3,7 +3,8 @@
 
 define(["html_utils"], function(HtmlUtils) {
     "use strict";
-    var streamRef;
+    var streamRef,
+        loadedDataHandler;
     
     /**
      * Wraps browser-specific getUserMedia
@@ -19,6 +20,25 @@ define(["html_utils"], function(HtmlUtils) {
         }, failure);
     }
 
+    function loadedData(video, callback) {
+        var attempts = 10;
+
+        function checkVideo() {
+            if (attempts > 0) {
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    console.log(video.videoWidth + "px x " + video.videoHeight + "px");
+                    callback();
+                } else {
+                    window.setTimeout(checkVideo, 500);
+                }
+            } else {
+                callback('Unable to play video stream. Is webcam working?');
+            }
+            attempts--;
+        }
+        checkVideo();
+    }
+
     /**
      * Tries to attach the camera-stream to a given video-element
      * and calls the callback function when the content is ready
@@ -29,25 +49,11 @@ define(["html_utils"], function(HtmlUtils) {
     function initCamera(constraints, video, callback) {
         getUserMedia(constraints, function(src) {
             video.src = src;
-            video.addEventListener('loadeddata', function() {
-                var attempts = 10;
-
-                function checkVideo() {
-                    if (attempts > 0) {
-                        if (video.videoWidth > 0 && video.videoHeight > 0) {
-                            console.log(video.videoWidth + "px x " + video.videoHeight + "px");
-                            callback();
-                        } else {
-                            window.setTimeout(checkVideo, 500);
-                        }
-                    } else {
-                        callback('Unable to play video stream. Is webcam working?');
-                    }
-                    attempts--;
-                }
-
-                checkVideo();
-            }, false);
+            if (loadedDataHandler) {
+                video.removeEventListener("loadeddata", loadedDataHandler, false);
+            }
+            loadedDataHandler = loadedData.bind(null, video, callback);
+            video.addEventListener('loadeddata', loadedDataHandler, false);
             video.play();
         }, function(e) {
             console.log(e);

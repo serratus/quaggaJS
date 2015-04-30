@@ -1,33 +1,103 @@
 $(function() {
     var App = {
         init : function() {
-            Quagga.init({
-                inputStream : {
-                    name : "Live",
-                    type : "LiveStream"
-                },
-                decoder : {
-                    readers : ["code_128_reader"]
-                }
-            }, function() {
+            Quagga.init(this.state, function() {
                 App.attachListeners();
                 Quagga.start();
             });
         },
-        attachListeners : function() {
-            $(".controls .reader-group").on("change", "input", function(e) {
-                e.preventDefault();
-                Quagga.setReaders([e.target.value + "_reader"]);
-            });
+        attachListeners: function() {
+            var self = this;
 
             $(".controls").on("click", "button.stop", function(e) {
                 e.preventDefault();
                 Quagga.stop();
             });
+
+            $(".controls .reader-config-group").on("change", "input, select", function(e) {
+                e.preventDefault();
+                var $target = $(e.target),
+                    value = $target.attr("type") === "checkbox" ? $target.prop("checked") : $target.val(),
+                    name = $target.attr("name"),
+                    state = self._convertNameToState(name);
+
+                console.log("Value of "+ state + " changed to " + value);
+                self.setState(state, value);
+            });
         },
-        detachListeners : function() {
-            $(".controls .reader-group").off("change", "input");
+        _accessByPath: function(obj, path, val) {
+            var parts = path.split('.'),
+                depth = parts.length,
+                setter = (typeof val !== "undefined") ? true : false;
+
+            return parts.reduce(function(o, key, i) {
+                if (setter && (i + 1) === depth) {
+                    o[key] = val;
+                }
+                return key in o ? o[key] : {};
+            }, obj);
+        },
+        _convertNameToState: function(name) {
+            return name.replace("_", ".").split("-").reduce(function(result, value) {
+                return result + value.charAt(0).toUpperCase() + value.substring(1);
+            });
+        },
+        detachListeners: function() {
             $(".controls").off("click", "button.stop");
+            $(".controls .reader-config-group").off("change", "input, select");
+        },
+        setState: function(path, value) {
+            var self = this;
+
+            if (typeof self._accessByPath(self.inputMapper, path) === "function") {
+                value = self._accessByPath(self.inputMapper, path)(value);
+            }
+
+            self._accessByPath(self.state, path, value);
+
+            console.log(JSON.stringify(self.state));
+            App.detachListeners();
+            Quagga.stop();
+            App.init();
+        },
+        inputMapper: {
+            inputStream: {
+                constraints: function(value){
+                    var values = value.split('x');
+                    return {
+                        width: parseInt(values[0]),
+                        height: parseInt(values[1]),
+                        facing: "environment"
+                    }
+                }
+            },
+            numOfWorkers: function(value) {
+                return parseInt(value);
+            },
+            decoder: {
+                readers: function(value) {
+                    return [value + "_reader"];
+                }
+            }
+        },
+        state: {
+            inputStream: {
+                type : "LiveStream",
+                constraints: {
+                    width: 640,
+                    height: 480,
+                    facing: "environment" // or user
+                }
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            numOfWorkers: 4,
+            decoder: {
+                readers : ["code_128_reader"]
+            },
+            locate: true
         },
         lastResult : null
     };

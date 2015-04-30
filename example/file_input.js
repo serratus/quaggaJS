@@ -3,10 +3,6 @@ $(function() {
         init: function() {
             App.attachListeners();
         },
-        config: {
-            reader: "code_128",
-            length: 10
-        },
         attachListeners: function() {
             var self = this;
 
@@ -92,15 +88,17 @@ $(function() {
         },
         state: {
             inputStream: {
-                size: 800
+                size: 640
             },
             locator: {
-                patchSize: "medium",
+                patchSize: "large",
                 halfSample: false
             },
-            numOfWorkers: 1,
+            numOfWorkers: 0,
             decoder: {
-                readers: ["code_128_reader"]
+                readers: ["code_128_reader"],
+                showFrequency: true,
+                showPattern: true
             },
             locate: true,
             src: null
