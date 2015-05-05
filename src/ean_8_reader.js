@@ -20,7 +20,7 @@ define(
                 self = this;
 
             for ( i = 0; i < 4; i++) {
-                code = self._decodeCode(code.end);
+                code = self._decodeCode(code.end, self.CODE_G_START);
                 result.push(code.code);
                 decodedCodes.push(code);
             }
