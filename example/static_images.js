@@ -84,18 +84,27 @@ $(function() {
         state: {
             inputStream: { name: "Test",
                 type: "ImageStream",
-                src: "../test/fixtures/code_128/",
+                src: "../test/fixtures/code_39_vin/",
                 length: 10
             },
             decoder : {
-                readers : ["code_128_reader"]
+                readers : ["code_39_vin_reader"],
+                drawScanline: true,
+            },
+            numOfWorkers: 4,
+            locator: {
+                halfSample: false,
+                showSkeleton: true,
+                showFoundPatches: true
             }
         }
     };
-    
+
     App.init();
+    window.App = App;
 
     Quagga.onProcessed(function(result) {
+        console.log('Quagga.onProcessed', result);
         var drawingCtx = Quagga.canvas.ctx.overlay,
             drawingCanvas = Quagga.canvas.dom.overlay;
 
@@ -129,4 +138,4 @@ $(function() {
         $node.find("h4.code").html(detectedCode);
         $("#result_strip ul.thumbnails").prepend($node);
     });
-}); 
+});
