@@ -10,7 +10,7 @@ define(["cv_utils"], function(CVUtils) {
         var _that = {},
             _streamConfig = inputStream.getConfig(),
             _video_size = CVUtils.imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
-            _size =_streamConfig.size ? CVUtils.imageRef(_streamConfig.size, _streamConfig.size) : _video_size,
+            _size =_streamConfig.size ? CVUtils.imageRef(inputStream.getWidth(), inputStream.getHeight()) : _video_size,
             _sx = 0,
             _sy = 0,
             _dx = 0,
@@ -23,17 +23,6 @@ define(["cv_utils"], function(CVUtils) {
             _ctx = null,
             _data = null;
 
-        // Check if size is given
-        if (_streamConfig.size) {
-            if (_video_size.x/_video_size.y > 1) {
-                _size.x = _streamConfig.size;
-                _size.y = (_video_size.y/_video_size.x)*_streamConfig.size;
-            } else {
-                _size.y = _streamConfig.size;
-                _size.x = (_video_size.x/_video_size.y)*_streamConfig.size;
-            }
-        }
-        
         _sWidth = _video_size.x;
         _dWidth = _size.x;
         _sHeight = _video_size.y;

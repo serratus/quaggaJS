@@ -118,9 +118,17 @@ function(Code128Reader,
             };
 
         if (_config.locate) {
-            patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
+            try {
+                patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
+            } catch (error) {
+                if (error instanceof CVUtils.AdjustToSizeError) {
+                    _inputStream.setWidth(Math.floor(width/error.patchSize.x)*error.patchSize.x);
+                    _inputStream.setHeight(Math.floor(height/error.patchSize.y)*error.patchSize.y);
+                    patchSize = error.patchSize;
+                }
+            }
             console.log("Patch-Size: " + JSON.stringify(patchSize));
-            if ((width % patchSize.x) === 0 && (height % patchSize.y) === 0) {
+            if ((_inputStream.getWidth() % patchSize.x) === 0 && (_inputStream.getHeight() % patchSize.y) === 0) {
                 return true;
             }
         }

@@ -579,30 +579,58 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
             divisorsY = this._computeDivisors(imgSize.y),
             wideSide = Math.max(imgSize.x, imgSize.y),
             common = this._computeIntersection(divisorsX, divisorsY),
+            nrOfPatchesList = [8, 10, 15, 20, 32, 60, 80],
             nrOfPatchesMap = {
-                "x-small": 60,
-                "small": 32,
-                "medium": 20,
-                "large": 15,
-                "x-large": 10
+                "x-small": 5,
+                "small": 4,
+                "medium": 3,
+                "large": 2,
+                "x-large": 1
             },
-            nrOfPatches = nrOfPatchesMap[patchSize] || nrOfPatchesMap.medium,
-            i = 0,
-            found = common[Math.floor(common.length/2)],
-            desiredPatchSize = wideSide/nrOfPatches;
+            nrOfPatchesIdx = nrOfPatchesMap[patchSize] || nrOfPatchesMap.medium,
+            nrOfPatches = nrOfPatchesList[nrOfPatchesIdx],
+            desiredPatchSize = Math.floor(wideSide/nrOfPatches),
+            optimalPatchSize;
 
-        while(i < (common.length - 1) && common[i] < desiredPatchSize) {
-            i++;
-        }
-        if (i > 0) {
-            if (Math.abs(common[i] - desiredPatchSize) > Math.abs(common[i-1] - desiredPatchSize)) {
-                found = common[i-1];
-            } else {
-                found = common[i];
+        function findPatchSizeForDivisors(divisors) {
+            var i = 0,
+                found = divisors[Math.floor(divisors.length/2)];
+
+            while(i < (divisors.length - 1) && divisors[i] < desiredPatchSize) {
+                i++;
             }
+            if (i > 0) {
+                if (Math.abs(divisors[i] - desiredPatchSize) > Math.abs(divisors[i-1] - desiredPatchSize)) {
+                    found = divisors[i-1];
+                } else {
+                    found = divisors[i];
+                }
+            }
+            if (desiredPatchSize / found < nrOfPatchesList[nrOfPatchesIdx+1] / nrOfPatchesList[nrOfPatchesIdx] &&
+                desiredPatchSize / found > nrOfPatchesList[nrOfPatchesIdx-1]/nrOfPatchesList[nrOfPatchesIdx] ) {
+                return {x: found, y: found};
+            }
+            return null;
         }
-        return {x: found, y: found};
+
+        optimalPatchSize = findPatchSizeForDivisors(common);
+        if (!optimalPatchSize) {
+            optimalPatchSize = findPatchSizeForDivisors(this._computeDivisors(wideSide));
+            throw new AdjustToSizeError("", optimalPatchSize);
+        }
+        return optimalPatchSize;
     };
+
+    function AdjustToSizeError(message, desiredPatchSize) {
+        this.name = 'AdjustToSizeError';
+        this.message = message || 'AdjustToSizeError';
+        this.patchSize = desiredPatchSize;
+    }
+
+    AdjustToSizeError.prototype = Object.create(RangeError.prototype);
+    AdjustToSizeError.prototype.constructor = AdjustToSizeError;
+
+    CVUtils.AdjustToSizeError = AdjustToSizeError;
 
     return (CVUtils);
 });
