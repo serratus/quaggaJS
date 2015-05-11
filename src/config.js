@@ -9,8 +9,8 @@ define(function(){
           constraints: {
               width: 640,
               height: 480,
-              minAspectRatio: 1,
-              maxAspectRatio: 1,
+              minAspectRatio: 0,
+              maxAspectRatio: 100,
               facing: "environment" // or user
           }
       },

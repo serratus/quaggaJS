@@ -74,8 +74,8 @@ define(["html_utils"], function(HtmlUtils) {
             videoConstraints = HtmlUtils.mergeObjects({
                 width: 640,
                 height: 480,
-                minAspectRatio: 1,
-                maxAspectRatio: 1,
+                minAspectRatio: 0,
+                maxAspectRatio: 100,
                 facing: "environment"
             }, config);
 
