@@ -130,6 +130,8 @@ define(["image_loader"], function(ImageLoader) {
             offset = 1,
             baseUrl = null,
             ended = false,
+            calculatedWidth,
+            calculatedHeight,
             _eventNames = ['canrecord', 'ended'],
             _eventHandlers = {};
 
@@ -139,6 +141,8 @@ define(["image_loader"], function(ImageLoader) {
                 imgArray = imgs;
                 width = imgs[0].width;
                 height = imgs[0].height;
+                calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
+                calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
                 loaded = true;
                 frameIdx = 0;
                 setTimeout(function() {
@@ -162,11 +166,19 @@ define(["image_loader"], function(ImageLoader) {
         that.trigger = publishEvent;
 
         that.getWidth = function() {
-            return _config.size ? width/height > 1 ? _config.size : (width/height) * _config.size : width;
+            return calculatedWidth;
         };
 
         that.getHeight = function() {
-            return _config.size ? width/height > 1 ? (height/width) * _config.size : _config.size : height;
+            return calculatedHeight;
+        };
+
+        that.setWidth = function(width) {
+            calculatedWidth = width;
+        };
+
+        that.setHeight = function(height) {
+            calculatedHeight = height;
         };
 
         that.getRealWidth = function() {

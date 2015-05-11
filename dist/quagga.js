@@ -437,7 +437,7 @@ define("almond", function(){});
 
 define(
     'barcode_reader',[],function() {
-        "use strict";
+        
         
         function BarcodeReader() {
             this._row = [];
@@ -631,7 +631,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
         
         function Code128Reader() {
             BarcodeReader.call(this);
@@ -1079,7 +1079,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
         
         function EANReader() {
             BarcodeReader.call(this);
@@ -1379,7 +1379,7 @@ define(
 /* global define */
 
 define('image_loader',[],function() {
-    "use strict";
+    
 
     var ImageLoader = {};
     ImageLoader.load = function(directory, callback, offset, size, sequence) {
@@ -1443,7 +1443,7 @@ define('image_loader',[],function() {
 /* global define */
 
 define('input_stream',["image_loader"], function(ImageLoader) {
-    "use strict";
+    
 
     var InputStream = {};
     InputStream.createVideoStream = function(video) {
@@ -1571,6 +1571,8 @@ define('input_stream',["image_loader"], function(ImageLoader) {
             offset = 1,
             baseUrl = null,
             ended = false,
+            calculatedWidth,
+            calculatedHeight,
             _eventNames = ['canrecord', 'ended'],
             _eventHandlers = {};
 
@@ -1580,6 +1582,8 @@ define('input_stream',["image_loader"], function(ImageLoader) {
                 imgArray = imgs;
                 width = imgs[0].width;
                 height = imgs[0].height;
+                calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
+                calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
                 loaded = true;
                 frameIdx = 0;
                 setTimeout(function() {
@@ -1603,11 +1607,19 @@ define('input_stream',["image_loader"], function(ImageLoader) {
         that.trigger = publishEvent;
 
         that.getWidth = function() {
-            return _config.size ? width/height > 1 ? _config.size : (width/height) * _config.size : width;
+            return calculatedWidth;
         };
 
         that.getHeight = function() {
-            return _config.size ? width/height > 1 ? (height/width) * _config.size : _config.size : height;
+            return calculatedHeight;
+        };
+
+        that.setWidth = function(width) {
+            calculatedWidth = width;
+        };
+
+        that.setHeight = function(height) {
+            calculatedHeight = height;
         };
 
         that.getRealWidth = function() {
@@ -1720,7 +1732,7 @@ define("typedefs", (function (global) {
 /* global define */
 
 define('subImage',["typedefs"], function() {
-    "use strict";
+    
 
     /**
      * Construct representing a part of another {ImageWrapper}. Shares data
@@ -1817,7 +1829,7 @@ define('subImage',["typedefs"], function() {
 /* global define, vec2 */
 
 define('cluster',[],function() {
-    "use strict";
+    
     
     /**
      * Creates a cluster for grouping similar orientations of datapoints 
@@ -4162,7 +4174,7 @@ define("glMatrixAddon", ["glMatrix"], (function (global) {
 /* global define */
 
 define('array_helper',[],function() {
-    "use strict";
+    
 
     return {
         init : function(arr, val) {
@@ -4249,7 +4261,7 @@ define('array_helper',[],function() {
 
 define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrixAddon, ArrayHelper) {
 
-    "use strict";
+    
     /*
     * cv_utils.js
     * Collection of CV functions and libraries
@@ -4825,30 +4837,58 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
             divisorsY = this._computeDivisors(imgSize.y),
             wideSide = Math.max(imgSize.x, imgSize.y),
             common = this._computeIntersection(divisorsX, divisorsY),
+            nrOfPatchesList = [8, 10, 15, 20, 32, 60, 80],
             nrOfPatchesMap = {
-                "x-small": 60,
-                "small": 32,
-                "medium": 20,
-                "large": 15,
-                "x-large": 10
+                "x-small": 5,
+                "small": 4,
+                "medium": 3,
+                "large": 2,
+                "x-large": 1
             },
-            nrOfPatches = nrOfPatchesMap[patchSize] || nrOfPatchesMap.medium,
-            i = 0,
-            found = common[Math.floor(common.length/2)],
-            desiredPatchSize = wideSide/nrOfPatches;
+            nrOfPatchesIdx = nrOfPatchesMap[patchSize] || nrOfPatchesMap.medium,
+            nrOfPatches = nrOfPatchesList[nrOfPatchesIdx],
+            desiredPatchSize = Math.floor(wideSide/nrOfPatches),
+            optimalPatchSize;
 
-        while(i < (common.length - 1) && common[i] < desiredPatchSize) {
-            i++;
-        }
-        if (i > 0) {
-            if (Math.abs(common[i] - desiredPatchSize) > Math.abs(common[i-1] - desiredPatchSize)) {
-                found = common[i-1];
-            } else {
-                found = common[i];
+        function findPatchSizeForDivisors(divisors) {
+            var i = 0,
+                found = divisors[Math.floor(divisors.length/2)];
+
+            while(i < (divisors.length - 1) && divisors[i] < desiredPatchSize) {
+                i++;
             }
+            if (i > 0) {
+                if (Math.abs(divisors[i] - desiredPatchSize) > Math.abs(divisors[i-1] - desiredPatchSize)) {
+                    found = divisors[i-1];
+                } else {
+                    found = divisors[i];
+                }
+            }
+            if (desiredPatchSize / found < nrOfPatchesList[nrOfPatchesIdx+1] / nrOfPatchesList[nrOfPatchesIdx] &&
+                desiredPatchSize / found > nrOfPatchesList[nrOfPatchesIdx-1]/nrOfPatchesList[nrOfPatchesIdx] ) {
+                return {x: found, y: found};
+            }
+            return null;
         }
-        return {x: found, y: found};
+
+        optimalPatchSize = findPatchSizeForDivisors(common);
+        if (!optimalPatchSize) {
+            optimalPatchSize = findPatchSizeForDivisors(this._computeDivisors(wideSide));
+            throw new AdjustToSizeError("", optimalPatchSize);
+        }
+        return optimalPatchSize;
     };
+
+    function AdjustToSizeError(message, desiredPatchSize) {
+        this.name = 'AdjustToSizeError';
+        this.message = message || 'AdjustToSizeError';
+        this.patchSize = desiredPatchSize;
+    }
+
+    AdjustToSizeError.prototype = Object.create(RangeError.prototype);
+    AdjustToSizeError.prototype.constructor = AdjustToSizeError;
+
+    CVUtils.AdjustToSizeError = AdjustToSizeError;
 
     return (CVUtils);
 });
@@ -4864,7 +4904,7 @@ define('image_wrapper',[
     ], 
     function(SubImage, CVUtils, ArrayHelper) {
     
-    'use strict';
+    
 
     /**
      * Represents a basic image combining the data and size.
@@ -5285,7 +5325,7 @@ define('image_wrapper',[
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('tracer',[],function() {
-    "use strict";
+    
     
     var Tracer = {
         searchDirections : [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
@@ -5394,7 +5434,7 @@ define('tracer',[],function() {
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('rasterizer',["tracer"], function(Tracer) {
-    "use strict";
+    
 
     var Rasterizer = {
         createContour2D : function() {
@@ -5590,7 +5630,7 @@ define('rasterizer',["tracer"], function(Tracer) {
 /* global define */
 
 define('skeletonizer',[],function() {
-    "use strict";
+    
 
     /* @preserve ASM BEGIN */
     function Skeletonizer(stdlib, foreign, buffer) {
@@ -5795,7 +5835,7 @@ define('skeletonizer',[],function() {
 /* global define */
 
 define('image_debug',[],function() {
-    "use strict";
+    
     
     return {
         drawRect: function(pos, size, ctx, style){
@@ -6340,7 +6380,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 /* global define */
 
 define('bresenham',[],function() {
-    "use strict";
+    
     var Bresenham = {};
 
     var Slope = {
@@ -6546,7 +6586,7 @@ define(
         "./array_helper"
     ],
     function(BarcodeReader, ArrayHelper) {
-        "use strict";
+        
 
         function Code39Reader() {
             BarcodeReader.call(this);
@@ -6808,7 +6848,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
 
         function CodabarReader() {
             BarcodeReader.call(this);
@@ -7121,7 +7161,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        "use strict";
+        
 
         function UPCReader() {
             EANReader.call(this);
@@ -7152,7 +7192,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        "use strict";
+        
 
         function EAN8Reader() {
             EANReader.call(this);
@@ -7197,7 +7237,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        "use strict";
+        
 
         function UPCEReader() {
             EANReader.call(this);
@@ -7323,8 +7363,13 @@ define('barcode_decoder',[
     UPCReader,
     EAN8Reader,
     UPCEReader) {
+<<<<<<< HEAD
     "use strict";
 
+=======
+    
+    
+>>>>>>> upstream/master
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
@@ -7602,7 +7647,7 @@ define('barcode_decoder',[
 /* global define */
 
 define('frame_grabber',["cv_utils"], function(CVUtils) {
-    "use strict";
+    
 
     var FrameGrabber = {};
 
@@ -7610,7 +7655,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
         var _that = {},
             _streamConfig = inputStream.getConfig(),
             _video_size = CVUtils.imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
-            _size =_streamConfig.size ? CVUtils.imageRef(_streamConfig.size, _streamConfig.size) : _video_size,
+            _size =_streamConfig.size ? CVUtils.imageRef(inputStream.getWidth(), inputStream.getHeight()) : _video_size,
             _sx = 0,
             _sy = 0,
             _dx = 0,
@@ -7623,17 +7668,6 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
             _ctx = null,
             _data = null;
 
-        // Check if size is given
-        if (_streamConfig.size) {
-            if (_video_size.x/_video_size.y > 1) {
-                _size.x = _streamConfig.size;
-                _size.y = (_video_size.y/_video_size.x)*_streamConfig.size;
-            } else {
-                _size.y = _streamConfig.size;
-                _size.x = (_video_size.x/_video_size.y)*_streamConfig.size;
-            }
-        }
-        
         _sWidth = _video_size.x;
         _dWidth = _size.x;
         _sHeight = _video_size.y;
@@ -7695,7 +7729,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
 /* global define */
 
 define('html_utils',[], function() {
-    "use strict";
+    
 
     function createNode(htmlStr) {
         var temp = document.createElement('div');
@@ -7789,7 +7823,7 @@ define('config',[],function(){
 /* global define */
 
 define('events',[],function() {
-    "use strict";
+    
 
     var _events = function() {
         var events = {};
@@ -7880,7 +7914,7 @@ define('events',[],function() {
 /* global define, MediaStreamTrack */
 
 define('camera_access',["html_utils"], function(HtmlUtils) {
-    "use strict";
+    
     var streamRef,
         loadedDataHandler;
 
@@ -8047,7 +8081,7 @@ function(Code128Reader,
          CameraAccess,
          ImageDebug,
          CVUtils) {
-    "use strict";
+    
     
     var _inputStream,
         _framegrabber,
@@ -8136,9 +8170,17 @@ function(Code128Reader,
             };
 
         if (_config.locate) {
-            patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
+            try {
+                patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
+            } catch (error) {
+                if (error instanceof CVUtils.AdjustToSizeError) {
+                    _inputStream.setWidth(Math.floor(width/error.patchSize.x)*error.patchSize.x);
+                    _inputStream.setHeight(Math.floor(height/error.patchSize.y)*error.patchSize.y);
+                    patchSize = error.patchSize;
+                }
+            }
             console.log("Patch-Size: " + JSON.stringify(patchSize));
-            if ((width % patchSize.x) === 0 && (height % patchSize.y) === 0) {
+            if ((_inputStream.getWidth() % patchSize.x) === 0 && (_inputStream.getHeight() % patchSize.y) === 0) {
                 return true;
             }
         }
