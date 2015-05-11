@@ -88,14 +88,7 @@ $(function() {
                 length: 10
             },
             decoder : {
-                readers : ["code_128_reader"],
-                drawScanline: true,
-            },
-            numOfWorkers: 4,
-            locator: {
-                halfSample: false,
-                showSkeleton: true,
-                showFoundPatches: true
+                readers : ["code_128_reader"]
             }
         }
     };
@@ -104,7 +97,6 @@ $(function() {
     window.App = App;
 
     Quagga.onProcessed(function(result) {
-        console.log('Quagga.onProcessed', result);
         var drawingCtx = Quagga.canvas.ctx.overlay,
             drawingCanvas = Quagga.canvas.dom.overlay;
 
