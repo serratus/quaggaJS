@@ -84,11 +84,11 @@ $(function() {
         state: {
             inputStream: { name: "Test",
                 type: "ImageStream",
-                src: "../test/fixtures/code_39_vin/",
+                src: "../test/fixtures/code_128/",
                 length: 10
             },
             decoder : {
-                readers : ["code_39_vin_reader"],
+                readers : ["code_128_reader"],
                 drawScanline: true,
             },
             numOfWorkers: 4,
