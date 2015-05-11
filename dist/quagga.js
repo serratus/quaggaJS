@@ -6589,9 +6589,7 @@ define(
             return counter;
         };
 
-
-
-        Code39Reader.prototype._decodeToResult = function() {
+        Code39Reader.prototype._decode = function() {
             var self = this,
                 counters = [0,0,0,0,0,0,0,0,0],
                 result = [],
@@ -6600,7 +6598,6 @@ define(
                 lastStart,
                 pattern,
                 nextStart;
-
 
             if (!start) {
                 return null;
@@ -6624,6 +6621,8 @@ define(
             } while(decodedChar !== '*');
             result.pop();
 
+
+
             return {
                 code : result.join(""),
                 start : start.start,
@@ -6631,10 +6630,6 @@ define(
                 startInfo : start,
                 decodedCodes : result
             };
-        };
-
-        Code39Reader.prototype._decode = function() {
-            return this._decodeToResult();
         };
 
         Code39Reader.prototype._patternToChar = function(pattern) {
@@ -6745,7 +6740,6 @@ define(
         return (Code39Reader);
     }
 );
-
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
@@ -6771,7 +6765,7 @@ define(
         // Cribbed from:
         // https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/client/result/VINResultParser.java
         Code39VINReader.prototype._decode = function() {
-            var result = this._decodeToResult();
+            var result = Code39Reader.prototype._decode.apply(this);
             if (!result) {
                 return null;
             }
