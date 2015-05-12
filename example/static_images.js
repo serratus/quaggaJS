@@ -92,8 +92,9 @@ $(function() {
             }
         }
     };
-    
+
     App.init();
+    window.App = App;
 
     Quagga.onProcessed(function(result) {
         var drawingCtx = Quagga.canvas.ctx.overlay,
@@ -129,4 +130,4 @@ $(function() {
         $node.find("h4.code").html(detectedCode);
         $("#result_strip ul.thumbnails").prepend($node);
     });
-}); 
+});

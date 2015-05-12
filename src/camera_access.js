@@ -5,7 +5,7 @@ define(["html_utils"], function(HtmlUtils) {
     "use strict";
     var streamRef,
         loadedDataHandler;
-    
+
     /**
      * Wraps browser-specific getUserMedia
      * @param {Object} constraints
@@ -74,6 +74,8 @@ define(["html_utils"], function(HtmlUtils) {
             videoConstraints = HtmlUtils.mergeObjects({
                 width: 640,
                 height: 480,
+                minAspectRatio: 0,
+                maxAspectRatio: 100,
                 facing: "environment"
             }, config);
 
@@ -89,7 +91,9 @@ define(["html_utils"], function(HtmlUtils) {
                 constraints.video = {
                     mandatory: {
                         minWidth: videoConstraints.width,
-                        minHeight: videoConstraints.height
+                        minHeight: videoConstraints.height,
+                        minAspectRatio: videoConstraints.minAspectRatio,
+                        maxAspectRatio: videoConstraints.maxAspectRatio
                     },
                     optional: [{
                         sourceId: videoSourceId
@@ -132,4 +136,4 @@ define(["html_utils"], function(HtmlUtils) {
             streamRef = null;
         }
     };
-}); 
+});

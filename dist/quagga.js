@@ -437,7 +437,7 @@ define("almond", function(){});
 
 define(
     'barcode_reader',[],function() {
-        
+        "use strict";
         
         function BarcodeReader() {
             this._row = [];
@@ -631,7 +631,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
         
         function Code128Reader() {
             BarcodeReader.call(this);
@@ -1079,7 +1079,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
         
         function EANReader() {
             BarcodeReader.call(this);
@@ -1379,7 +1379,7 @@ define(
 /* global define */
 
 define('image_loader',[],function() {
-    
+    "use strict";
 
     var ImageLoader = {};
     ImageLoader.load = function(directory, callback, offset, size, sequence) {
@@ -1443,7 +1443,7 @@ define('image_loader',[],function() {
 /* global define */
 
 define('input_stream',["image_loader"], function(ImageLoader) {
-    
+    "use strict";
 
     var InputStream = {};
     InputStream.createVideoStream = function(video) {
@@ -1732,7 +1732,7 @@ define("typedefs", (function (global) {
 /* global define */
 
 define('subImage',["typedefs"], function() {
-    
+    "use strict";
 
     /**
      * Construct representing a part of another {ImageWrapper}. Shares data
@@ -1829,7 +1829,7 @@ define('subImage',["typedefs"], function() {
 /* global define, vec2 */
 
 define('cluster',[],function() {
-    
+    "use strict";
     
     /**
      * Creates a cluster for grouping similar orientations of datapoints 
@@ -4174,7 +4174,7 @@ define("glMatrixAddon", ["glMatrix"], (function (global) {
 /* global define */
 
 define('array_helper',[],function() {
-    
+    "use strict";
 
     return {
         init : function(arr, val) {
@@ -4261,7 +4261,7 @@ define('array_helper',[],function() {
 
 define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrixAddon, ArrayHelper) {
 
-    
+    "use strict";
     /*
     * cv_utils.js
     * Collection of CV functions and libraries
@@ -4904,7 +4904,7 @@ define('image_wrapper',[
     ], 
     function(SubImage, CVUtils, ArrayHelper) {
     
-    
+    'use strict';
 
     /**
      * Represents a basic image combining the data and size.
@@ -5325,7 +5325,7 @@ define('image_wrapper',[
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('tracer',[],function() {
-    
+    "use strict";
     
     var Tracer = {
         searchDirections : [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
@@ -5434,7 +5434,7 @@ define('tracer',[],function() {
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('rasterizer',["tracer"], function(Tracer) {
-    
+    "use strict";
 
     var Rasterizer = {
         createContour2D : function() {
@@ -5630,7 +5630,7 @@ define('rasterizer',["tracer"], function(Tracer) {
 /* global define */
 
 define('skeletonizer',[],function() {
-    
+    "use strict";
 
     /* @preserve ASM BEGIN */
     function Skeletonizer(stdlib, foreign, buffer) {
@@ -5835,7 +5835,7 @@ define('skeletonizer',[],function() {
 /* global define */
 
 define('image_debug',[],function() {
-    
+    "use strict";
     
     return {
         drawRect: function(pos, size, ctx, style){
@@ -6380,7 +6380,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 /* global define */
 
 define('bresenham',[],function() {
-    
+    "use strict";
     var Bresenham = {};
 
     var Slope = {
@@ -6586,7 +6586,7 @@ define(
         "./array_helper"
     ],
     function(BarcodeReader, ArrayHelper) {
-        
+        "use strict";
 
         function Code39Reader() {
             BarcodeReader.call(this);
@@ -6784,11 +6784,71 @@ define(
 /* global define */
 
 define(
+    'code_39_vin_reader',[
+        "./code_39_reader"
+    ],
+    function(Code39Reader) {
+        "use strict";
+
+        function Code39VINReader() {
+            Code39Reader.call(this);
+        }
+
+        var patterns = {
+            IOQ: /[IOQ]/g,
+            AZ09: /[A-Z0-9]{17}/
+        };
+
+        Code39VINReader.prototype = Object.create(Code39Reader.prototype);
+        Code39VINReader.prototype.constructor = Code39VINReader;
+
+        // Cribbed from:
+        // https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/client/result/VINResultParser.java
+        Code39VINReader.prototype._decode = function() {
+            var result = Code39Reader.prototype._decode.apply(this);
+            if (!result) {
+                return null;
+            }
+
+            var code = result.code;
+
+            if (!code) {
+                return;
+            }
+
+            code = code.replace(patterns.IOQ, '');
+
+            if (!code.match(patterns.AZ09)) {
+                console.log('Failed AZ09 pattern code:', code);
+                return null;
+            }
+
+            if (!this._checkChecksum(code)) {
+                return null;
+            }
+
+            result.code = code;
+            return result;
+        };
+
+        Code39VINReader.prototype._checkChecksum = function(code) {
+            // TODO
+            return !!code;
+        };
+
+        return (Code39VINReader);
+    }
+);
+
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
     'codabar_reader',[
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
 
         function CodabarReader() {
             BarcodeReader.call(this);
@@ -7101,7 +7161,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function UPCReader() {
             EANReader.call(this);
@@ -7132,7 +7192,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function EAN8Reader() {
             EANReader.call(this);
@@ -7177,7 +7237,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function UPCEReader() {
             EANReader.call(this);
@@ -7287,6 +7347,7 @@ define('barcode_decoder',[
     'code_128_reader',
     'ean_reader',
     'code_39_reader',
+    'code_39_vin_reader',
     'codabar_reader',
     'upc_reader',
     'ean_8_reader',
@@ -7297,17 +7358,19 @@ define('barcode_decoder',[
     Code128Reader,
     EANReader,
     Code39Reader,
+    Code39VINReader,
     CodabarReader,
     UPCReader,
     EAN8Reader,
     UPCEReader) {
-    
-    
+    "use strict";
+
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
         ean_8_reader: EAN8Reader,
         code_39_reader: Code39Reader,
+        code_39_vin_reader: Code39VINReader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader,
         upc_e_reader: UPCEReader
@@ -7328,7 +7391,7 @@ define('barcode_decoder',[
                 },
                 _barcodeReaders = [],
                 _barcodeReader = null;
-            
+
             initCanvas();
             initReaders();
             initConfig();
@@ -7393,9 +7456,9 @@ define('barcode_decoder',[
             }
 
             /**
-             * extend the line on both ends 
+             * extend the line on both ends
              * @param {Array} line
-             * @param {Number} angle 
+             * @param {Number} angle
              */
             function getExtendedLine(line, angle, ext) {
                 function extendLine(amount) {
@@ -7421,7 +7484,7 @@ define('barcode_decoder',[
                 }
                 return line;
             }
-            
+
             function getLine(box) {
                 return [{
                     x : (box[1][0] - box[0][0]) / 2 + box[0][0],
@@ -7431,12 +7494,12 @@ define('barcode_decoder',[
                     y : (box[3][1] - box[2][1]) / 2 + box[2][1]
                 }];
             }
-            
+
             function tryDecode(line) {
                 var result = null,
                     i,
                     barcodeLine = Bresenham.getBarcodeLine(inputImageWrapper, line[0], line[1]);
-                    
+
                 if (config.showFrequency) {
                     ImageDebug.drawPath(line, {x: 'x', y: 'y'}, _canvas.ctx.overlay, {color: 'red', lineWidth: 3});
                     Bresenham.debug.printFrequency(barcodeLine.line, _canvas.dom.frequency);
@@ -7445,7 +7508,7 @@ define('barcode_decoder',[
                 if (config.showPattern) {
                     Bresenham.debug.printPattern(barcodeLine.line, _canvas.dom.pattern);
                 }
-                
+
                 for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                     result = _barcodeReaders[i].decodePattern(barcodeLine.line);
                     if (result !== null) {
@@ -7459,15 +7522,15 @@ define('barcode_decoder',[
                     codeResult: result,
                     barcodeLine: barcodeLine
                 };
-                
+
             }
-            
+
             /**
              * This method slices the given area apart and tries to detect a barcode-pattern
              * for each slice. It returns the decoded barcode, or null if nothing was found
              * @param {Array} box
              * @param {Array} line
-             * @param {Number} lineAngle 
+             * @param {Number} lineAngle
              */
             function tryDecodeBruteForce(box, line, lineAngle) {
                 var sideLength = Math.sqrt(Math.pow(box[1][0] - box[0][0], 2) + Math.pow((box[1][1] - box[0][1]), 2)),
@@ -7478,7 +7541,7 @@ define('barcode_decoder',[
                     extension,
                     xdir = Math.sin(lineAngle),
                     ydir = Math.cos(lineAngle);
-                    
+
                 for ( i = 1; i < slices && result === null; i++) {
                     // move line perpendicular to angle
                     dir = sideLength / slices * i * (i % 2 === 0 ? -1 : 1);
@@ -7503,7 +7566,7 @@ define('barcode_decoder',[
             }
 
             /**
-             * With the help of the configured readers (Code128 or EAN) this function tries to detect a 
+             * With the help of the configured readers (Code128 or EAN) this function tries to detect a
              * valid barcode pattern within the given area.
              * @param {Object} box The area to search in
              * @returns {Object} the result {codeResult, line, angle, pattern, threshold}
@@ -7531,7 +7594,7 @@ define('barcode_decoder',[
                 if(result === null) {
                     result = tryDecodeBruteForce(box, line, lineAngle);
                 }
-                
+
                 if(result === null) {
                     return null;
                 }
@@ -7573,12 +7636,13 @@ define('barcode_decoder',[
     };
 
     return (BarcodeDecoder);
-}); 
+});
+
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
 define('frame_grabber',["cv_utils"], function(CVUtils) {
-    
+    "use strict";
 
     var FrameGrabber = {};
 
@@ -7660,7 +7724,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
 /* global define */
 
 define('html_utils',[], function() {
-    
+    "use strict";
 
     function createNode(htmlStr) {
         var temp = document.createElement('div');
@@ -7697,7 +7761,7 @@ define('html_utils',[], function() {
     };
 }); 
 /**
- * The basic configuration 
+ * The basic configuration
  */
 
 define('config',[],function(){
@@ -7707,6 +7771,8 @@ define('config',[],function(){
           constraints: {
               width: 640,
               height: 480,
+              minAspectRatio: 1,
+              maxAspectRatio: 1,
               facing: "environment" // or user
           }
       },
@@ -7744,14 +7810,15 @@ define('config',[],function(){
         }
       }
    };
-   
+
    return config;
 });
+
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
 define('events',[],function() {
-    
+    "use strict";
 
     var _events = function() {
         var events = {};
@@ -7842,10 +7909,10 @@ define('events',[],function() {
 /* global define, MediaStreamTrack */
 
 define('camera_access',["html_utils"], function(HtmlUtils) {
-    
+    "use strict";
     var streamRef,
         loadedDataHandler;
-    
+
     /**
      * Wraps browser-specific getUserMedia
      * @param {Object} constraints
@@ -7914,6 +7981,8 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
             videoConstraints = HtmlUtils.mergeObjects({
                 width: 640,
                 height: 480,
+                minAspectRatio: 1,
+                maxAspectRatio: 1,
                 facing: "environment"
             }, config);
 
@@ -7929,7 +7998,9 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
                 constraints.video = {
                     mandatory: {
                         minWidth: videoConstraints.width,
-                        minHeight: videoConstraints.height
+                        minHeight: videoConstraints.height,
+                        minAspectRatio: videoConstraints.minAspectRatio,
+                        maxAspectRatio: videoConstraints.maxAspectRatio
                     },
                     optional: [{
                         sourceId: videoSourceId
@@ -7972,7 +8043,8 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
             streamRef = null;
         }
     };
-}); 
+});
+
 /* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
 /* global define,  vec2 */
 
@@ -8004,7 +8076,7 @@ function(Code128Reader,
          CameraAccess,
          ImageDebug,
          CVUtils) {
-    
+    "use strict";
     
     var _inputStream,
         _framegrabber,

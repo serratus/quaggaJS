@@ -7,6 +7,7 @@ define([
     'code_128_reader',
     'ean_reader',
     'code_39_reader',
+    'code_39_vin_reader',
     'codabar_reader',
     'upc_reader',
     'ean_8_reader',
@@ -17,17 +18,19 @@ define([
     Code128Reader,
     EANReader,
     Code39Reader,
+    Code39VINReader,
     CodabarReader,
     UPCReader,
     EAN8Reader,
     UPCEReader) {
     "use strict";
-    
+
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
         ean_8_reader: EAN8Reader,
         code_39_reader: Code39Reader,
+        code_39_vin_reader: Code39VINReader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader,
         upc_e_reader: UPCEReader
@@ -48,7 +51,7 @@ define([
                 },
                 _barcodeReaders = [],
                 _barcodeReader = null;
-            
+
             initCanvas();
             initReaders();
             initConfig();
@@ -113,9 +116,9 @@ define([
             }
 
             /**
-             * extend the line on both ends 
+             * extend the line on both ends
              * @param {Array} line
-             * @param {Number} angle 
+             * @param {Number} angle
              */
             function getExtendedLine(line, angle, ext) {
                 function extendLine(amount) {
@@ -141,7 +144,7 @@ define([
                 }
                 return line;
             }
-            
+
             function getLine(box) {
                 return [{
                     x : (box[1][0] - box[0][0]) / 2 + box[0][0],
@@ -151,12 +154,12 @@ define([
                     y : (box[3][1] - box[2][1]) / 2 + box[2][1]
                 }];
             }
-            
+
             function tryDecode(line) {
                 var result = null,
                     i,
                     barcodeLine = Bresenham.getBarcodeLine(inputImageWrapper, line[0], line[1]);
-                    
+
                 if (config.showFrequency) {
                     ImageDebug.drawPath(line, {x: 'x', y: 'y'}, _canvas.ctx.overlay, {color: 'red', lineWidth: 3});
                     Bresenham.debug.printFrequency(barcodeLine.line, _canvas.dom.frequency);
@@ -165,7 +168,7 @@ define([
                 if (config.showPattern) {
                     Bresenham.debug.printPattern(barcodeLine.line, _canvas.dom.pattern);
                 }
-                
+
                 for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                     result = _barcodeReaders[i].decodePattern(barcodeLine.line);
                     if (result !== null) {
@@ -179,15 +182,15 @@ define([
                     codeResult: result,
                     barcodeLine: barcodeLine
                 };
-                
+
             }
-            
+
             /**
              * This method slices the given area apart and tries to detect a barcode-pattern
              * for each slice. It returns the decoded barcode, or null if nothing was found
              * @param {Array} box
              * @param {Array} line
-             * @param {Number} lineAngle 
+             * @param {Number} lineAngle
              */
             function tryDecodeBruteForce(box, line, lineAngle) {
                 var sideLength = Math.sqrt(Math.pow(box[1][0] - box[0][0], 2) + Math.pow((box[1][1] - box[0][1]), 2)),
@@ -198,7 +201,7 @@ define([
                     extension,
                     xdir = Math.sin(lineAngle),
                     ydir = Math.cos(lineAngle);
-                    
+
                 for ( i = 1; i < slices && result === null; i++) {
                     // move line perpendicular to angle
                     dir = sideLength / slices * i * (i % 2 === 0 ? -1 : 1);
@@ -223,7 +226,7 @@ define([
             }
 
             /**
-             * With the help of the configured readers (Code128 or EAN) this function tries to detect a 
+             * With the help of the configured readers (Code128 or EAN) this function tries to detect a
              * valid barcode pattern within the given area.
              * @param {Object} box The area to search in
              * @returns {Object} the result {codeResult, line, angle, pattern, threshold}
@@ -251,7 +254,7 @@ define([
                 if(result === null) {
                     result = tryDecodeBruteForce(box, line, lineAngle);
                 }
-                
+
                 if(result === null) {
                     return null;
                 }
@@ -293,4 +296,4 @@ define([
     };
 
     return (BarcodeDecoder);
-}); 
+});

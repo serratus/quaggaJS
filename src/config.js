@@ -1,5 +1,5 @@
 /**
- * The basic configuration 
+ * The basic configuration
  */
 
 define(function(){
@@ -9,6 +9,8 @@ define(function(){
           constraints: {
               width: 640,
               height: 480,
+              minAspectRatio: 0,
+              maxAspectRatio: 100,
               facing: "environment" // or user
           }
       },
@@ -46,6 +48,6 @@ define(function(){
         }
       }
    };
-   
+
    return config;
 });
