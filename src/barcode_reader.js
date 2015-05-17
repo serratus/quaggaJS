@@ -26,12 +26,19 @@ define(
         
         BarcodeReader.prototype._matchPattern = function(counter, code) {
             var i,
-                error = 0;
+                error = 0,
+                singleError = 0,
+                modulo = this.MODULO,
+                maxSingleError = 0.9;
                 
             for (i = 0; i < counter.length; i++) {
-                error += Math.abs(code[i] - counter[i]);
+                singleError = Math.abs(code[i] - counter[i]);
+                if (singleError > maxSingleError) {
+                    return Number.MAX_VALUE;
+                }
+                error += singleError;
             }
-            return error;
+            return error/modulo;
         };
 
         BarcodeReader.prototype._nextSet = function(line, offset) {

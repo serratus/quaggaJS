@@ -340,16 +340,24 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
      * @returns {Array} list of patches
      */
     function describePatch(moments, patchPos, x, y) {
-        var k, avg, sum = 0, eligibleMoments = [], matchingMoments, patch, patchesFound = [];
+        var k,
+            avg,
+            sum = 0,
+            eligibleMoments = [],
+            matchingMoments,
+            patch,
+            patchesFound = [],
+            minComponentWeight = Math.ceil(_patchSize.x/3);
+
         if (moments.length >= 2) {
-            // only collect moments which's area covers at least 6 pixels.
+            // only collect moments which's area covers at least minComponentWeight pixels.
             for ( k = 0; k < moments.length; k++) {
-                if (moments[k].m00 > 6) {
+                if (moments[k].m00 > minComponentWeight) {
                     eligibleMoments.push(moments[k]);
                 }
             }
 
-            // if at least 2 moments are found which have 6pixels covered
+            // if at least 2 moments are found which have at least minComponentWeights covered
             if (eligibleMoments.length >= 2) {
                 sum = eligibleMoments.length;
                 matchingMoments = similarMoments(eligibleMoments);

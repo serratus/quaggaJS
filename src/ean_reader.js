@@ -82,6 +82,9 @@ define(
                             }
                         }
                         bestMatch.end = i;
+                        if (bestMatch.error > 0.5) {
+                            return null;
+                        }
                         return bestMatch;
                     } else {
                         counterPos++;
@@ -122,7 +125,7 @@ define(
             }
 
             if ( epsilon === undefined) {
-                epsilon = 1.5;
+                epsilon = 0.5;
             }
 
             for ( i = 0; i < pattern.length; i++) {
@@ -206,13 +209,29 @@ define(
             return self._verifyTrailingWhitespace(endInfo);
         };
 
+        EANReader.prototype._calculateFirstDigit = function(codeFrequency) {
+            var i,
+                self = this;
+
+            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
+                if (codeFrequency === self.CODE_FREQUENCY[i]) {
+                    return i;
+                }
+            }
+            return null;
+        };
+
         EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
             var i,
                 self = this,
-                codeFrequency = 0x0;
+                codeFrequency = 0x0,
+                firstDigit;
 
             for ( i = 0; i < 6; i++) {
                 code = self._decodeCode(code.end);
+                if (!code) {
+                    return null;
+                }
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
@@ -223,12 +242,11 @@ define(
                 decodedCodes.push(code);
             }
 
-            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
-                if (codeFrequency === self.CODE_FREQUENCY[i]) {
-                    result.unshift(i);
-                    break;
-                }
+            firstDigit = self._calculateFirstDigit(codeFrequency);
+            if (firstDigit === null) {
+                return null;
             }
+            result.unshift(firstDigit);
 
             code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {

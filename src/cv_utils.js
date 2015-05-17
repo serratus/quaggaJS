@@ -119,22 +119,46 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
         }
     };
 
-    CVUtils.computeHistogram = function(imageWrapper) {
-        var imageData = imageWrapper.data, length = imageData.length, i, hist = new Int32Array(256);
-
-        // init histogram
-        for ( i = 0; i < 256; i++) {
-            hist[i] = 0;
+    CVUtils.computeHistogram = function(imageWrapper, bitsPerPixel) {
+        if (!bitsPerPixel) {
+            bitsPerPixel = 8;
         }
+        var imageData = imageWrapper.data,
+            length = imageData.length,
+            bitShift = 8 - bitsPerPixel,
+            bucketCnt = 1 << bitsPerPixel,
+            hist = new Int32Array(bucketCnt);
 
         while (length--) {
-            hist[imageData[length]]++;
+            hist[imageData[length] >> bitShift]++;
         }
         return hist;
     };
 
-    CVUtils.otsuThreshold = function(imageWrapper, targetWrapper) {
-        var hist, threshold;
+    CVUtils.sharpenLine = function(line) {
+        var i,
+            length = line.length,
+            left = line[0],
+            center = line[1],
+            right;
+
+        for (i = 1; i < length - 1; i++) {
+            right = line[i + 1];
+            //  -1 4 -1 kernel
+            line[i-1] = (((center * 2) - left - right)) & 255;
+            left = center;
+            center = right;
+        }
+        return line;
+    };
+
+    CVUtils.determineOtsuThreshold = function(imageWrapper, bitsPerPixel) {
+        if (!bitsPerPixel) {
+            bitsPerPixel = 8;
+        }
+        var hist,
+            threshold,
+            bitShift = 8 - bitsPerPixel;
 
         function px(init, end) {
             var sum = 0, i;
@@ -155,18 +179,19 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
         }
 
         function determineThreshold() {
-            var vet = [0], p1, p2, p12, k, m1, m2, m12;
+            var vet = [0], p1, p2, p12, k, m1, m2, m12,
+                max = (1 << bitsPerPixel) - 1;
 
-            hist = CVUtils.computeHistogram(imageWrapper);
-            for ( k = 1; k < 255; k++) {
+            hist = CVUtils.computeHistogram(imageWrapper, bitsPerPixel);
+            for ( k = 1; k < max; k++) {
                 p1 = px(0, k);
-                p2 = px(k + 1, 255);
+                p2 = px(k + 1, max);
                 p12 = p1 * p2;
                 if (p12 === 0) {
                     p12 = 1;
                 }
                 m1 = mx(0, k) * p2;
-                m2 = mx(k + 1, 255) * p1;
+                m2 = mx(k + 1, max) * p1;
                 m12 = m1 - m2;
                 vet[k] = m12 * m12 / p12;
             }
@@ -174,6 +199,12 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
         }
 
         threshold = determineThreshold();
+        return threshold << bitShift;
+    };
+
+    CVUtils.otsuThreshold = function(imageWrapper, targetWrapper) {
+        var threshold = CVUtils.determineOtsuThreshold(imageWrapper);
+
         CVUtils.thresholdImage(imageWrapper, threshold, targetWrapper);
         return threshold;
     };

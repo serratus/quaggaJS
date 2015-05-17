@@ -437,7 +437,7 @@ define("almond", function(){});
 
 define(
     'barcode_reader',[],function() {
-        "use strict";
+        
         
         function BarcodeReader() {
             this._row = [];
@@ -460,12 +460,19 @@ define(
         
         BarcodeReader.prototype._matchPattern = function(counter, code) {
             var i,
-                error = 0;
+                error = 0,
+                singleError = 0,
+                modulo = this.MODULO,
+                maxSingleError = 0.9;
                 
             for (i = 0; i < counter.length; i++) {
-                error += Math.abs(code[i] - counter[i]);
+                singleError = Math.abs(code[i] - counter[i]);
+                if (singleError > maxSingleError) {
+                    return Number.MAX_VALUE;
+                }
+                error += singleError;
             }
-            return error;
+            return error/modulo;
         };
 
         BarcodeReader.prototype._nextSet = function(line, offset) {
@@ -631,7 +638,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
         
         function Code128Reader() {
             BarcodeReader.call(this);
@@ -1079,7 +1086,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
         
         function EANReader() {
             BarcodeReader.call(this);
@@ -1155,6 +1162,9 @@ define(
                             }
                         }
                         bestMatch.end = i;
+                        if (bestMatch.error > 0.5) {
+                            return null;
+                        }
                         return bestMatch;
                     } else {
                         counterPos++;
@@ -1195,7 +1205,7 @@ define(
             }
 
             if ( epsilon === undefined) {
-                epsilon = 1.5;
+                epsilon = 0.5;
             }
 
             for ( i = 0; i < pattern.length; i++) {
@@ -1279,13 +1289,29 @@ define(
             return self._verifyTrailingWhitespace(endInfo);
         };
 
+        EANReader.prototype._calculateFirstDigit = function(codeFrequency) {
+            var i,
+                self = this;
+
+            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
+                if (codeFrequency === self.CODE_FREQUENCY[i]) {
+                    return i;
+                }
+            }
+            return null;
+        };
+
         EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
             var i,
                 self = this,
-                codeFrequency = 0x0;
+                codeFrequency = 0x0,
+                firstDigit;
 
             for ( i = 0; i < 6; i++) {
                 code = self._decodeCode(code.end);
+                if (!code) {
+                    return null;
+                }
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
@@ -1296,12 +1322,11 @@ define(
                 decodedCodes.push(code);
             }
 
-            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
-                if (codeFrequency === self.CODE_FREQUENCY[i]) {
-                    result.unshift(i);
-                    break;
-                }
+            firstDigit = self._calculateFirstDigit(codeFrequency);
+            if (firstDigit === null) {
+                return null;
             }
+            result.unshift(firstDigit);
 
             code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {
@@ -1379,7 +1404,7 @@ define(
 /* global define */
 
 define('image_loader',[],function() {
-    "use strict";
+    
 
     var ImageLoader = {};
     ImageLoader.load = function(directory, callback, offset, size, sequence) {
@@ -1443,7 +1468,7 @@ define('image_loader',[],function() {
 /* global define */
 
 define('input_stream',["image_loader"], function(ImageLoader) {
-    "use strict";
+    
 
     var InputStream = {};
     InputStream.createVideoStream = function(video) {
@@ -1732,7 +1757,7 @@ define("typedefs", (function (global) {
 /* global define */
 
 define('subImage',["typedefs"], function() {
-    "use strict";
+    
 
     /**
      * Construct representing a part of another {ImageWrapper}. Shares data
@@ -1829,7 +1854,7 @@ define('subImage',["typedefs"], function() {
 /* global define, vec2 */
 
 define('cluster',[],function() {
-    "use strict";
+    
     
     /**
      * Creates a cluster for grouping similar orientations of datapoints 
@@ -4174,7 +4199,7 @@ define("glMatrixAddon", ["glMatrix"], (function (global) {
 /* global define */
 
 define('array_helper',[],function() {
-    "use strict";
+    
 
     return {
         init : function(arr, val) {
@@ -4261,7 +4286,7 @@ define('array_helper',[],function() {
 
 define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrixAddon, ArrayHelper) {
 
-    "use strict";
+    
     /*
     * cv_utils.js
     * Collection of CV functions and libraries
@@ -4377,22 +4402,46 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         }
     };
 
-    CVUtils.computeHistogram = function(imageWrapper) {
-        var imageData = imageWrapper.data, length = imageData.length, i, hist = new Int32Array(256);
-
-        // init histogram
-        for ( i = 0; i < 256; i++) {
-            hist[i] = 0;
+    CVUtils.computeHistogram = function(imageWrapper, bitsPerPixel) {
+        if (!bitsPerPixel) {
+            bitsPerPixel = 8;
         }
+        var imageData = imageWrapper.data,
+            length = imageData.length,
+            bitShift = 8 - bitsPerPixel,
+            bucketCnt = 1 << bitsPerPixel,
+            hist = new Int32Array(bucketCnt);
 
         while (length--) {
-            hist[imageData[length]]++;
+            hist[imageData[length] >> bitShift]++;
         }
         return hist;
     };
 
-    CVUtils.otsuThreshold = function(imageWrapper, targetWrapper) {
-        var hist, threshold;
+    CVUtils.sharpenLine = function(line) {
+        var i,
+            length = line.length,
+            left = line[0],
+            center = line[1],
+            right;
+
+        for (i = 1; i < length - 1; i++) {
+            right = line[i + 1];
+            //  -1 4 -1 kernel
+            line[i-1] = (((center * 2) - left - right)) & 255;
+            left = center;
+            center = right;
+        }
+        return line;
+    };
+
+    CVUtils.determineOtsuThreshold = function(imageWrapper, bitsPerPixel) {
+        if (!bitsPerPixel) {
+            bitsPerPixel = 8;
+        }
+        var hist,
+            threshold,
+            bitShift = 8 - bitsPerPixel;
 
         function px(init, end) {
             var sum = 0, i;
@@ -4413,18 +4462,19 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         }
 
         function determineThreshold() {
-            var vet = [0], p1, p2, p12, k, m1, m2, m12;
+            var vet = [0], p1, p2, p12, k, m1, m2, m12,
+                max = (1 << bitsPerPixel) - 1;
 
-            hist = CVUtils.computeHistogram(imageWrapper);
-            for ( k = 1; k < 255; k++) {
+            hist = CVUtils.computeHistogram(imageWrapper, bitsPerPixel);
+            for ( k = 1; k < max; k++) {
                 p1 = px(0, k);
-                p2 = px(k + 1, 255);
+                p2 = px(k + 1, max);
                 p12 = p1 * p2;
                 if (p12 === 0) {
                     p12 = 1;
                 }
                 m1 = mx(0, k) * p2;
-                m2 = mx(k + 1, 255) * p1;
+                m2 = mx(k + 1, max) * p1;
                 m12 = m1 - m2;
                 vet[k] = m12 * m12 / p12;
             }
@@ -4432,6 +4482,12 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         }
 
         threshold = determineThreshold();
+        return threshold << bitShift;
+    };
+
+    CVUtils.otsuThreshold = function(imageWrapper, targetWrapper) {
+        var threshold = CVUtils.determineOtsuThreshold(imageWrapper);
+
         CVUtils.thresholdImage(imageWrapper, threshold, targetWrapper);
         return threshold;
     };
@@ -4904,7 +4960,7 @@ define('image_wrapper',[
     ], 
     function(SubImage, CVUtils, ArrayHelper) {
     
-    'use strict';
+    
 
     /**
      * Represents a basic image combining the data and size.
@@ -5325,7 +5381,7 @@ define('image_wrapper',[
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('tracer',[],function() {
-    "use strict";
+    
     
     var Tracer = {
         searchDirections : [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
@@ -5434,7 +5490,7 @@ define('tracer',[],function() {
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('rasterizer',["tracer"], function(Tracer) {
-    "use strict";
+    
 
     var Rasterizer = {
         createContour2D : function() {
@@ -5630,7 +5686,7 @@ define('rasterizer',["tracer"], function(Tracer) {
 /* global define */
 
 define('skeletonizer',[],function() {
-    "use strict";
+    
 
     /* @preserve ASM BEGIN */
     function Skeletonizer(stdlib, foreign, buffer) {
@@ -5835,7 +5891,7 @@ define('skeletonizer',[],function() {
 /* global define */
 
 define('image_debug',[],function() {
-    "use strict";
+    
     
     return {
         drawRect: function(pos, size, ctx, style){
@@ -6203,16 +6259,24 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
      * @returns {Array} list of patches
      */
     function describePatch(moments, patchPos, x, y) {
-        var k, avg, sum = 0, eligibleMoments = [], matchingMoments, patch, patchesFound = [];
+        var k,
+            avg,
+            sum = 0,
+            eligibleMoments = [],
+            matchingMoments,
+            patch,
+            patchesFound = [],
+            minComponentWeight = Math.ceil(_patchSize.x/3);
+
         if (moments.length >= 2) {
-            // only collect moments which's area covers at least 6 pixels.
+            // only collect moments which's area covers at least minComponentWeight pixels.
             for ( k = 0; k < moments.length; k++) {
-                if (moments[k].m00 > 6) {
+                if (moments[k].m00 > minComponentWeight) {
                     eligibleMoments.push(moments[k]);
                 }
             }
 
-            // if at least 2 moments are found which have 6pixels covered
+            // if at least 2 moments are found which have at least minComponentWeights covered
             if (eligibleMoments.length >= 2) {
                 sum = eligibleMoments.length;
                 matchingMoments = similarMoments(eligibleMoments);
@@ -6379,8 +6443,8 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define('bresenham',[],function() {
-    "use strict";
+define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
+    
     var Bresenham = {};
 
     var Slope = {
@@ -6467,6 +6531,20 @@ define('bresenham',[],function() {
             line : line,
             min : min,
             max : max
+        };
+    };
+
+    Bresenham.toOtsuBinaryLine = function(result) {
+        var line = result.line,
+            image = new ImageWrapper({x: line.length - 1, y: 1}, line),
+            threshold = CVUtils.determineOtsuThreshold(image, 5);
+
+        line = CVUtils.sharpenLine(line);
+        CVUtils.thresholdImage(image, threshold);
+
+        return {
+            line: line,
+            threshold: threshold
         };
     };
     
@@ -6586,7 +6664,7 @@ define(
         "./array_helper"
     ],
     function(BarcodeReader, ArrayHelper) {
-        "use strict";
+        
 
         function Code39Reader() {
             BarcodeReader.call(this);
@@ -6788,7 +6866,7 @@ define(
         "./code_39_reader"
     ],
     function(Code39Reader) {
-        "use strict";
+        
 
         function Code39VINReader() {
             Code39Reader.call(this);
@@ -6848,7 +6926,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        "use strict";
+        
 
         function CodabarReader() {
             BarcodeReader.call(this);
@@ -7161,7 +7239,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        "use strict";
+        
 
         function UPCReader() {
             EANReader.call(this);
@@ -7192,7 +7270,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        "use strict";
+        
 
         function EAN8Reader() {
             EANReader.call(this);
@@ -7237,7 +7315,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        "use strict";
+        
 
         function UPCEReader() {
             EANReader.call(this);
@@ -7363,7 +7441,7 @@ define('barcode_decoder',[
     UPCReader,
     EAN8Reader,
     UPCEReader) {
-    "use strict";
+    
 
     var readers = {
         code_128_reader: Code128Reader,
@@ -7642,7 +7720,7 @@ define('barcode_decoder',[
 /* global define */
 
 define('frame_grabber',["cv_utils"], function(CVUtils) {
-    "use strict";
+    
 
     var FrameGrabber = {};
 
@@ -7724,7 +7802,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
 /* global define */
 
 define('html_utils',[], function() {
-    "use strict";
+    
 
     function createNode(htmlStr) {
         var temp = document.createElement('div');
@@ -7771,8 +7849,8 @@ define('config',[],function(){
           constraints: {
               width: 640,
               height: 480,
-              minAspectRatio: 1,
-              maxAspectRatio: 1,
+              minAspectRatio: 0,
+              maxAspectRatio: 100,
               facing: "environment" // or user
           }
       },
@@ -7818,7 +7896,7 @@ define('config',[],function(){
 /* global define */
 
 define('events',[],function() {
-    "use strict";
+    
 
     var _events = function() {
         var events = {};
@@ -7909,7 +7987,7 @@ define('events',[],function() {
 /* global define, MediaStreamTrack */
 
 define('camera_access',["html_utils"], function(HtmlUtils) {
-    "use strict";
+    
     var streamRef,
         loadedDataHandler;
 
@@ -7981,8 +8059,8 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
             videoConstraints = HtmlUtils.mergeObjects({
                 width: 640,
                 height: 480,
-                minAspectRatio: 1,
-                maxAspectRatio: 1,
+                minAspectRatio: 0,
+                maxAspectRatio: 100,
                 facing: "environment"
             }, config);
 
@@ -8076,7 +8154,7 @@ function(Code128Reader,
          CameraAccess,
          ImageDebug,
          CVUtils) {
-    "use strict";
+    
     
     var _inputStream,
         _framegrabber,

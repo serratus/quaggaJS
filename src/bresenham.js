@@ -1,7 +1,7 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define(function() {
+define(["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
     "use strict";
     var Bresenham = {};
 
@@ -89,6 +89,20 @@ define(function() {
             line : line,
             min : min,
             max : max
+        };
+    };
+
+    Bresenham.toOtsuBinaryLine = function(result) {
+        var line = result.line,
+            image = new ImageWrapper({x: line.length - 1, y: 1}, line),
+            threshold = CVUtils.determineOtsuThreshold(image, 5);
+
+        line = CVUtils.sharpenLine(line);
+        CVUtils.thresholdImage(image, threshold);
+
+        return {
+            line: line,
+            threshold: threshold
         };
     };
     
