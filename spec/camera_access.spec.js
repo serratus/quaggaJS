@@ -32,6 +32,9 @@ define(['camera_access'], function(CameraAccess){
             addEventListener: function() {
                 
             },
+            removeEventListener: function() {
+
+            },
             play: function() {
                 
             },

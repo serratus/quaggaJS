@@ -41,7 +41,9 @@ define(
                 [3, 1, 2, 1],
                 [2, 1, 1, 3]
             ]},
-            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]}
+            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
+            SINGLE_CODE_ERROR: {value: 1},
+            AVG_CODE_ERROR: {value: 0.5}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -82,7 +84,7 @@ define(
                             }
                         }
                         bestMatch.end = i;
-                        if (bestMatch.error > 0.5) {
+                        if (bestMatch.error > self.AVG_CODE_ERROR) {
                             return null;
                         }
                         return bestMatch;
@@ -125,7 +127,7 @@ define(
             }
 
             if ( epsilon === undefined) {
-                epsilon = 0.5;
+                epsilon = self.AVG_CODE_ERROR;
             }
 
             for ( i = 0; i < pattern.length; i++) {

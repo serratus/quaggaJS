@@ -463,7 +463,7 @@ define(
                 error = 0,
                 singleError = 0,
                 modulo = this.MODULO,
-                maxSingleError = 0.9;
+                maxSingleError = this.SINGLE_CODE_ERROR || 0.9;
                 
             for (i = 0; i < counter.length; i++) {
                 singleError = Math.abs(code[i] - counter[i]);
@@ -1121,7 +1121,9 @@ define(
                 [3, 1, 2, 1],
                 [2, 1, 1, 3]
             ]},
-            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]}
+            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
+            SINGLE_CODE_ERROR: {value: 1},
+            AVG_CODE_ERROR: {value: 0.5}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -1162,7 +1164,7 @@ define(
                             }
                         }
                         bestMatch.end = i;
-                        if (bestMatch.error > 0.5) {
+                        if (bestMatch.error > self.AVG_CODE_ERROR) {
                             return null;
                         }
                         return bestMatch;
@@ -1205,7 +1207,7 @@ define(
             }
 
             if ( epsilon === undefined) {
-                epsilon = 0.5;
+                epsilon = self.AVG_CODE_ERROR;
             }
 
             for ( i = 0; i < pattern.length; i++) {
@@ -6604,9 +6606,9 @@ define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper
         // iterate over extrema and convert to binary based on avg between minmax
         for ( i = 1; i < extrema.length - 1; i++) {
             if (extrema[i + 1].val > extrema[i].val) {
-                threshold = (extrema[i].val + (extrema[i + 1].val - extrema[i].val) / 2) | 0;
+                threshold = (extrema[i].val + ((extrema[i + 1].val - extrema[i].val) / 3) * 2) | 0;
             } else {
-                threshold = (extrema[i + 1].val + (extrema[i].val - extrema[i + 1].val) / 2) | 0;
+                threshold = (extrema[i + 1].val + ((extrema[i].val - extrema[i + 1].val) / 3)) | 0;
             }
 
             for ( j = extrema[i].pos; j < extrema[i + 1].pos; j++) {

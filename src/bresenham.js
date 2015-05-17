@@ -162,9 +162,9 @@ define(["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
         // iterate over extrema and convert to binary based on avg between minmax
         for ( i = 1; i < extrema.length - 1; i++) {
             if (extrema[i + 1].val > extrema[i].val) {
-                threshold = (extrema[i].val + (extrema[i + 1].val - extrema[i].val) / 2) | 0;
+                threshold = (extrema[i].val + ((extrema[i + 1].val - extrema[i].val) / 3) * 2) | 0;
             } else {
-                threshold = (extrema[i + 1].val + (extrema[i].val - extrema[i + 1].val) / 2) | 0;
+                threshold = (extrema[i + 1].val + ((extrema[i].val - extrema[i + 1].val) / 3)) | 0;
             }
 
             for ( j = extrema[i].pos; j < extrema[i + 1].pos; j++) {
