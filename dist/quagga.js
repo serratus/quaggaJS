@@ -463,7 +463,7 @@ define(
                 error = 0,
                 singleError = 0,
                 modulo = this.MODULO,
-                maxSingleError = this.SINGLE_CODE_ERROR || 0.9;
+                maxSingleError = this.SINGLE_CODE_ERROR || 1;
                 
             for (i = 0; i < counter.length; i++) {
                 singleError = Math.abs(code[i] - counter[i]);
@@ -762,7 +762,9 @@ define(
                 [2, 1, 1, 2, 1, 4],
                 [2, 1, 1, 2, 3, 2],
                 [2, 3, 3, 1, 1, 1, 2]
-            ]}
+            ]},
+            SINGLE_CODE_ERROR: {value: 1},
+            AVG_CODE_ERROR: {value: 0.5}
         };
         
         Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -839,7 +841,7 @@ define(
                         }
                         normalized = self._normalize(counter, 13);
                         error = self._matchPattern(normalized, self.CODE_PATTERN[self.STOP_CODE]);
-                        if (error < 3) {
+                        if (error < self.AVG_CODE_ERROR) {
                             bestMatch.error = error;
                             bestMatch.start = i - sum;
                             bestMatch.end = i;
@@ -898,7 +900,7 @@ define(
                                 bestMatch.error = error;
                             }
                         }
-                        if (bestMatch.error < 3) {
+                        if (bestMatch.error < self.AVG_CODE_ERROR) {
                             bestMatch.start = i - sum;
                             bestMatch.end = i;
                             return bestMatch;
@@ -8579,7 +8581,7 @@ function(Code128Reader,
                 }
             }, config);
             this.init(config, function() {
-                Events.once("detected", function(result) {
+                Events.once("processed", function(result) {
                     _stopped = true;
                     resultCallback.call(null, result);
                 }, true);

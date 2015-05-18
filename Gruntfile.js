@@ -6,6 +6,9 @@ module.exports = function(grunt) {
         karma: {
             unit: {
                 configFile: 'karma.conf.js'
+            },
+            integration: {
+                configFile: 'karma-integration.conf.js'
             }
         },
         uglify : {
@@ -75,6 +78,7 @@ module.exports = function(grunt) {
     grunt.registerTask('check', ['jshint']);
     grunt.registerTask('dist', ['build', 'uglify', 'uglyasm']);
     grunt.registerTask('test', ['karma']);
+    grunt.registerTask('integrationtest', ['karma:integration']);
 
     grunt.registerTask('default', ['build']);
 }; 

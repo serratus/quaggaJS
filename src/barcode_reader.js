@@ -29,7 +29,7 @@ define(
                 error = 0,
                 singleError = 0,
                 modulo = this.MODULO,
-                maxSingleError = this.SINGLE_CODE_ERROR || 0.9;
+                maxSingleError = this.SINGLE_CODE_ERROR || 1;
                 
             for (i = 0; i < counter.length; i++) {
                 singleError = Math.abs(code[i] - counter[i]);

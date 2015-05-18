@@ -8,35 +8,25 @@ module.exports = function(config) {
       'src/typedefs.js',
       {pattern: 'node_modules/async/lib/async.js', included: false},
       {pattern: 'src/*.js', included: false},
-      {pattern: 'spec/**/*.js', included: false},
+      {pattern: 'spec/**/*integration.spec.js', included: false},
       {pattern: 'test/**/*.*', included: false}
     ],
     exclude: [
-        'spec/**/*integration.spec.js'
     ],
-    preprocessors: {
-        'src/*.js': ['coverage']
-    },
     plugins: [
         'karma-chrome-launcher',
-        'karma-coverage',
         'karma-mocha',
         'karma-requirejs',
         'karma-chai',
         'karma-sinon',
-        'karma-sinon-chai',
-        'karma-phantomjs-launcher'
+        'karma-sinon-chai'
     ],
-    reporters: ['progress', 'coverage'],
+    reporters: ['progress'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['Chrome'],
-    singleRun: false,
-    coverageReporter: {
-        type : 'html',
-        dir : 'coverage/'
-    }
+    singleRun: false
   });
 };

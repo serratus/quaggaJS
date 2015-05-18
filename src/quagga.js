@@ -452,7 +452,7 @@ function(Code128Reader,
                 }
             }, config);
             this.init(config, function() {
-                Events.once("detected", function(result) {
+                Events.once("processed", function(result) {
                     _stopped = true;
                     resultCallback.call(null, result);
                 }, true);
