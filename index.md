@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-05-09)
+- [Changelog](#changelog) (2015-05-18)
 
 ## What is QuaggaJS?
 
@@ -298,6 +298,11 @@ configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-05-18
+- Improvements
+  - Making EAN and UPC readers more restrictive
+  - Added integration-tests for all barcode-readers
 
 ### 2015-05-09
 - Improvements

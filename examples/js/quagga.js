@@ -460,12 +460,19 @@ define(
         
         BarcodeReader.prototype._matchPattern = function(counter, code) {
             var i,
-                error = 0;
+                error = 0,
+                singleError = 0,
+                modulo = this.MODULO,
+                maxSingleError = this.SINGLE_CODE_ERROR || 1;
                 
             for (i = 0; i < counter.length; i++) {
-                error += Math.abs(code[i] - counter[i]);
+                singleError = Math.abs(code[i] - counter[i]);
+                if (singleError > maxSingleError) {
+                    return Number.MAX_VALUE;
+                }
+                error += singleError;
             }
-            return error;
+            return error/modulo;
         };
 
         BarcodeReader.prototype._nextSet = function(line, offset) {
@@ -755,7 +762,9 @@ define(
                 [2, 1, 1, 2, 1, 4],
                 [2, 1, 1, 2, 3, 2],
                 [2, 3, 3, 1, 1, 1, 2]
-            ]}
+            ]},
+            SINGLE_CODE_ERROR: {value: 1},
+            AVG_CODE_ERROR: {value: 0.5}
         };
         
         Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -832,7 +841,7 @@ define(
                         }
                         normalized = self._normalize(counter, 13);
                         error = self._matchPattern(normalized, self.CODE_PATTERN[self.STOP_CODE]);
-                        if (error < 3) {
+                        if (error < self.AVG_CODE_ERROR) {
                             bestMatch.error = error;
                             bestMatch.start = i - sum;
                             bestMatch.end = i;
@@ -891,7 +900,7 @@ define(
                                 bestMatch.error = error;
                             }
                         }
-                        if (bestMatch.error < 3) {
+                        if (bestMatch.error < self.AVG_CODE_ERROR) {
                             bestMatch.start = i - sum;
                             bestMatch.end = i;
                             return bestMatch;
@@ -1114,7 +1123,9 @@ define(
                 [3, 1, 2, 1],
                 [2, 1, 1, 3]
             ]},
-            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]}
+            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
+            SINGLE_CODE_ERROR: {value: 1},
+            AVG_CODE_ERROR: {value: 0.5}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -1155,6 +1166,9 @@ define(
                             }
                         }
                         bestMatch.end = i;
+                        if (bestMatch.error > self.AVG_CODE_ERROR) {
+                            return null;
+                        }
                         return bestMatch;
                     } else {
                         counterPos++;
@@ -1195,7 +1209,7 @@ define(
             }
 
             if ( epsilon === undefined) {
-                epsilon = 1.5;
+                epsilon = self.AVG_CODE_ERROR;
             }
 
             for ( i = 0; i < pattern.length; i++) {
@@ -1279,13 +1293,29 @@ define(
             return self._verifyTrailingWhitespace(endInfo);
         };
 
+        EANReader.prototype._calculateFirstDigit = function(codeFrequency) {
+            var i,
+                self = this;
+
+            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
+                if (codeFrequency === self.CODE_FREQUENCY[i]) {
+                    return i;
+                }
+            }
+            return null;
+        };
+
         EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
             var i,
                 self = this,
-                codeFrequency = 0x0;
+                codeFrequency = 0x0,
+                firstDigit;
 
             for ( i = 0; i < 6; i++) {
                 code = self._decodeCode(code.end);
+                if (!code) {
+                    return null;
+                }
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
@@ -1296,12 +1326,11 @@ define(
                 decodedCodes.push(code);
             }
 
-            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
-                if (codeFrequency === self.CODE_FREQUENCY[i]) {
-                    result.unshift(i);
-                    break;
-                }
+            firstDigit = self._calculateFirstDigit(codeFrequency);
+            if (firstDigit === null) {
+                return null;
             }
+            result.unshift(firstDigit);
 
             code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {
@@ -4377,22 +4406,46 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         }
     };
 
-    CVUtils.computeHistogram = function(imageWrapper) {
-        var imageData = imageWrapper.data, length = imageData.length, i, hist = new Int32Array(256);
-
-        // init histogram
-        for ( i = 0; i < 256; i++) {
-            hist[i] = 0;
+    CVUtils.computeHistogram = function(imageWrapper, bitsPerPixel) {
+        if (!bitsPerPixel) {
+            bitsPerPixel = 8;
         }
+        var imageData = imageWrapper.data,
+            length = imageData.length,
+            bitShift = 8 - bitsPerPixel,
+            bucketCnt = 1 << bitsPerPixel,
+            hist = new Int32Array(bucketCnt);
 
         while (length--) {
-            hist[imageData[length]]++;
+            hist[imageData[length] >> bitShift]++;
         }
         return hist;
     };
 
-    CVUtils.otsuThreshold = function(imageWrapper, targetWrapper) {
-        var hist, threshold;
+    CVUtils.sharpenLine = function(line) {
+        var i,
+            length = line.length,
+            left = line[0],
+            center = line[1],
+            right;
+
+        for (i = 1; i < length - 1; i++) {
+            right = line[i + 1];
+            //  -1 4 -1 kernel
+            line[i-1] = (((center * 2) - left - right)) & 255;
+            left = center;
+            center = right;
+        }
+        return line;
+    };
+
+    CVUtils.determineOtsuThreshold = function(imageWrapper, bitsPerPixel) {
+        if (!bitsPerPixel) {
+            bitsPerPixel = 8;
+        }
+        var hist,
+            threshold,
+            bitShift = 8 - bitsPerPixel;
 
         function px(init, end) {
             var sum = 0, i;
@@ -4413,18 +4466,19 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         }
 
         function determineThreshold() {
-            var vet = [0], p1, p2, p12, k, m1, m2, m12;
+            var vet = [0], p1, p2, p12, k, m1, m2, m12,
+                max = (1 << bitsPerPixel) - 1;
 
-            hist = CVUtils.computeHistogram(imageWrapper);
-            for ( k = 1; k < 255; k++) {
+            hist = CVUtils.computeHistogram(imageWrapper, bitsPerPixel);
+            for ( k = 1; k < max; k++) {
                 p1 = px(0, k);
-                p2 = px(k + 1, 255);
+                p2 = px(k + 1, max);
                 p12 = p1 * p2;
                 if (p12 === 0) {
                     p12 = 1;
                 }
                 m1 = mx(0, k) * p2;
-                m2 = mx(k + 1, 255) * p1;
+                m2 = mx(k + 1, max) * p1;
                 m12 = m1 - m2;
                 vet[k] = m12 * m12 / p12;
             }
@@ -4432,6 +4486,12 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         }
 
         threshold = determineThreshold();
+        return threshold << bitShift;
+    };
+
+    CVUtils.otsuThreshold = function(imageWrapper, targetWrapper) {
+        var threshold = CVUtils.determineOtsuThreshold(imageWrapper);
+
         CVUtils.thresholdImage(imageWrapper, threshold, targetWrapper);
         return threshold;
     };
@@ -6203,16 +6263,24 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
      * @returns {Array} list of patches
      */
     function describePatch(moments, patchPos, x, y) {
-        var k, avg, sum = 0, eligibleMoments = [], matchingMoments, patch, patchesFound = [];
+        var k,
+            avg,
+            sum = 0,
+            eligibleMoments = [],
+            matchingMoments,
+            patch,
+            patchesFound = [],
+            minComponentWeight = Math.ceil(_patchSize.x/3);
+
         if (moments.length >= 2) {
-            // only collect moments which's area covers at least 6 pixels.
+            // only collect moments which's area covers at least minComponentWeight pixels.
             for ( k = 0; k < moments.length; k++) {
-                if (moments[k].m00 > 6) {
+                if (moments[k].m00 > minComponentWeight) {
                     eligibleMoments.push(moments[k]);
                 }
             }
 
-            // if at least 2 moments are found which have 6pixels covered
+            // if at least 2 moments are found which have at least minComponentWeights covered
             if (eligibleMoments.length >= 2) {
                 sum = eligibleMoments.length;
                 matchingMoments = similarMoments(eligibleMoments);
@@ -6379,7 +6447,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define('bresenham',[],function() {
+define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
     
     var Bresenham = {};
 
@@ -6469,6 +6537,20 @@ define('bresenham',[],function() {
             max : max
         };
     };
+
+    Bresenham.toOtsuBinaryLine = function(result) {
+        var line = result.line,
+            image = new ImageWrapper({x: line.length - 1, y: 1}, line),
+            threshold = CVUtils.determineOtsuThreshold(image, 5);
+
+        line = CVUtils.sharpenLine(line);
+        CVUtils.thresholdImage(image, threshold);
+
+        return {
+            line: line,
+            threshold: threshold
+        };
+    };
     
     /**
      * Converts the result from getBarcodeLine into a binary representation 
@@ -6526,9 +6608,9 @@ define('bresenham',[],function() {
         // iterate over extrema and convert to binary based on avg between minmax
         for ( i = 1; i < extrema.length - 1; i++) {
             if (extrema[i + 1].val > extrema[i].val) {
-                threshold = (extrema[i].val + (extrema[i + 1].val - extrema[i].val) / 2) | 0;
+                threshold = (extrema[i].val + ((extrema[i + 1].val - extrema[i].val) / 3) * 2) | 0;
             } else {
-                threshold = (extrema[i + 1].val + (extrema[i].val - extrema[i + 1].val) / 2) | 0;
+                threshold = (extrema[i + 1].val + ((extrema[i].val - extrema[i + 1].val) / 3)) | 0;
             }
 
             for ( j = extrema[i].pos; j < extrema[i + 1].pos; j++) {
@@ -6780,6 +6862,66 @@ define(
         return (Code39Reader);
     }
 );
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
+    'code_39_vin_reader',[
+        "./code_39_reader"
+    ],
+    function(Code39Reader) {
+        
+
+        function Code39VINReader() {
+            Code39Reader.call(this);
+        }
+
+        var patterns = {
+            IOQ: /[IOQ]/g,
+            AZ09: /[A-Z0-9]{17}/
+        };
+
+        Code39VINReader.prototype = Object.create(Code39Reader.prototype);
+        Code39VINReader.prototype.constructor = Code39VINReader;
+
+        // Cribbed from:
+        // https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/client/result/VINResultParser.java
+        Code39VINReader.prototype._decode = function() {
+            var result = Code39Reader.prototype._decode.apply(this);
+            if (!result) {
+                return null;
+            }
+
+            var code = result.code;
+
+            if (!code) {
+                return;
+            }
+
+            code = code.replace(patterns.IOQ, '');
+
+            if (!code.match(patterns.AZ09)) {
+                console.log('Failed AZ09 pattern code:', code);
+                return null;
+            }
+
+            if (!this._checkChecksum(code)) {
+                return null;
+            }
+
+            result.code = code;
+            return result;
+        };
+
+        Code39VINReader.prototype._checkChecksum = function(code) {
+            // TODO
+            return !!code;
+        };
+
+        return (Code39VINReader);
+    }
+);
+
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
@@ -7287,6 +7429,7 @@ define('barcode_decoder',[
     'code_128_reader',
     'ean_reader',
     'code_39_reader',
+    'code_39_vin_reader',
     'codabar_reader',
     'upc_reader',
     'ean_8_reader',
@@ -7297,17 +7440,19 @@ define('barcode_decoder',[
     Code128Reader,
     EANReader,
     Code39Reader,
+    Code39VINReader,
     CodabarReader,
     UPCReader,
     EAN8Reader,
     UPCEReader) {
     
-    
+
     var readers = {
         code_128_reader: Code128Reader,
         ean_reader: EANReader,
         ean_8_reader: EAN8Reader,
         code_39_reader: Code39Reader,
+        code_39_vin_reader: Code39VINReader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader,
         upc_e_reader: UPCEReader
@@ -7328,7 +7473,7 @@ define('barcode_decoder',[
                 },
                 _barcodeReaders = [],
                 _barcodeReader = null;
-            
+
             initCanvas();
             initReaders();
             initConfig();
@@ -7393,9 +7538,9 @@ define('barcode_decoder',[
             }
 
             /**
-             * extend the line on both ends 
+             * extend the line on both ends
              * @param {Array} line
-             * @param {Number} angle 
+             * @param {Number} angle
              */
             function getExtendedLine(line, angle, ext) {
                 function extendLine(amount) {
@@ -7421,7 +7566,7 @@ define('barcode_decoder',[
                 }
                 return line;
             }
-            
+
             function getLine(box) {
                 return [{
                     x : (box[1][0] - box[0][0]) / 2 + box[0][0],
@@ -7431,12 +7576,12 @@ define('barcode_decoder',[
                     y : (box[3][1] - box[2][1]) / 2 + box[2][1]
                 }];
             }
-            
+
             function tryDecode(line) {
                 var result = null,
                     i,
                     barcodeLine = Bresenham.getBarcodeLine(inputImageWrapper, line[0], line[1]);
-                    
+
                 if (config.showFrequency) {
                     ImageDebug.drawPath(line, {x: 'x', y: 'y'}, _canvas.ctx.overlay, {color: 'red', lineWidth: 3});
                     Bresenham.debug.printFrequency(barcodeLine.line, _canvas.dom.frequency);
@@ -7445,7 +7590,7 @@ define('barcode_decoder',[
                 if (config.showPattern) {
                     Bresenham.debug.printPattern(barcodeLine.line, _canvas.dom.pattern);
                 }
-                
+
                 for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                     result = _barcodeReaders[i].decodePattern(barcodeLine.line);
                     if (result !== null) {
@@ -7459,15 +7604,15 @@ define('barcode_decoder',[
                     codeResult: result,
                     barcodeLine: barcodeLine
                 };
-                
+
             }
-            
+
             /**
              * This method slices the given area apart and tries to detect a barcode-pattern
              * for each slice. It returns the decoded barcode, or null if nothing was found
              * @param {Array} box
              * @param {Array} line
-             * @param {Number} lineAngle 
+             * @param {Number} lineAngle
              */
             function tryDecodeBruteForce(box, line, lineAngle) {
                 var sideLength = Math.sqrt(Math.pow(box[1][0] - box[0][0], 2) + Math.pow((box[1][1] - box[0][1]), 2)),
@@ -7478,7 +7623,7 @@ define('barcode_decoder',[
                     extension,
                     xdir = Math.sin(lineAngle),
                     ydir = Math.cos(lineAngle);
-                    
+
                 for ( i = 1; i < slices && result === null; i++) {
                     // move line perpendicular to angle
                     dir = sideLength / slices * i * (i % 2 === 0 ? -1 : 1);
@@ -7503,7 +7648,7 @@ define('barcode_decoder',[
             }
 
             /**
-             * With the help of the configured readers (Code128 or EAN) this function tries to detect a 
+             * With the help of the configured readers (Code128 or EAN) this function tries to detect a
              * valid barcode pattern within the given area.
              * @param {Object} box The area to search in
              * @returns {Object} the result {codeResult, line, angle, pattern, threshold}
@@ -7531,7 +7676,7 @@ define('barcode_decoder',[
                 if(result === null) {
                     result = tryDecodeBruteForce(box, line, lineAngle);
                 }
-                
+
                 if(result === null) {
                     return null;
                 }
@@ -7573,7 +7718,8 @@ define('barcode_decoder',[
     };
 
     return (BarcodeDecoder);
-}); 
+});
+
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
@@ -7697,7 +7843,7 @@ define('html_utils',[], function() {
     };
 }); 
 /**
- * The basic configuration 
+ * The basic configuration
  */
 
 define('config',[],function(){
@@ -7707,6 +7853,8 @@ define('config',[],function(){
           constraints: {
               width: 640,
               height: 480,
+              minAspectRatio: 0,
+              maxAspectRatio: 100,
               facing: "environment" // or user
           }
       },
@@ -7744,9 +7892,10 @@ define('config',[],function(){
         }
       }
    };
-   
+
    return config;
 });
+
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
@@ -7845,7 +7994,7 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
     
     var streamRef,
         loadedDataHandler;
-    
+
     /**
      * Wraps browser-specific getUserMedia
      * @param {Object} constraints
@@ -7914,6 +8063,8 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
             videoConstraints = HtmlUtils.mergeObjects({
                 width: 640,
                 height: 480,
+                minAspectRatio: 0,
+                maxAspectRatio: 100,
                 facing: "environment"
             }, config);
 
@@ -7929,7 +8080,9 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
                 constraints.video = {
                     mandatory: {
                         minWidth: videoConstraints.width,
-                        minHeight: videoConstraints.height
+                        minHeight: videoConstraints.height,
+                        minAspectRatio: videoConstraints.minAspectRatio,
+                        maxAspectRatio: videoConstraints.maxAspectRatio
                     },
                     optional: [{
                         sourceId: videoSourceId
@@ -7972,7 +8125,8 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
             streamRef = null;
         }
     };
-}); 
+});
+
 /* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
 /* global define,  vec2 */
 
@@ -8427,7 +8581,7 @@ function(Code128Reader,
                 }
             }, config);
             this.init(config, function() {
-                Events.once("detected", function(result) {
+                Events.once("processed", function(result) {
                     _stopped = true;
                     resultCallback.call(null, result);
                 }, true);
