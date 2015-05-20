@@ -293,6 +293,11 @@ work.
 
 ## <a name="changelog">Changelog</a>
 
+### 2015-05-20
+- Improvements
+  - Making EAN and UPC readers even more restrictive
+  - Added example using requirejs
+
 ### 2015-05-18
 - Improvements
   - Making EAN and UPC readers more restrictive

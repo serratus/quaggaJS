@@ -1090,8 +1090,8 @@ define(
     function(BarcodeReader) {
         
         
-        function EANReader() {
-            BarcodeReader.call(this);
+        function EANReader(opts) {
+            BarcodeReader.call(this, opts);
         }
         
         var properties = {
@@ -1124,8 +1124,8 @@ define(
                 [2, 1, 1, 3]
             ]},
             CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
-            SINGLE_CODE_ERROR: {value: 1},
-            AVG_CODE_ERROR: {value: 0.5}
+            SINGLE_CODE_ERROR: {value: 0.7},
+            AVG_CODE_ERROR: {value: 0.3}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
