@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-05-18)
+- [Changelog](#changelog) (2015-05-20)
 
 ## What is QuaggaJS?
 
