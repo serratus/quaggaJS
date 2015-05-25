@@ -9,7 +9,17 @@ define(["image_loader"], function(ImageLoader) {
         var that = {},
             _config = null,
             _eventNames = ['canrecord', 'ended'],
-            _eventHandlers = {};
+            _eventHandlers = {},
+            _calculatedWidth,
+            _calculatedHeight;
+
+        function initSize() {
+            var width = video.videoWidth,
+                height = video.videoHeight;
+
+            _calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
+            _calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+        }
 
         that.getRealWidth = function() {
             return video.videoWidth;
@@ -20,11 +30,19 @@ define(["image_loader"], function(ImageLoader) {
         };
 
         that.getWidth = function() {
-            return _config.halfSample ? video.videoWidth / 2 : video.videoWidth;
+            return _calculatedWidth;
         };
 
         that.getHeight = function() {
-            return _config.halfSample ? video.videoHeight / 2 : video.videoHeight;
+            return _calculatedHeight;
+        };
+
+        that.setWidth = function(width) {
+            _calculatedWidth = width;
+        };
+
+        that.setHeight = function(height) {
+            _calculatedHeight = height;
         };
 
         that.setInputStream = function(config) {
@@ -82,7 +100,10 @@ define(["image_loader"], function(ImageLoader) {
         that.trigger = function(eventName, args) {
             var j,
                 handlers = _eventHandlers[eventName];
-                
+
+            if (eventName === 'canrecord') {
+                initSize();
+            }
             if (handlers && handlers.length > 0) {
                 for ( j = 0; j < handlers.length; j++) {
                     handlers[j].apply(that, args);
@@ -103,14 +124,6 @@ define(["image_loader"], function(ImageLoader) {
 
         that.ended = function() {
             return false;
-        };
-
-        that.getWidth = function() {
-            return this.getConfig().halfSample ? video.videoWidth / 2 : video.videoWidth;
-        };
-
-        that.getHeight = function() {
-            return this.getConfig().halfSample ? video.videoHeight / 2 : video.videoHeight;
         };
 
         return that;

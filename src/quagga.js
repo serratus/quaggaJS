@@ -111,19 +111,20 @@ function(Code128Reader,
         var patchSize,
             width = _inputStream.getWidth(),
             height = _inputStream.getHeight(),
-            halfSample = _config.locator.halfSample,
+            halfSample = _config.locator.halfSample ? 0.5 : 1,
             size = {
-                x: Math.floor(width * (halfSample ? 0.5 : 1)),
-                y: Math.floor(height * (halfSample ? 0.5 : 1))
+                x: Math.floor(width * halfSample),
+                y: Math.floor(height * halfSample)
             };
 
         if (_config.locate) {
             try {
+                console.log(size);
                 patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
             } catch (error) {
                 if (error instanceof CVUtils.AdjustToSizeError) {
-                    _inputStream.setWidth(Math.floor(width/error.patchSize.x)*error.patchSize.x);
-                    _inputStream.setHeight(Math.floor(height/error.patchSize.y)*error.patchSize.y);
+                    _inputStream.setWidth(Math.floor(Math.floor(size.x/error.patchSize.x)*(1/halfSample)*error.patchSize.x));
+                    _inputStream.setHeight(Math.floor(Math.floor(size.y/error.patchSize.y)*(1/halfSample)*error.patchSize.y));
                     patchSize = error.patchSize;
                 }
             }

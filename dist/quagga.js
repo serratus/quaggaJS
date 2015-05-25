@@ -1479,7 +1479,17 @@ define('input_stream',["image_loader"], function(ImageLoader) {
         var that = {},
             _config = null,
             _eventNames = ['canrecord', 'ended'],
-            _eventHandlers = {};
+            _eventHandlers = {},
+            _calculatedWidth,
+            _calculatedHeight;
+
+        function initSize() {
+            var width = video.videoWidth,
+                height = video.videoHeight;
+
+            _calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
+            _calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+        }
 
         that.getRealWidth = function() {
             return video.videoWidth;
@@ -1490,11 +1500,19 @@ define('input_stream',["image_loader"], function(ImageLoader) {
         };
 
         that.getWidth = function() {
-            return _config.halfSample ? video.videoWidth / 2 : video.videoWidth;
+            return _calculatedWidth;
         };
 
         that.getHeight = function() {
-            return _config.halfSample ? video.videoHeight / 2 : video.videoHeight;
+            return _calculatedHeight;
+        };
+
+        that.setWidth = function(width) {
+            _calculatedWidth = width;
+        };
+
+        that.setHeight = function(height) {
+            _calculatedHeight = height;
         };
 
         that.setInputStream = function(config) {
@@ -1552,7 +1570,10 @@ define('input_stream',["image_loader"], function(ImageLoader) {
         that.trigger = function(eventName, args) {
             var j,
                 handlers = _eventHandlers[eventName];
-                
+
+            if (eventName === 'canrecord') {
+                initSize();
+            }
             if (handlers && handlers.length > 0) {
                 for ( j = 0; j < handlers.length; j++) {
                     handlers[j].apply(that, args);
@@ -1573,14 +1594,6 @@ define('input_stream',["image_loader"], function(ImageLoader) {
 
         that.ended = function() {
             return false;
-        };
-
-        that.getWidth = function() {
-            return this.getConfig().halfSample ? video.videoWidth / 2 : video.videoWidth;
-        };
-
-        that.getHeight = function() {
-            return this.getConfig().halfSample ? video.videoHeight / 2 : video.videoHeight;
         };
 
         return that;
@@ -8240,19 +8253,20 @@ function(Code128Reader,
         var patchSize,
             width = _inputStream.getWidth(),
             height = _inputStream.getHeight(),
-            halfSample = _config.locator.halfSample,
+            halfSample = _config.locator.halfSample ? 0.5 : 1,
             size = {
-                x: Math.floor(width * (halfSample ? 0.5 : 1)),
-                y: Math.floor(height * (halfSample ? 0.5 : 1))
+                x: Math.floor(width * halfSample),
+                y: Math.floor(height * halfSample)
             };
 
         if (_config.locate) {
             try {
+                console.log(size);
                 patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
             } catch (error) {
                 if (error instanceof CVUtils.AdjustToSizeError) {
-                    _inputStream.setWidth(Math.floor(width/error.patchSize.x)*error.patchSize.x);
-                    _inputStream.setHeight(Math.floor(height/error.patchSize.y)*error.patchSize.y);
+                    _inputStream.setWidth(Math.floor(Math.floor(size.x/error.patchSize.x)*(1/halfSample)*error.patchSize.x));
+                    _inputStream.setHeight(Math.floor(Math.floor(size.y/error.patchSize.y)*(1/halfSample)*error.patchSize.y));
                     patchSize = error.patchSize;
                 }
             }
