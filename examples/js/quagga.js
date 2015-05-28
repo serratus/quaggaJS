@@ -1177,7 +1177,7 @@ define(
                     isWhite = !isWhite;
                 }
             }
-            throw BarcodeReader.CodeNotFoundException;
+            return null;
         };
 
         EANReader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder, epsilon) {
@@ -1242,7 +1242,7 @@ define(
                             counter[counter.length - 1] = 0;
                             counterPos--;
                         } else {
-                            throw BarcodeReader.PatternNotFoundException;
+                            return null;
                         }
                     } else {
                         counterPos++;
@@ -1251,7 +1251,7 @@ define(
                     isWhite = !isWhite;
                 }
             }
-            throw BarcodeReader.PatternNotFoundException;
+            return null;
         };
 
         EANReader.prototype._findStart = function() {
@@ -1262,6 +1262,9 @@ define(
 
             while(!startInfo) {
                 startInfo = self._findPattern(self.START_PATTERN, offset);
+                if (!startInfo) {
+                    return null;
+                }
                 leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
                 if (leadingWhitespaceStart >= 0) {
                     if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
@@ -1290,7 +1293,7 @@ define(
             var self = this,
                 endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite, false);
 
-            return self._verifyTrailingWhitespace(endInfo);
+            return endInfo !== null ? self._verifyTrailingWhitespace(endInfo) : null;
         };
 
         EANReader.prototype._calculateFirstDigit = function(codeFrequency) {
@@ -1340,6 +1343,9 @@ define(
 
             for ( i = 0; i < 6; i++) {
                 code = self._decodeCode(code.end, self.CODE_G_START);
+                if (!code) {
+                    return null;
+                }
                 decodedCodes.push(code);
                 result.push(code.code);
             }
@@ -1350,31 +1356,33 @@ define(
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
-                code = null, 
+                code,
                 result = [],
                 decodedCodes = [];
 
-            try {
-                startInfo = self._findStart();
-                code = {
-                    code : startInfo.code,
-                    start : startInfo.start,
-                    end : startInfo.end
-                };
-                decodedCodes.push(code);
-                code = self._decodePayload(code, result, decodedCodes);
-                code = self._findEnd(code.end, false);
-                if (!code){
-                    return null;
-                }
+            startInfo = self._findStart();
+            if (!startInfo) {
+                return null;
+            }
+            code = {
+                code : startInfo.code,
+                start : startInfo.start,
+                end : startInfo.end
+            };
+            decodedCodes.push(code);
+            code = self._decodePayload(code, result, decodedCodes);
+            if (!code) {
+                return null;
+            }
+            code = self._findEnd(code.end, false);
+            if (!code){
+                return null;
+            }
 
-                decodedCodes.push(code);
+            decodedCodes.push(code);
 
-                // Checksum
-                if (!self._checksum(result)) {
-                    return null;
-                }
-            } catch (exc) {
+            // Checksum
+            if (!self._checksum(result)) {
                 return null;
             }
 
@@ -1479,7 +1487,17 @@ define('input_stream',["image_loader"], function(ImageLoader) {
         var that = {},
             _config = null,
             _eventNames = ['canrecord', 'ended'],
-            _eventHandlers = {};
+            _eventHandlers = {},
+            _calculatedWidth,
+            _calculatedHeight;
+
+        function initSize() {
+            var width = video.videoWidth,
+                height = video.videoHeight;
+
+            _calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
+            _calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+        }
 
         that.getRealWidth = function() {
             return video.videoWidth;
@@ -1490,11 +1508,19 @@ define('input_stream',["image_loader"], function(ImageLoader) {
         };
 
         that.getWidth = function() {
-            return _config.halfSample ? video.videoWidth / 2 : video.videoWidth;
+            return _calculatedWidth;
         };
 
         that.getHeight = function() {
-            return _config.halfSample ? video.videoHeight / 2 : video.videoHeight;
+            return _calculatedHeight;
+        };
+
+        that.setWidth = function(width) {
+            _calculatedWidth = width;
+        };
+
+        that.setHeight = function(height) {
+            _calculatedHeight = height;
         };
 
         that.setInputStream = function(config) {
@@ -1552,7 +1578,10 @@ define('input_stream',["image_loader"], function(ImageLoader) {
         that.trigger = function(eventName, args) {
             var j,
                 handlers = _eventHandlers[eventName];
-                
+
+            if (eventName === 'canrecord') {
+                initSize();
+            }
             if (handlers && handlers.length > 0) {
                 for ( j = 0; j < handlers.length; j++) {
                     handlers[j].apply(that, args);
@@ -1573,14 +1602,6 @@ define('input_stream',["image_loader"], function(ImageLoader) {
 
         that.ended = function() {
             return false;
-        };
-
-        that.getWidth = function() {
-            return this.getConfig().halfSample ? video.videoWidth / 2 : video.videoWidth;
-        };
-
-        that.getHeight = function() {
-            return this.getConfig().halfSample ? video.videoHeight / 2 : video.videoHeight;
         };
 
         return that;
@@ -7289,6 +7310,9 @@ define(
 
             for ( i = 0; i < 4; i++) {
                 code = self._decodeCode(code.end, self.CODE_G_START);
+                if (!code) {
+                    return null;
+                }
                 result.push(code.code);
                 decodedCodes.push(code);
             }
@@ -7301,6 +7325,9 @@ define(
 
             for ( i = 0; i < 4; i++) {
                 code = self._decodeCode(code.end, self.CODE_G_START);
+                if (!code) {
+                    return null;
+                }
                 decodedCodes.push(code);
                 result.push(code.code);
             }
@@ -7342,6 +7369,9 @@ define(
 
             for ( i = 0; i < 6; i++) {
                 code = self._decodeCode(code.end);
+                if (!code) {
+                    return null;
+                }
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
@@ -8240,19 +8270,20 @@ function(Code128Reader,
         var patchSize,
             width = _inputStream.getWidth(),
             height = _inputStream.getHeight(),
-            halfSample = _config.locator.halfSample,
+            halfSample = _config.locator.halfSample ? 0.5 : 1,
             size = {
-                x: Math.floor(width * (halfSample ? 0.5 : 1)),
-                y: Math.floor(height * (halfSample ? 0.5 : 1))
+                x: Math.floor(width * halfSample),
+                y: Math.floor(height * halfSample)
             };
 
         if (_config.locate) {
             try {
+                console.log(size);
                 patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
             } catch (error) {
                 if (error instanceof CVUtils.AdjustToSizeError) {
-                    _inputStream.setWidth(Math.floor(width/error.patchSize.x)*error.patchSize.x);
-                    _inputStream.setHeight(Math.floor(height/error.patchSize.y)*error.patchSize.y);
+                    _inputStream.setWidth(Math.floor(Math.floor(size.x/error.patchSize.x)*(1/halfSample)*error.patchSize.x));
+                    _inputStream.setHeight(Math.floor(Math.floor(size.y/error.patchSize.y)*(1/halfSample)*error.patchSize.y));
                     patchSize = error.patchSize;
                 }
             }
