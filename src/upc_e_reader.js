@@ -29,6 +29,9 @@ define(
 
             for ( i = 0; i < 6; i++) {
                 code = self._decodeCode(code.end);
+                if (!code) {
+                    return null;
+                }
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);

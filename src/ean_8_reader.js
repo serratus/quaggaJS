@@ -21,6 +21,9 @@ define(
 
             for ( i = 0; i < 4; i++) {
                 code = self._decodeCode(code.end, self.CODE_G_START);
+                if (!code) {
+                    return null;
+                }
                 result.push(code.code);
                 decodedCodes.push(code);
             }
@@ -33,6 +36,9 @@ define(
 
             for ( i = 0; i < 4; i++) {
                 code = self._decodeCode(code.end, self.CODE_G_START);
+                if (!code) {
+                    return null;
+                }
                 decodedCodes.push(code);
                 result.push(code.code);
             }

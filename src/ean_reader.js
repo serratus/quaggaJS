@@ -95,7 +95,7 @@ define(
                     isWhite = !isWhite;
                 }
             }
-            throw BarcodeReader.CodeNotFoundException;
+            return null;
         };
 
         EANReader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder, epsilon) {
@@ -160,7 +160,7 @@ define(
                             counter[counter.length - 1] = 0;
                             counterPos--;
                         } else {
-                            throw BarcodeReader.PatternNotFoundException;
+                            return null;
                         }
                     } else {
                         counterPos++;
@@ -169,7 +169,7 @@ define(
                     isWhite = !isWhite;
                 }
             }
-            throw BarcodeReader.PatternNotFoundException;
+            return null;
         };
 
         EANReader.prototype._findStart = function() {
@@ -180,6 +180,9 @@ define(
 
             while(!startInfo) {
                 startInfo = self._findPattern(self.START_PATTERN, offset);
+                if (!startInfo) {
+                    return null;
+                }
                 leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
                 if (leadingWhitespaceStart >= 0) {
                     if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
@@ -208,7 +211,7 @@ define(
             var self = this,
                 endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite, false);
 
-            return self._verifyTrailingWhitespace(endInfo);
+            return endInfo !== null ? self._verifyTrailingWhitespace(endInfo) : null;
         };
 
         EANReader.prototype._calculateFirstDigit = function(codeFrequency) {
@@ -258,6 +261,9 @@ define(
 
             for ( i = 0; i < 6; i++) {
                 code = self._decodeCode(code.end, self.CODE_G_START);
+                if (!code) {
+                    return null;
+                }
                 decodedCodes.push(code);
                 result.push(code.code);
             }
@@ -268,31 +274,33 @@ define(
         EANReader.prototype._decode = function() {
             var startInfo,
                 self = this,
-                code = null, 
+                code,
                 result = [],
                 decodedCodes = [];
 
-            try {
-                startInfo = self._findStart();
-                code = {
-                    code : startInfo.code,
-                    start : startInfo.start,
-                    end : startInfo.end
-                };
-                decodedCodes.push(code);
-                code = self._decodePayload(code, result, decodedCodes);
-                code = self._findEnd(code.end, false);
-                if (!code){
-                    return null;
-                }
+            startInfo = self._findStart();
+            if (!startInfo) {
+                return null;
+            }
+            code = {
+                code : startInfo.code,
+                start : startInfo.start,
+                end : startInfo.end
+            };
+            decodedCodes.push(code);
+            code = self._decodePayload(code, result, decodedCodes);
+            if (!code) {
+                return null;
+            }
+            code = self._findEnd(code.end, false);
+            if (!code){
+                return null;
+            }
 
-                decodedCodes.push(code);
+            decodedCodes.push(code);
 
-                // Checksum
-                if (!self._checksum(result)) {
-                    return null;
-                }
-            } catch (exc) {
+            // Checksum
+            if (!self._checksum(result)) {
                 return null;
             }
 
