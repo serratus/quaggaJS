@@ -1,9 +1,10 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define, vec2 */
+/* global define */
 
-define(function() {
+define(["gl-matrix"], function(glMatrix) {
     "use strict";
-    
+
+    var vec2 = glMatrix.vec2;
     /**
      * Creates a cluster for grouping similar orientations of datapoints 
      */
@@ -11,7 +12,7 @@ define(function() {
         create : function(point, threshold) {
             var points = [], center = {
                 rad : 0,
-                vec : vec2.create([0, 0])
+                vec : vec2.clone([0, 0])
             }, pointMap = {};
 
             function init() {
@@ -30,7 +31,7 @@ define(function() {
                     sum += points[i].rad;
                 }
                 center.rad = sum / points.length;
-                center.vec = vec2.create([Math.cos(center.rad), Math.sin(center.rad)]);
+                center.vec = vec2.clone([Math.cos(center.rad), Math.sin(center.rad)]);
             }
 
             init();

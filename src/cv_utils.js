@@ -1,7 +1,7 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define, vec2, vec3 */
+/* global define */
 
-define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrixAddon, ArrayHelper) {
+define(['cluster', "array_helper", "gl-matrix"], function(Cluster2, ArrayHelper, glMatrix) {
 
     "use strict";
     /*
@@ -14,7 +14,9 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
      * @class Represents a collection of useful CV algorithms/functions
      */
 
-    var CVUtils = {};
+    var CVUtils = {},
+        vec2 = glMatrix.vec2,
+        vec3 = glMatrix.vec3;
 
     /**
      * @param x x-coordinate
@@ -26,10 +28,10 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
             x : x,
             y : y,
             toVec2 : function() {
-                return vec2.create([this.x, this.y]);
+                return vec2.clone([this.x, this.y]);
             },
             toVec3 : function() {
-                return vec3.create([this.x, this.y, 1]);
+                return vec3.clone([this.x, this.y, 1]);
             },
             round : function() {
                 this.x = this.x > 0.0 ? Math.floor(this.x + 0.5) : Math.floor(this.x - 0.5);

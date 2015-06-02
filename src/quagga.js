@@ -1,5 +1,5 @@
 /* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
-/* global define,  vec2 */
+/* global define */
 
 
 define([
@@ -15,7 +15,8 @@ define([
         "events",
         "camera_access",
         "image_debug",
-        "cv_utils"],
+        "cv_utils",
+        "gl-matrix"],
 function(Code128Reader,
          EANReader,
          InputStream,
@@ -28,7 +29,8 @@ function(Code128Reader,
          Events,
          CameraAccess,
          ImageDebug,
-         CVUtils) {
+         CVUtils,
+         glMatrix) {
     "use strict";
     
     var _inputStream,
@@ -48,7 +50,8 @@ function(Code128Reader,
         _boxSize,
         _decoder,
         _workerPool = [],
-        _onUIThread = true;
+        _onUIThread = true,
+        vec2 = glMatrix.vec2;
 
     function initializeData(imageWrapper) {
         initBuffers(imageWrapper);
@@ -56,20 +59,22 @@ function(Code128Reader,
     }
 
     function initConfig() {
-        var vis = [{
-            node : document.querySelector("div[data-controls]"),
-            prop : _config.controls
-        }, {
-            node : _canvasContainer.dom.overlay,
-            prop : _config.visual.show
-        }];
+        if (typeof document !== "undefined") {
+            var vis = [{
+                node: document.querySelector("div[data-controls]"),
+                prop: _config.controls
+            }, {
+                node: _canvasContainer.dom.overlay,
+                prop: _config.visual.show
+            }];
 
-        for (var i = 0; i < vis.length; i++) {
-            if (vis[i].node) {
-                if (vis[i].prop === true) {
-                    vis[i].node.style.display = "block";
-                } else {
-                    vis[i].node.style.display = "none";
+            for (var i = 0; i < vis.length; i++) {
+                if (vis[i].node) {
+                    if (vis[i].prop === true) {
+                        vis[i].node.style.display = "block";
+                    } else {
+                        vis[i].node.style.display = "none";
+                    }
                 }
             }
         }
@@ -161,35 +166,37 @@ function(Code128Reader,
     }
 
     function initCanvas() {
-        var $viewport = document.querySelector("#interactive.viewport");
-        _canvasContainer.dom.image = document.querySelector("canvas.imgBuffer");
-        if (!_canvasContainer.dom.image) {
-            _canvasContainer.dom.image = document.createElement("canvas");
-            _canvasContainer.dom.image.className = "imgBuffer";
-            if($viewport && _config.inputStream.type == "ImageStream") {
-                $viewport.appendChild(_canvasContainer.dom.image);
+        if (typeof document !== "undefined") {
+            var $viewport = document.querySelector("#interactive.viewport");
+            _canvasContainer.dom.image = document.querySelector("canvas.imgBuffer");
+            if (!_canvasContainer.dom.image) {
+                _canvasContainer.dom.image = document.createElement("canvas");
+                _canvasContainer.dom.image.className = "imgBuffer";
+                if ($viewport && _config.inputStream.type == "ImageStream") {
+                    $viewport.appendChild(_canvasContainer.dom.image);
+                }
             }
-        }
-        _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
-        _canvasContainer.dom.image.width = _inputStream.getWidth();
-        _canvasContainer.dom.image.height = _inputStream.getHeight();
+            _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
+            _canvasContainer.dom.image.width = _inputStream.getWidth();
+            _canvasContainer.dom.image.height = _inputStream.getHeight();
 
-        _canvasContainer.dom.overlay = document.querySelector("canvas.drawingBuffer");
-        if (!_canvasContainer.dom.overlay) {
-            _canvasContainer.dom.overlay = document.createElement("canvas");
-            _canvasContainer.dom.overlay.className = "drawingBuffer";
-            if($viewport) {
-                $viewport.appendChild(_canvasContainer.dom.overlay);
+            _canvasContainer.dom.overlay = document.querySelector("canvas.drawingBuffer");
+            if (!_canvasContainer.dom.overlay) {
+                _canvasContainer.dom.overlay = document.createElement("canvas");
+                _canvasContainer.dom.overlay.className = "drawingBuffer";
+                if ($viewport) {
+                    $viewport.appendChild(_canvasContainer.dom.overlay);
+                }
+                var clearFix = document.createElement("br");
+                clearFix.setAttribute("clear", "all");
+                if ($viewport) {
+                    $viewport.appendChild(clearFix);
+                }
             }
-            var clearFix = document.createElement("br");
-            clearFix.setAttribute("clear", "all");
-            if($viewport) {
-                $viewport.appendChild(clearFix);
-            }
+            _canvasContainer.ctx.overlay = _canvasContainer.dom.overlay.getContext("2d");
+            _canvasContainer.dom.overlay.width = _inputStream.getWidth();
+            _canvasContainer.dom.overlay.height = _inputStream.getHeight();
         }
-        _canvasContainer.ctx.overlay = _canvasContainer.dom.overlay.getContext("2d");
-        _canvasContainer.dom.overlay.width = _inputStream.getWidth();
-        _canvasContainer.dom.overlay.height = _inputStream.getHeight();
     }
 
     function initBuffers(imageWrapper) {
@@ -204,10 +211,10 @@ function(Code128Reader,
 
         console.log(_inputImageWrapper.size);
         _boxSize = [
-                vec2.create([20, _inputImageWrapper.size.y / 2 - 100]),
-                vec2.create([20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.create([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.create([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 - 100])
+                vec2.clone([20, _inputImageWrapper.size.y / 2 - 100]),
+                vec2.clone([20, _inputImageWrapper.size.y / 2 + 100]),
+                vec2.clone([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 + 100]),
+                vec2.clone([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 - 100])
             ];
         BarcodeLocator.init(_inputImageWrapper, _config.locator);
     }

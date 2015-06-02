@@ -224,7 +224,7 @@ mat2.inverse = function(mat){
 };
 
 var vec2 = {};
-vec2.create = function(vec){
+vec2.clone = function(vec){
 	var dest;
 	
 	if(vec) {
@@ -324,7 +324,7 @@ vec2.length = function(vec){
 };
 
 vec2.perspectiveProject = function(vec){
-  var result = vec2.create(vec);
+  var result = vec2.clone(vec);
   return vec2.scale(result, 1/vec[2]);
 };
 
@@ -333,7 +333,7 @@ vec2.perspectiveProject = function(vec){
  * @returns vec2 projected vector
  */
 vec3.project = function(vec){
-	return vec2.scale(vec2.create(vec), 1/vec[2]);
+	return vec2.scale(vec2.clone(vec), 1/vec[2]);
 };
 
 var vec6 = {};

@@ -1,14 +1,17 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define, vec2, mat2  */
+/* global define  */
 
 define([
     "subImage",
     "cv_utils",
-    "array_helper"
+    "array_helper",
+    "gl-matrix"
     ], 
-    function(SubImage, CVUtils, ArrayHelper) {
+    function(SubImage, CVUtils, ArrayHelper, glMatrix) {
     
     'use strict';
+    var vec2 = glMatrix.vec2,
+        mat2 = glMatrix.mat2;
 
     /**
      * Represents a basic image combining the data and size.
@@ -62,11 +65,11 @@ define([
      */
     ImageWrapper.transform = function(inImg, outImg, M, inOrig, outOrig) {
         var w = outImg.size.x, h = outImg.size.y, iw = inImg.size.x, ih = inImg.size.y;
-        var across = vec2.create([M[0], M[2]]);
-        var down = vec2.create([M[1], M[3]]);
+        var across = vec2.clone([M[0], M[2]]);
+        var down = vec2.clone([M[1], M[3]]);
         var defaultValue = 0;
 
-        var p0 = vec2.subtract(inOrig, mat2.xVec2(M, outOrig, vec2.create()), vec2.create());
+        var p0 = vec2.subtract(inOrig, mat2.xVec2(M, outOrig, vec2.clone()), vec2.clone());
 
         var min_x = p0[0], min_y = p0[1];
         var max_x = min_x, max_y = min_y;
@@ -94,7 +97,7 @@ define([
         else
             max_y += h * down[1];
 
-        var carrigeReturn = vec2.subtract(down, vec2.scale(across, w, vec2.create()), vec2.create());
+        var carrigeReturn = vec2.subtract(down, vec2.scale(across, w, vec2.clone()), vec2.clone());
 
         if (min_x >= 0 && min_y >= 0 && max_x < iw - 1 && max_y < ih - 1) {
             p = p0;
@@ -346,7 +349,7 @@ define([
                     label.theta += 180;
                 }
                 label.rad = tmp > PI ? tmp - PI : tmp;
-                label.vec = vec2.create([Math.cos(tmp), Math.sin(tmp)]);
+                label.vec = vec2.clone([Math.cos(tmp), Math.sin(tmp)]);
                 result.push(label);
             }
         }

@@ -1,8 +1,8 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define, mat2, vec2 */
 
-define("barcode_locator", ["image_wrapper", "cv_utils", "rasterizer", "tracer", "skeletonizer", "array_helper", "image_debug"],
-function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, ImageDebug) {
+define("barcode_locator", ["image_wrapper", "cv_utils", "rasterizer", "tracer", "skeletonizer", "array_helper", "image_debug", "gl-matrix"],
+function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, ImageDebug, glMatrix) {
 
     var _config,
         _currentImageWrapper,
@@ -25,6 +25,8 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         _numPatches = {x: 0, y: 0},
         _inputImageWrapper,
         _skeletonizer,
+        vec2 = glMatrix.vec2,
+        mat2 = glMatrix.mat2,
         self = this;
 
     function initBuffers() {
@@ -100,15 +102,14 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             overAvg += 180;
         }
 
-        //console.log(overAvg);
         overAvg = (180 - overAvg) * Math.PI / 180;
-        transMat = mat2.create([Math.cos(overAvg), -Math.sin(overAvg), Math.sin(overAvg), Math.cos(overAvg)]);
+        transMat = mat2.clone([Math.cos(overAvg), Math.sin(overAvg), -Math.sin(overAvg), Math.cos(overAvg)]);
 
         // iterate over patches and rotate by angle
         for ( i = 0; i < patches.length; i++) {
             patch = patches[i];
             for ( j = 0; j < 4; j++) {
-                mat2.xVec2(transMat, patch.box[j]);
+                vec2.transformMat2(patch.box[j], patch.box[j], transMat);
             }
 
             if (_config.boxFromPatches.showTransformed) {
@@ -143,9 +144,9 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 
         scale = _config.halfSample ? 2 : 1;
         // reverse rotation;
-        transMat = mat2.inverse(transMat);
+        transMat = mat2.invert(transMat, transMat);
         for ( j = 0; j < 4; j++) {
-            mat2.xVec2(transMat, box[j]);
+            vec2.transformMat2(box[j], box[j], transMat);
         }
 
         if (_config.boxFromPatches.showBB) {
@@ -153,7 +154,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
         }
         
         for ( j = 0; j < 4; j++) {
-            vec2.scale(box[j], scale);
+            vec2.scale(box[j], box[j], scale);
         }
 
         return box;
@@ -377,10 +378,10 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
                             x : x,
                             y : y
                         },
-                        box : [vec2.create([x, y]), vec2.create([x + _subImageWrapper.size.x, y]), vec2.create([x + _subImageWrapper.size.x, y + _subImageWrapper.size.y]), vec2.create([x, y + _subImageWrapper.size.y])],
+                        box : [vec2.clone([x, y]), vec2.clone([x + _subImageWrapper.size.x, y]), vec2.clone([x + _subImageWrapper.size.x, y + _subImageWrapper.size.y]), vec2.clone([x, y + _subImageWrapper.size.y])],
                         moments : matchingMoments,
                         rad : avg,
-                        vec : vec2.create([Math.cos(avg), Math.sin(avg)])
+                        vec : vec2.clone([Math.cos(avg), Math.sin(avg)])
                     };
                     patchesFound.push(patch);
                 }
