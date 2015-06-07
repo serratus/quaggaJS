@@ -14,8 +14,7 @@ define([
         "config",
         "events",
         "camera_access",
-        "image_debug",
-        "cv_utils"],
+        "image_debug"],
 function(Code128Reader,
          EANReader,
          InputStream,
@@ -27,8 +26,7 @@ function(Code128Reader,
          _config,
          Events,
          CameraAccess,
-         ImageDebug,
-         CVUtils) {
+         ImageDebug) {
     "use strict";
     
     var _inputStream,
@@ -107,39 +105,10 @@ function(Code128Reader,
         _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
     }
 
-    function checkImageConstraints() {
-        var patchSize,
-            width = _inputStream.getWidth(),
-            height = _inputStream.getHeight(),
-            halfSample = _config.locator.halfSample ? 0.5 : 1,
-            size = {
-                x: Math.floor(width * halfSample),
-                y: Math.floor(height * halfSample)
-            };
-
-        if (_config.locate) {
-            try {
-                console.log(size);
-                patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
-            } catch (error) {
-                if (error instanceof CVUtils.AdjustToSizeError) {
-                    _inputStream.setWidth(Math.floor(Math.floor(size.x/error.patchSize.x)*(1/halfSample)*error.patchSize.x));
-                    _inputStream.setHeight(Math.floor(Math.floor(size.y/error.patchSize.y)*(1/halfSample)*error.patchSize.y));
-                    patchSize = error.patchSize;
-                }
-            }
-            console.log("Patch-Size: " + JSON.stringify(patchSize));
-            if ((_inputStream.getWidth() % patchSize.x) === 0 && (_inputStream.getHeight() % patchSize.y) === 0) {
-                return true;
-            }
-        }
-        throw new Error("Image dimensions do not comply with the current settings: Width (" +
-                            width + " )and height (" + height +
-                            ") must a multiple of " + patchSize.x);
-    }
-
     function canRecord(cb) {
-        checkImageConstraints();
+        if (_config.locate) {
+            BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
+        }
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();

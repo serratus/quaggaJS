@@ -647,7 +647,6 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
         optimalPatchSize = findPatchSizeForDivisors(common);
         if (!optimalPatchSize) {
             optimalPatchSize = findPatchSizeForDivisors(this._computeDivisors(wideSide));
-            throw new AdjustToSizeError("", optimalPatchSize);
         }
         return optimalPatchSize;
     };

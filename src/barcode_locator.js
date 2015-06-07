@@ -486,6 +486,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             initBuffers();
             initCanvas();
         },
+
         locate : function() {
             var patchesFound,
             topLabels = [],
@@ -516,6 +517,30 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 
             boxes = findBoxes(topLabels, maxLabel);
             return boxes;
+        },
+
+        checkImageConstraints: function(inputStream, config) {
+            var patchSize,
+                width = inputStream.getWidth(),
+                height = inputStream.getHeight(),
+                halfSample = config.halfSample ? 0.5 : 1,
+                size = {
+                    x: Math.floor(width * halfSample),
+                    y: Math.floor(height * halfSample)
+                };
+
+            patchSize = CVUtils.calculatePatchSize(config.patchSize, size);
+            inputStream.setWidth(Math.floor(Math.floor(size.x/patchSize.x)*(1/halfSample)*patchSize.x));
+            inputStream.setHeight(Math.floor(Math.floor(size.y/patchSize.y)*(1/halfSample)*patchSize.y));
+
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+            if ((inputStream.getWidth() % patchSize.x) === 0 && (inputStream.getHeight() % patchSize.y) === 0) {
+                return true;
+            }
+
+            throw new Error("Image dimensions do not comply with the current settings: Width (" +
+                width + " )and height (" + height +
+                ") must a multiple of " + patchSize.x);
         }
     };
 });

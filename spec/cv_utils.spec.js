@@ -8,4 +8,20 @@ define(['cv_utils'], function(CVUtils){
             expect(res.toVec2()[0]).to.equal(1);
         });
     });
+
+    describe('calculatePatchSize', function() {
+        it('should not throw an error in case of valid image size', function() {
+            var expected = {x: 32, y: 32},
+                patchSize = CVUtils.calculatePatchSize("medium", {x: 640, y: 480});
+
+            expect(patchSize).to.be.deep.equal(expected);
+        });
+
+        it('should thow an error if image size it not valid', function() {
+            var expected = {x: 32, y: 32},
+                patchSize = CVUtils.calculatePatchSize("medium", {x: 640, y: 480});
+
+            expect(patchSize).to.be.deep.equal(expected);
+        });
+    });
 });
