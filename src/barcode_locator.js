@@ -1,5 +1,5 @@
 /* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define, mat2, vec2 */
+/* global define */
 
 define("barcode_locator", ["image_wrapper", "cv_utils", "rasterizer", "tracer", "skeletonizer", "array_helper", "image_debug", "gl-matrix"],
 function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, ImageDebug, glMatrix) {

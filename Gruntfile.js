@@ -44,21 +44,12 @@ module.exports = function(grunt) {
                         "typedefs" : {
                             "deps" : [],
                             "exports" : "typedefs"
-                        },
-                        "glMatrix" : {
-                            "deps" : ["typedefs"],
-                            "exports" : "glMatrix"
-                        },
-                        "glMatrixAddon" : {
-                            "deps" : ["glMatrix"],
-                            "exports" : "glMatrixAddon"
                         }
                     },
 
                     "paths" : {
                         "typedefs" : "typedefs",
-                        "glMatrix" : "vendor/glMatrix",
-                        "glMatrixAddon" : "glMatrixAddon"
+                        "gl-matrix": "../node_modules/gl-matrix/dist/gl-matrix"
                     }
                 }
             }
