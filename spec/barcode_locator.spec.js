@@ -5,7 +5,8 @@ define(['barcode_locator', 'config', 'html_utils'],
     describe('checkImageConstraints', function() {
         var config,
             inputStream,
-            imageSize;
+            imageSize,
+            streamConfig = {};
 
         beforeEach(function() {
             imageSize = {
@@ -20,7 +21,12 @@ define(['barcode_locator', 'config', 'html_utils'],
                     return imageSize.y;
                 },
                 setWidth: function() {},
-                setHeight: function() {}
+                setHeight: function() {},
+                setTopRight: function() {},
+                setCanvasSize: function() {},
+                getConfig: function() {
+                    return streamConfig;
+                }
             };
             sinon.stub(inputStream, "setWidth", function(width) {
                 imageSize.x = width;
@@ -28,6 +34,8 @@ define(['barcode_locator', 'config', 'html_utils'],
             sinon.stub(inputStream, "setHeight", function(height) {
                 imageSize.y = height;
             });
+            sinon.stub(inputStream, "setTopRight");
+            sinon.stub(inputStream, "setCanvasSize");
         });
 
         afterEach(function() {
@@ -60,6 +68,64 @@ define(['barcode_locator', 'config', 'html_utils'],
             BarcodeLocator.checkImageConstraints(inputStream, config.locator);
             expect(inputStream.getHeight()).to.be.equal(expected.y);
             expect(inputStream.getWidth()).to.be.equal(expected.x);
+        });
+
+        it("should take the defined area into account", function() {
+            var expectedSize = {
+                    x: 420,
+                    y: 315
+                },
+                expectedTopRight = {
+                    x: 115,
+                    y: 52
+                },
+                expectedCanvasSize = {
+                    x: 640,
+                    y: 480
+                };
+
+            streamConfig.area = {
+                top: "11%",
+                right: "15%",
+                bottom: "20%",
+                left: "18%"
+            };
+
+            config.locator.halfSample = false;
+            BarcodeLocator.checkImageConstraints(inputStream, config.locator);
+            expect(inputStream.getHeight()).to.be.equal(expectedSize.y);
+            expect(inputStream.getWidth()).to.be.equal(expectedSize.x);
+            expect(inputStream.setTopRight.getCall(0).args[0]).to.deep.equal(expectedTopRight);
+            expect(inputStream.setCanvasSize.getCall(0).args[0]).to.deep.equal(expectedCanvasSize);
+        });
+
+        it("should return the original size if set to full image", function() {
+            var expectedSize = {
+                    x: 640,
+                    y: 480
+                },
+                expectedTopRight = {
+                    x: 0,
+                    y: 0
+                },
+                expectedCanvasSize = {
+                    x: 640,
+                    y: 480
+                };
+
+            streamConfig.area = {
+                top: "0%",
+                right: "0%",
+                bottom: "0%",
+                left: "0%"
+            };
+
+            config.locator.halfSample = false;
+            BarcodeLocator.checkImageConstraints(inputStream, config.locator);
+            expect(inputStream.getHeight()).to.be.equal(expectedSize.y);
+            expect(inputStream.getWidth()).to.be.equal(expectedSize.x);
+            expect(inputStream.setTopRight.getCall(0).args[0]).to.deep.equal(expectedTopRight);
+            expect(inputStream.setCanvasSize.getCall(0).args[0]).to.deep.equal(expectedCanvasSize);
         });
     });
 });

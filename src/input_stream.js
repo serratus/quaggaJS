@@ -11,7 +11,9 @@ define(["image_loader"], function(ImageLoader) {
             _eventNames = ['canrecord', 'ended'],
             _eventHandlers = {},
             _calculatedWidth,
-            _calculatedHeight;
+            _calculatedHeight,
+            _topRight = {x: 0, y: 0},
+            _canvasSize = {x: 0, y: 0};
 
         function initSize() {
             var width = video.videoWidth,
@@ -19,6 +21,9 @@ define(["image_loader"], function(ImageLoader) {
 
             _calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
             _calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+
+            _canvasSize.x = _calculatedWidth;
+            _canvasSize.y = _calculatedHeight;
         }
 
         that.getRealWidth = function() {
@@ -111,6 +116,24 @@ define(["image_loader"], function(ImageLoader) {
             }
         };
 
+        that.setTopRight = function(topRight) {
+            _topRight.x = topRight.x;
+            _topRight.y = topRight.y;
+        };
+
+        that.getTopRight = function() {
+            return _topRight;
+        };
+
+        that.setCanvasSize = function(size) {
+            _canvasSize.x = size.x;
+            _canvasSize.y = size.y;
+        };
+
+        that.getCanvasSize = function() {
+            return _canvasSize;
+        };
+
         that.getFrame = function() {
             return video;
         };
@@ -146,7 +169,9 @@ define(["image_loader"], function(ImageLoader) {
             calculatedWidth,
             calculatedHeight,
             _eventNames = ['canrecord', 'ended'],
-            _eventHandlers = {};
+            _eventHandlers = {},
+            _topRight = {x: 0, y: 0},
+            _canvasSize = {x: 0, y: 0};
 
         function loadImages() {
             loaded = false;
@@ -156,6 +181,8 @@ define(["image_loader"], function(ImageLoader) {
                 height = imgs[0].height;
                 calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
                 calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+                _canvasSize.x = calculatedWidth;
+                _canvasSize.y = calculatedHeight;
                 loaded = true;
                 frameIdx = 0;
                 setTimeout(function() {
@@ -243,6 +270,24 @@ define(["image_loader"], function(ImageLoader) {
                 }
                 _eventHandlers[event].push(f);
             }
+        };
+
+        that.setTopRight = function(topRight) {
+            _topRight.x = topRight.x;
+            _topRight.y = topRight.y;
+        };
+
+        that.getTopRight = function() {
+            return _topRight;
+        };
+
+        that.setCanvasSize = function(size) {
+            _canvasSize.x = size.x;
+            _canvasSize.y = size.y;
+        };
+
+        that.getCanvasSize = function() {
+            return _canvasSize;
         };
 
         that.getFrame = function() {

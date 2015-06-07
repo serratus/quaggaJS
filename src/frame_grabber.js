@@ -10,29 +10,26 @@ define(["cv_utils"], function(CVUtils) {
         var _that = {},
             _streamConfig = inputStream.getConfig(),
             _video_size = CVUtils.imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
-            _size =_streamConfig.size ? CVUtils.imageRef(inputStream.getWidth(), inputStream.getHeight()) : _video_size,
-            _sx = 0,
-            _sy = 0,
-            _dx = 0,
-            _dy = 0,
-            _sWidth,
-            _dWidth,
-            _sHeight,
-            _dHeight,
-            _canvas = null,
+            _canvasSize = inputStream.getCanvasSize(),
+            _size = CVUtils.imageRef(inputStream.getWidth(), inputStream.getHeight()),
+            topRight = inputStream.getTopRight(),
+            _sx = topRight.x,
+            _sy = topRight.y,
+            _canvas,
             _ctx = null,
             _data = null;
 
-        _sWidth = _video_size.x;
-        _dWidth = _size.x;
-        _sHeight = _video_size.y;
-        _dHeight = _size.y;
-
         _canvas = canvas ? canvas : document.createElement("canvas");
-        _canvas.width = _size.x;
-        _canvas.height = _size.y;
+        _canvas.width = _canvasSize.x;
+        _canvas.height = _canvasSize.y;
         _ctx = _canvas.getContext("2d");
         _data = new Uint8Array(_size.x * _size.y);
+        console.log("FrameGrabber", {
+            size: _size,
+            topRight: topRight,
+            videoSize: _video_size,
+            canvasSize: _canvasSize
+        });
 
         /**
          * Uses the given array as frame-buffer 
@@ -57,8 +54,8 @@ define(["cv_utils"], function(CVUtils) {
                 frame = inputStream.getFrame(),
                 ctxData;
             if (frame) {
-                _ctx.drawImage(frame, _sx, _sy, _sWidth, _sHeight, _dx, _dy, _dWidth, _dHeight);
-                ctxData = _ctx.getImageData(0, 0, _size.x, _size.y).data;
+                _ctx.drawImage(frame, 0, 0, _canvasSize.x, _canvasSize.y);
+                ctxData = _ctx.getImageData(_sx, _sy, _size.x, _size.y).data;
                 if(doHalfSample){
                     CVUtils.grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
                 } else {
