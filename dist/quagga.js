@@ -1489,7 +1489,9 @@ define('input_stream',["image_loader"], function(ImageLoader) {
             _eventNames = ['canrecord', 'ended'],
             _eventHandlers = {},
             _calculatedWidth,
-            _calculatedHeight;
+            _calculatedHeight,
+            _topRight = {x: 0, y: 0},
+            _canvasSize = {x: 0, y: 0};
 
         function initSize() {
             var width = video.videoWidth,
@@ -1497,6 +1499,9 @@ define('input_stream',["image_loader"], function(ImageLoader) {
 
             _calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
             _calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+
+            _canvasSize.x = _calculatedWidth;
+            _canvasSize.y = _calculatedHeight;
         }
 
         that.getRealWidth = function() {
@@ -1589,6 +1594,24 @@ define('input_stream',["image_loader"], function(ImageLoader) {
             }
         };
 
+        that.setTopRight = function(topRight) {
+            _topRight.x = topRight.x;
+            _topRight.y = topRight.y;
+        };
+
+        that.getTopRight = function() {
+            return _topRight;
+        };
+
+        that.setCanvasSize = function(size) {
+            _canvasSize.x = size.x;
+            _canvasSize.y = size.y;
+        };
+
+        that.getCanvasSize = function() {
+            return _canvasSize;
+        };
+
         that.getFrame = function() {
             return video;
         };
@@ -1624,7 +1647,9 @@ define('input_stream',["image_loader"], function(ImageLoader) {
             calculatedWidth,
             calculatedHeight,
             _eventNames = ['canrecord', 'ended'],
-            _eventHandlers = {};
+            _eventHandlers = {},
+            _topRight = {x: 0, y: 0},
+            _canvasSize = {x: 0, y: 0};
 
         function loadImages() {
             loaded = false;
@@ -1634,6 +1659,8 @@ define('input_stream',["image_loader"], function(ImageLoader) {
                 height = imgs[0].height;
                 calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
                 calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+                _canvasSize.x = calculatedWidth;
+                _canvasSize.y = calculatedHeight;
                 loaded = true;
                 frameIdx = 0;
                 setTimeout(function() {
@@ -1721,6 +1748,24 @@ define('input_stream',["image_loader"], function(ImageLoader) {
                 }
                 _eventHandlers[event].push(f);
             }
+        };
+
+        that.setTopRight = function(topRight) {
+            _topRight.x = topRight.x;
+            _topRight.y = topRight.y;
+        };
+
+        that.getTopRight = function() {
+            return _topRight;
+        };
+
+        that.setCanvasSize = function(size) {
+            _canvasSize.x = size.x;
+            _canvasSize.y = size.y;
+        };
+
+        that.getCanvasSize = function() {
+            return _canvasSize;
         };
 
         that.getFrame = function() {
@@ -4955,21 +5000,64 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
         optimalPatchSize = findPatchSizeForDivisors(common);
         if (!optimalPatchSize) {
             optimalPatchSize = findPatchSizeForDivisors(this._computeDivisors(wideSide));
-            throw new AdjustToSizeError("", optimalPatchSize);
+            if (!optimalPatchSize) {
+                optimalPatchSize = findPatchSizeForDivisors((this._computeDivisors(desiredPatchSize * nrOfPatches)));
+            }
         }
         return optimalPatchSize;
     };
 
-    function AdjustToSizeError(message, desiredPatchSize) {
-        this.name = 'AdjustToSizeError';
-        this.message = message || 'AdjustToSizeError';
-        this.patchSize = desiredPatchSize;
-    }
+    CVUtils._parseCSSDimensionValues = function(value) {
+        var dimension = {
+                value: parseFloat(value),
+                unit: value.indexOf("%") === value.length-1 ? "%" : "%"
+            };
 
-    AdjustToSizeError.prototype = Object.create(RangeError.prototype);
-    AdjustToSizeError.prototype.constructor = AdjustToSizeError;
+        return dimension;
+    };
 
-    CVUtils.AdjustToSizeError = AdjustToSizeError;
+    CVUtils._dimensionsConverters = {
+        top: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.height * (dimension.value / 100));
+            }
+        },
+        right: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.width - (context.width * (dimension.value / 100)));
+            }
+        },
+        bottom: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.height - (context.height * (dimension.value / 100)));
+            }
+        },
+        left: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.width * (dimension.value / 100));
+            }
+        }
+    };
+
+    CVUtils.computeImageArea = function(inputWidth, inputHeight, area) {
+        var context = {width: inputWidth, height: inputHeight};
+
+        var parsedArea = Object.keys(area).reduce(function(result, key) {
+            var value = area[key],
+                parsed = CVUtils._parseCSSDimensionValues(value),
+                calculated = CVUtils._dimensionsConverters[key](parsed, context);
+
+            result[key] = calculated;
+            return result;
+        }, {});
+
+        return {
+            sx: parsedArea.left,
+            sy: parsedArea.top,
+            sw: parsedArea.right - parsedArea.left,
+            sh: parsedArea.bottom - parsedArea.top
+        };
+    };
 
     return (CVUtils);
 });
@@ -6430,10 +6518,11 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             initBuffers();
             initCanvas();
         },
+
         locate : function() {
             var patchesFound,
-            topLabels = [],
-            boxes = [];
+            topLabels,
+            boxes;
 
             if (_config.halfSample) {
                 CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
@@ -6460,6 +6549,43 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 
             boxes = findBoxes(topLabels, maxLabel);
             return boxes;
+        },
+
+        checkImageConstraints: function(inputStream, config) {
+            var patchSize,
+                width = inputStream.getWidth(),
+                height = inputStream.getHeight(),
+                halfSample = config.halfSample ? 0.5 : 1,
+                size,
+                area;
+
+            // calculate width and height based on area
+            if (inputStream.getConfig().area) {
+                area = CVUtils.computeImageArea(width, height, inputStream.getConfig().area);
+                inputStream.setTopRight({x: area.sx, y: area.sy});
+                inputStream.setCanvasSize({x: width, y: height});
+                width = area.sw;
+                height = area.sh;
+            }
+
+            size = {
+                x: Math.floor(width * halfSample),
+                y: Math.floor(height * halfSample)
+            };
+
+            patchSize = CVUtils.calculatePatchSize(config.patchSize, size);
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+
+            inputStream.setWidth(Math.floor(Math.floor(size.x/patchSize.x)*(1/halfSample)*patchSize.x));
+            inputStream.setHeight(Math.floor(Math.floor(size.y/patchSize.y)*(1/halfSample)*patchSize.y));
+
+            if ((inputStream.getWidth() % patchSize.x) === 0 && (inputStream.getHeight() % patchSize.y) === 0) {
+                return true;
+            }
+
+            throw new Error("Image dimensions do not comply with the current settings: Width (" +
+                width + " )and height (" + height +
+                ") must a multiple of " + patchSize.x);
         }
     };
 });
@@ -7762,29 +7888,26 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
         var _that = {},
             _streamConfig = inputStream.getConfig(),
             _video_size = CVUtils.imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
-            _size =_streamConfig.size ? CVUtils.imageRef(inputStream.getWidth(), inputStream.getHeight()) : _video_size,
-            _sx = 0,
-            _sy = 0,
-            _dx = 0,
-            _dy = 0,
-            _sWidth,
-            _dWidth,
-            _sHeight,
-            _dHeight,
-            _canvas = null,
+            _canvasSize = inputStream.getCanvasSize(),
+            _size = CVUtils.imageRef(inputStream.getWidth(), inputStream.getHeight()),
+            topRight = inputStream.getTopRight(),
+            _sx = topRight.x,
+            _sy = topRight.y,
+            _canvas,
             _ctx = null,
             _data = null;
 
-        _sWidth = _video_size.x;
-        _dWidth = _size.x;
-        _sHeight = _video_size.y;
-        _dHeight = _size.y;
-
         _canvas = canvas ? canvas : document.createElement("canvas");
-        _canvas.width = _size.x;
-        _canvas.height = _size.y;
+        _canvas.width = _canvasSize.x;
+        _canvas.height = _canvasSize.y;
         _ctx = _canvas.getContext("2d");
         _data = new Uint8Array(_size.x * _size.y);
+        console.log("FrameGrabber", {
+            size: _size,
+            topRight: topRight,
+            videoSize: _video_size,
+            canvasSize: _canvasSize
+        });
 
         /**
          * Uses the given array as frame-buffer 
@@ -7809,8 +7932,8 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
                 frame = inputStream.getFrame(),
                 ctxData;
             if (frame) {
-                _ctx.drawImage(frame, _sx, _sy, _sWidth, _sHeight, _dx, _dy, _dWidth, _dHeight);
-                ctxData = _ctx.getImageData(0, 0, _size.x, _size.y).data;
+                _ctx.drawImage(frame, 0, 0, _canvasSize.x, _canvasSize.y);
+                ctxData = _ctx.getImageData(_sx, _sy, _size.x, _size.y).data;
                 if(doHalfSample){
                     CVUtils.grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
                 } else {
@@ -7886,6 +8009,12 @@ define('config',[],function(){
               minAspectRatio: 0,
               maxAspectRatio: 100,
               facing: "environment" // or user
+          },
+          area: {
+              top: "0%",
+              right: "0%",
+              left: "0%",
+              bottom: "0%"
           }
       },
       tracking: false,
@@ -8173,8 +8302,7 @@ define('quagga',[
         "config",
         "events",
         "camera_access",
-        "image_debug",
-        "cv_utils"],
+        "image_debug"],
 function(Code128Reader,
          EANReader,
          InputStream,
@@ -8186,8 +8314,7 @@ function(Code128Reader,
          _config,
          Events,
          CameraAccess,
-         ImageDebug,
-         CVUtils) {
+         ImageDebug) {
     
     
     var _inputStream,
@@ -8266,39 +8393,10 @@ function(Code128Reader,
         _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
     }
 
-    function checkImageConstraints() {
-        var patchSize,
-            width = _inputStream.getWidth(),
-            height = _inputStream.getHeight(),
-            halfSample = _config.locator.halfSample ? 0.5 : 1,
-            size = {
-                x: Math.floor(width * halfSample),
-                y: Math.floor(height * halfSample)
-            };
-
-        if (_config.locate) {
-            try {
-                console.log(size);
-                patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
-            } catch (error) {
-                if (error instanceof CVUtils.AdjustToSizeError) {
-                    _inputStream.setWidth(Math.floor(Math.floor(size.x/error.patchSize.x)*(1/halfSample)*error.patchSize.x));
-                    _inputStream.setHeight(Math.floor(Math.floor(size.y/error.patchSize.y)*(1/halfSample)*error.patchSize.y));
-                    patchSize = error.patchSize;
-                }
-            }
-            console.log("Patch-Size: " + JSON.stringify(patchSize));
-            if ((_inputStream.getWidth() % patchSize.x) === 0 && (_inputStream.getHeight() % patchSize.y) === 0) {
-                return true;
-            }
-        }
-        throw new Error("Image dimensions do not comply with the current settings: Width (" +
-                            width + " )and height (" + height +
-                            ") must a multiple of " + patchSize.x);
-    }
-
     function canRecord(cb) {
-        checkImageConstraints();
+        if (_config.locate) {
+            BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
+        }
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();
@@ -8330,8 +8428,8 @@ function(Code128Reader,
             }
         }
         _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
-        _canvasContainer.dom.image.width = _inputStream.getWidth();
-        _canvasContainer.dom.image.height = _inputStream.getHeight();
+        _canvasContainer.dom.image.width = _inputStream.getCanvasSize().x;
+        _canvasContainer.dom.image.height = _inputStream.getCanvasSize().y;
 
         _canvasContainer.dom.overlay = document.querySelector("canvas.drawingBuffer");
         if (!_canvasContainer.dom.overlay) {
@@ -8347,8 +8445,8 @@ function(Code128Reader,
             }
         }
         _canvasContainer.ctx.overlay = _canvasContainer.dom.overlay.getContext("2d");
-        _canvasContainer.dom.overlay.width = _inputStream.getWidth();
-        _canvasContainer.dom.overlay.height = _inputStream.getHeight();
+        _canvasContainer.dom.overlay.width = _inputStream.getCanvasSize().x;
+        _canvasContainer.dom.overlay.height = _inputStream.getCanvasSize().y;
     }
 
     function initBuffers(imageWrapper) {
@@ -8379,6 +8477,53 @@ function(Code128Reader,
         }
     }
 
+    function transformResult(result) {
+        var topRight = _inputStream.getTopRight(),
+            xOffset = topRight.x,
+            yOffset = topRight.y,
+            i;
+
+        if (!result || (xOffset === 0 && yOffset === 0)) {
+            return;
+        }
+
+
+        if (result.line && result.line.length === 2) {
+            moveLine(result.line);
+        }
+        if (result.boxes && result.boxes.length > 0) {
+            for (i = 0; i < result.boxes.length; i++) {
+                moveBox(result.boxes[i]);
+            }
+        }
+
+        function moveBox(box) {
+            var corner = box.length;
+
+            while(corner--) {
+                box[corner][0] += xOffset;
+                box[corner][1] += yOffset;
+            }
+        }
+
+        function moveLine(line) {
+            line[0].x += xOffset;
+            line[0].y += yOffset;
+            line[1].x += xOffset;
+            line[1].y += yOffset;
+        }
+    }
+
+    function publishResult(result) {
+        if (_onUIThread) {
+            transformResult(result);
+        }
+        Events.publish("processed", result);
+        if (result && result.codeResult) {
+            Events.publish("detected", result);
+        }
+    }
+
     function locateAndDecode() {
         var result,
             boxes;
@@ -8388,14 +8533,10 @@ function(Code128Reader,
             result = _decoder.decodeFromBoundingBoxes(boxes);
             result = result || {};
             result.boxes = boxes;
-            Events.publish("processed", result);
-            if (result && result.codeResult) {
-                Events.publish("detected", result);
-            }
+            publishResult(result);
         } else {
-            Events.publish("processed");
+            publishResult();
         }
-
     }
 
     function update() {
@@ -8479,10 +8620,7 @@ function(Code128Reader,
             } else if (e.data.event === 'processed') {
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
-                Events.publish("processed", e.data.result);
-                if (e.data.result && e.data.result.codeResult) {
-                    Events.publish("detected", e.data.result);
-                }
+                publishResult(e.data.result);
             }
         };
 

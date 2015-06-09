@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-05-20)
+- [Changelog](#changelog) (2015-06-09)
 
 ## What is QuaggaJS?
 
@@ -212,12 +212,18 @@ The default `config` object is set as followed:
 ```javascript
 {
   inputStream: { name: "Live",
-       type: "LiveStream",
-       constraints: {
-         width: 640,
-         height: 480,
-         facing: "environment"
-       }
+      type: "LiveStream",
+      constraints: {
+          width: 640,
+          height: 480,
+          facing: "environment"
+      },
+      area: { // defines rectangle of the detection/localization area
+          top: "0%",    // top offset
+          right: "0%",  // right offset
+          left: "0%",   // left offset
+          bottom: "0%"  // bottom offset
+      }
   },
   tracking: false,
   debug: false,
@@ -292,6 +298,11 @@ configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-06-09
+- Features
+  - Introduced the ``area`` property
+  - Ability to define a rectangle where localization/decoding should be applied
 
 ### 2015-05-20
 - Improvements

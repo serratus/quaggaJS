@@ -12,6 +12,12 @@ define(function(){
               minAspectRatio: 0,
               maxAspectRatio: 100,
               facing: "environment" // or user
+          },
+          area: {
+              top: "0%",
+              right: "0%",
+              left: "0%",
+              bottom: "0%"
           }
       },
       tracking: false,
