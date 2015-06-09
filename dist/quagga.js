@@ -5010,7 +5010,7 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
     CVUtils._parseCSSDimensionValues = function(value) {
         var dimension = {
                 value: parseFloat(value),
-                unit: value.indexOf("%") === value.length-1 ? "%" : "px"
+                unit: value.indexOf("%") === value.length-1 ? "%" : "%"
             };
 
         return dimension;
@@ -6574,7 +6574,8 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             };
 
             patchSize = CVUtils.calculatePatchSize(config.patchSize, size);
-            console.log("patchSize:", patchSize);
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+
             inputStream.setWidth(Math.floor(Math.floor(size.x/patchSize.x)*(1/halfSample)*patchSize.x));
             inputStream.setHeight(Math.floor(Math.floor(size.y/patchSize.y)*(1/halfSample)*patchSize.y));
 
