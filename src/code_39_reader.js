@@ -82,7 +82,13 @@ define(
             } while(decodedChar !== '*');
             result.pop();
 
+            if (!result.length) {
+                return null;
+            }
 
+            if(!self._verifyTrailingWhitespace(lastStart, nextStart, counters)) {
+                return null;
+            }
 
             return {
                 code : result.join(""),
@@ -91,6 +97,17 @@ define(
                 startInfo : start,
                 decodedCodes : result
             };
+        };
+
+        Code39Reader.prototype._verifyTrailingWhitespace = function(lastStart, nextStart, counters) {
+            var trailingWhitespaceEnd,
+                patternSize = ArrayHelper.sum(counters);
+
+            trailingWhitespaceEnd = nextStart - lastStart - patternSize;
+            if ((trailingWhitespaceEnd * 3) >= patternSize) {
+                return true;
+            }
+            return false;
         };
 
         Code39Reader.prototype._patternToChar = function(pattern) {

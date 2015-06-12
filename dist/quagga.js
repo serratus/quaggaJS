@@ -6890,7 +6890,13 @@ define(
             } while(decodedChar !== '*');
             result.pop();
 
+            if (!result.length) {
+                return null;
+            }
 
+            if(!self._verifyTrailingWhitespace(lastStart, nextStart, counters)) {
+                return null;
+            }
 
             return {
                 code : result.join(""),
@@ -6899,6 +6905,17 @@ define(
                 startInfo : start,
                 decodedCodes : result
             };
+        };
+
+        Code39Reader.prototype._verifyTrailingWhitespace = function(lastStart, nextStart, counters) {
+            var trailingWhitespaceEnd,
+                patternSize = ArrayHelper.sum(counters);
+
+            trailingWhitespaceEnd = nextStart - lastStart - patternSize;
+            if ((trailingWhitespaceEnd * 3) >= patternSize) {
+                return true;
+            }
+            return false;
         };
 
         Code39Reader.prototype._patternToChar = function(pattern) {
@@ -7902,12 +7919,12 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
         _canvas.height = _canvasSize.y;
         _ctx = _canvas.getContext("2d");
         _data = new Uint8Array(_size.x * _size.y);
-        console.log("FrameGrabber", {
+        console.log("FrameGrabber", JSON.stringify({
             size: _size,
             topRight: topRight,
             videoSize: _video_size,
             canvasSize: _canvasSize
-        });
+        }));
 
         /**
          * Uses the given array as frame-buffer 
