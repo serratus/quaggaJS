@@ -107,9 +107,31 @@ $(function() {
     
     App.init();
 
+    function calculateRectFromArea(canvas, area) {
+        var canvasWidth = canvas.width,
+            canvasHeight = canvas.height,
+            top = parseInt(area.top)/100,
+            right = parseInt(area.right)/100,
+            bottom = parseInt(area.bottom)/100,
+            left = parseInt(area.left)/100;
+
+        top *= canvasHeight;
+        right = canvasWidth - canvasWidth*right;
+        bottom = canvasHeight - canvasHeight*bottom;
+        left *= canvasWidth;
+
+        return {
+            x: left,
+            y: top,
+            width: right - left,
+            height: bottom - top
+        };
+    }
+
     Quagga.onProcessed(function(result) {
         var drawingCtx = Quagga.canvas.ctx.overlay,
-            drawingCanvas = Quagga.canvas.dom.overlay;
+            drawingCanvas = Quagga.canvas.dom.overlay,
+            area;
 
         if (result) {
             if (result.boxes) {
@@ -128,7 +150,13 @@ $(function() {
             if (result.codeResult && result.codeResult.code) {
                 Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
             }
-        }
+
+            if (App.state.inputStream.area) {
+                area = calculateRectFromArea(drawingCanvas, App.state.inputStream.area);
+                drawingCtx.strokeStyle = "#0F0";
+                drawingCtx.strokeRect(area.x, area.y, area.width, area.height);
+            }
+    }
     });
 
     Quagga.onDetected(function(result) {
