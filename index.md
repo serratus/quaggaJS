@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-06-09)
+- [Changelog](#changelog) (2015-06-13)
 
 ## What is QuaggaJS?
 
@@ -298,6 +298,11 @@ configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
 ## <a name="changelog">Changelog</a>
+
+
+### 2015-06-13
+- Improvements
+  - Added fixes for ``Code39Reader`` (trailing whitespace was missing)
 
 ### 2015-06-09
 - Features
