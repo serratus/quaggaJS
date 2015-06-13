@@ -649,21 +649,64 @@ define(['cluster', "array_helper", "gl-matrix"], function(Cluster2, ArrayHelper,
         optimalPatchSize = findPatchSizeForDivisors(common);
         if (!optimalPatchSize) {
             optimalPatchSize = findPatchSizeForDivisors(this._computeDivisors(wideSide));
-            throw new AdjustToSizeError("", optimalPatchSize);
+            if (!optimalPatchSize) {
+                optimalPatchSize = findPatchSizeForDivisors((this._computeDivisors(desiredPatchSize * nrOfPatches)));
+            }
         }
         return optimalPatchSize;
     };
 
-    function AdjustToSizeError(message, desiredPatchSize) {
-        this.name = 'AdjustToSizeError';
-        this.message = message || 'AdjustToSizeError';
-        this.patchSize = desiredPatchSize;
-    }
+    CVUtils._parseCSSDimensionValues = function(value) {
+        var dimension = {
+                value: parseFloat(value),
+                unit: value.indexOf("%") === value.length-1 ? "%" : "%"
+            };
 
-    AdjustToSizeError.prototype = Object.create(RangeError.prototype);
-    AdjustToSizeError.prototype.constructor = AdjustToSizeError;
+        return dimension;
+    };
 
-    CVUtils.AdjustToSizeError = AdjustToSizeError;
+    CVUtils._dimensionsConverters = {
+        top: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.height * (dimension.value / 100));
+            }
+        },
+        right: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.width - (context.width * (dimension.value / 100)));
+            }
+        },
+        bottom: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.height - (context.height * (dimension.value / 100)));
+            }
+        },
+        left: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.width * (dimension.value / 100));
+            }
+        }
+    };
+
+    CVUtils.computeImageArea = function(inputWidth, inputHeight, area) {
+        var context = {width: inputWidth, height: inputHeight};
+
+        var parsedArea = Object.keys(area).reduce(function(result, key) {
+            var value = area[key],
+                parsed = CVUtils._parseCSSDimensionValues(value),
+                calculated = CVUtils._dimensionsConverters[key](parsed, context);
+
+            result[key] = calculated;
+            return result;
+        }, {});
+
+        return {
+            sx: parsedArea.left,
+            sy: parsedArea.top,
+            sw: parsedArea.right - parsedArea.left,
+            sh: parsedArea.bottom - parsedArea.top
+        };
+    };
 
     return (CVUtils);
 });

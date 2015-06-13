@@ -487,10 +487,11 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
             initBuffers();
             initCanvas();
         },
+
         locate : function() {
             var patchesFound,
-            topLabels = [],
-            boxes = [];
+            topLabels,
+            boxes;
 
             if (_config.halfSample) {
                 CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
@@ -517,6 +518,43 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 
             boxes = findBoxes(topLabels, maxLabel);
             return boxes;
+        },
+
+        checkImageConstraints: function(inputStream, config) {
+            var patchSize,
+                width = inputStream.getWidth(),
+                height = inputStream.getHeight(),
+                halfSample = config.halfSample ? 0.5 : 1,
+                size,
+                area;
+
+            // calculate width and height based on area
+            if (inputStream.getConfig().area) {
+                area = CVUtils.computeImageArea(width, height, inputStream.getConfig().area);
+                inputStream.setTopRight({x: area.sx, y: area.sy});
+                inputStream.setCanvasSize({x: width, y: height});
+                width = area.sw;
+                height = area.sh;
+            }
+
+            size = {
+                x: Math.floor(width * halfSample),
+                y: Math.floor(height * halfSample)
+            };
+
+            patchSize = CVUtils.calculatePatchSize(config.patchSize, size);
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+
+            inputStream.setWidth(Math.floor(Math.floor(size.x/patchSize.x)*(1/halfSample)*patchSize.x));
+            inputStream.setHeight(Math.floor(Math.floor(size.y/patchSize.y)*(1/halfSample)*patchSize.y));
+
+            if ((inputStream.getWidth() % patchSize.x) === 0 && (inputStream.getHeight() % patchSize.y) === 0) {
+                return true;
+            }
+
+            throw new Error("Image dimensions do not comply with the current settings: Width (" +
+                width + " )and height (" + height +
+                ") must a multiple of " + patchSize.x);
         }
     };
 });

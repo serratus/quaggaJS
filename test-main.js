@@ -18,7 +18,6 @@ require.config({
     'array_helper': 'src/array_helper',
     'cv_utils': 'src/cv_utils',
     'typedefs': 'src/typedefs',
-    'glMatrixAddon': 'src/glMatrixAddon',
     'cluster': 'src/cluster',
     'camera_access': 'src/camera_access',
     'events': 'src/events',
@@ -46,7 +45,8 @@ require.config({
     'tracer': 'src/tracer',
     'upc_e_reader': 'src/upc_e_reader',
     'upc_reader': 'src/upc_reader',
-    'async': 'node_modules/async/lib/async'
+    'async': 'node_modules/async/lib/async',
+    'gl-matrix': 'node_modules/gl-matrix/dist/gl-matrix'
   },
   deps: allTestFiles,
   callback: window.__karma__.start

@@ -15,7 +15,6 @@ define([
         "events",
         "camera_access",
         "image_debug",
-        "cv_utils",
         "gl-matrix"],
 function(Code128Reader,
          EANReader,
@@ -29,7 +28,6 @@ function(Code128Reader,
          Events,
          CameraAccess,
          ImageDebug,
-         CVUtils,
          glMatrix) {
     "use strict";
     
@@ -112,39 +110,10 @@ function(Code128Reader,
         _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
     }
 
-    function checkImageConstraints() {
-        var patchSize,
-            width = _inputStream.getWidth(),
-            height = _inputStream.getHeight(),
-            halfSample = _config.locator.halfSample ? 0.5 : 1,
-            size = {
-                x: Math.floor(width * halfSample),
-                y: Math.floor(height * halfSample)
-            };
-
-        if (_config.locate) {
-            try {
-                console.log(size);
-                patchSize = CVUtils.calculatePatchSize(_config.locator.patchSize, size);
-            } catch (error) {
-                if (error instanceof CVUtils.AdjustToSizeError) {
-                    _inputStream.setWidth(Math.floor(Math.floor(size.x/error.patchSize.x)*(1/halfSample)*error.patchSize.x));
-                    _inputStream.setHeight(Math.floor(Math.floor(size.y/error.patchSize.y)*(1/halfSample)*error.patchSize.y));
-                    patchSize = error.patchSize;
-                }
-            }
-            console.log("Patch-Size: " + JSON.stringify(patchSize));
-            if ((_inputStream.getWidth() % patchSize.x) === 0 && (_inputStream.getHeight() % patchSize.y) === 0) {
-                return true;
-            }
-        }
-        throw new Error("Image dimensions do not comply with the current settings: Width (" +
-                            width + " )and height (" + height +
-                            ") must a multiple of " + patchSize.x);
-    }
-
     function canRecord(cb) {
-        checkImageConstraints();
+        if (_config.locate) {
+            BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
+        }
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();
@@ -177,8 +146,8 @@ function(Code128Reader,
                 }
             }
             _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
-            _canvasContainer.dom.image.width = _inputStream.getWidth();
-            _canvasContainer.dom.image.height = _inputStream.getHeight();
+            _canvasContainer.dom.image.width = _inputStream.getCanvasSize().x;
+            _canvasContainer.dom.image.height = _inputStream.getCanvasSize().y;
 
             _canvasContainer.dom.overlay = document.querySelector("canvas.drawingBuffer");
             if (!_canvasContainer.dom.overlay) {
@@ -194,8 +163,8 @@ function(Code128Reader,
                 }
             }
             _canvasContainer.ctx.overlay = _canvasContainer.dom.overlay.getContext("2d");
-            _canvasContainer.dom.overlay.width = _inputStream.getWidth();
-            _canvasContainer.dom.overlay.height = _inputStream.getHeight();
+            _canvasContainer.dom.overlay.width = _inputStream.getCanvasSize().x;
+            _canvasContainer.dom.overlay.height = _inputStream.getCanvasSize().y;
         }
     }
 
@@ -227,6 +196,53 @@ function(Code128Reader,
         }
     }
 
+    function transformResult(result) {
+        var topRight = _inputStream.getTopRight(),
+            xOffset = topRight.x,
+            yOffset = topRight.y,
+            i;
+
+        if (!result || (xOffset === 0 && yOffset === 0)) {
+            return;
+        }
+
+
+        if (result.line && result.line.length === 2) {
+            moveLine(result.line);
+        }
+        if (result.boxes && result.boxes.length > 0) {
+            for (i = 0; i < result.boxes.length; i++) {
+                moveBox(result.boxes[i]);
+            }
+        }
+
+        function moveBox(box) {
+            var corner = box.length;
+
+            while(corner--) {
+                box[corner][0] += xOffset;
+                box[corner][1] += yOffset;
+            }
+        }
+
+        function moveLine(line) {
+            line[0].x += xOffset;
+            line[0].y += yOffset;
+            line[1].x += xOffset;
+            line[1].y += yOffset;
+        }
+    }
+
+    function publishResult(result) {
+        if (_onUIThread) {
+            transformResult(result);
+        }
+        Events.publish("processed", result);
+        if (result && result.codeResult) {
+            Events.publish("detected", result);
+        }
+    }
+
     function locateAndDecode() {
         var result,
             boxes;
@@ -236,14 +252,10 @@ function(Code128Reader,
             result = _decoder.decodeFromBoundingBoxes(boxes);
             result = result || {};
             result.boxes = boxes;
-            Events.publish("processed", result);
-            if (result && result.codeResult) {
-                Events.publish("detected", result);
-            }
+            publishResult(result);
         } else {
-            Events.publish("processed");
+            publishResult();
         }
-
     }
 
     function update() {
@@ -327,10 +339,7 @@ function(Code128Reader,
             } else if (e.data.event === 'processed') {
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
-                Events.publish("processed", e.data.result);
-                if (e.data.result && e.data.result.codeResult) {
-                    Events.publish("detected", e.data.result);
-                }
+                publishResult(e.data.result);
             }
         };
 
