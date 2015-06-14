@@ -49,8 +49,7 @@ define([
                         overlay : null
                     }
                 },
-                _barcodeReaders = [],
-                _barcodeReader = null;
+                _barcodeReaders = [];
 
             initCanvas();
             initReaders();
@@ -171,9 +170,6 @@ define([
 
                 for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                     result = _barcodeReaders[i].decodePattern(barcodeLine.line);
-                    if (result !== null) {
-                        _barcodeReader = _barcodeReaders[i];
-                    }
                 }
                 if(result === null){
                     return null;

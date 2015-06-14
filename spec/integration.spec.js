@@ -35,6 +35,7 @@ define(['quagga', 'async'], function(Quagga, async) {
                     Quagga.decodeSingle(config, function(result) {
                         console.log(sample.name);
                         expect(result.codeResult.code).to.equal(sample.result);
+                        expect(result.codeResult.format).to.equal(sample.format);
                         callback();
                     });
                 }, function() {
@@ -45,18 +46,22 @@ define(['quagga', 'async'], function(Quagga, async) {
 
         describe("EAN", function() {
             var config = generateConfig(),
-            testSet = [
-                {"name": "image-001.jpg", "result": "3574660239843"},
-                {"name": "image-002.jpg", "result": "8032754490297"},
-                {"name": "image-003.jpg", "result": "4006209700068"},
-                /* {"name": "image-004.jpg", "result": "9002233139084"}, */
-                /* {"name": "image-005.jpg", "result": "8004030044005"}, */
-                {"name": "image-006.jpg", "result": "4003626011159"},
-                {"name": "image-007.jpg", "result": "2111220009686"},
-                {"name": "image-008.jpg", "result": "9000275609022"},
-                {"name": "image-009.jpg", "result": "9004593978587"},
-                {"name": "image-010.jpg", "result": "9002244845578"}
-            ];
+                testSet = [
+                    {"name": "image-001.jpg", "result": "3574660239843"},
+                    {"name": "image-002.jpg", "result": "8032754490297"},
+                    {"name": "image-003.jpg", "result": "4006209700068"},
+                    /* {"name": "image-004.jpg", "result": "9002233139084"}, */
+                    /* {"name": "image-005.jpg", "result": "8004030044005"}, */
+                    {"name": "image-006.jpg", "result": "4003626011159"},
+                    {"name": "image-007.jpg", "result": "2111220009686"},
+                    {"name": "image-008.jpg", "result": "9000275609022"},
+                    {"name": "image-009.jpg", "result": "9004593978587"},
+                    {"name": "image-010.jpg", "result": "9002244845578"}
+                ];
+
+            testSet.forEach(function(sample) {
+                sample.format = "ean_13";
+            });
 
             config.decoder.readers = ['ean_reader'];
             _runTestSet(testSet, config);
@@ -65,17 +70,21 @@ define(['quagga', 'async'], function(Quagga, async) {
         describe("Code128", function() {
             var config = generateConfig(),
                 testSet = [
-                {"name": "image-001.jpg", "result": "0001285112001000040801"},
-                {"name": "image-002.jpg", "result": "FANAVF1461710"},
-                {"name": "image-003.jpg", "result": "673023"},
-                // {"name": "image-004.jpg", "result": "010210150301625334"},
-                {"name": "image-005.jpg", "result": "419055603900009001012999"},
-                {"name": "image-006.jpg", "result": "419055603900009001012999"},
-                {"name": "image-007.jpg", "result": "T 000003552345"},
-                {"name": "image-008.jpg", "result": "FANAVF1461710"},
-                {"name": "image-009.jpg", "result": "0001285112001000040801"},
-                {"name": "image-010.jpg", "result": "673023"}
-            ];
+                    {"name": "image-001.jpg", "result": "0001285112001000040801"},
+                    // {"name": "image-002.jpg", "result": "FANAVF1461710"},
+                    // {"name": "image-003.jpg", "result": "673023"},
+                    {"name": "image-004.jpg", "result": "010210150301625334"},
+                    {"name": "image-005.jpg", "result": "419055603900009001012999"},
+                    {"name": "image-006.jpg", "result": "419055603900009001012999"},
+                    {"name": "image-007.jpg", "result": "T 000003552345"},
+                    {"name": "image-008.jpg", "result": "FANAVF1461710"},
+                    {"name": "image-009.jpg", "result": "0001285112001000040801"},
+                    {"name": "image-010.jpg", "result": "673023"}
+                ];
+
+            testSet.forEach(function(sample) {
+                sample.format = "code_128";
+            });
 
             config.decoder.readers = ['code_128_reader'];
             _runTestSet(testSet, config);
@@ -84,17 +93,21 @@ define(['quagga', 'async'], function(Quagga, async) {
         describe("Code39", function() {
             var config = generateConfig(),
                 testSet = [
-                {"name": "image-001.jpg", "result": "B3% $DAD$"},
-                /*{"name": "image-002.jpg", "result": "QUAGGAJS"},*/
-                {"name": "image-003.jpg", "result": "CODE39"},
-                {"name": "image-004.jpg", "result": "QUAGGAJS"},
-                /* {"name": "image-005.jpg", "result": "CODE39"}, */
-                {"name": "image-006.jpg", "result": "2/4-8/16-32"},
-                {"name": "image-007.jpg", "result": "2/4-8/16-32"},
-                {"name": "image-008.jpg", "result": "CODE39"},
-                {"name": "image-009.jpg", "result": "2/4-8/16-32"},
-                {"name": "image-010.jpg", "result": "CODE39"}
-            ];
+                    {"name": "image-001.jpg", "result": "B3% $DAD$"},
+                    /*{"name": "image-002.jpg", "result": "QUAGGAJS"},*/
+                    {"name": "image-003.jpg", "result": "CODE39"},
+                    {"name": "image-004.jpg", "result": "QUAGGAJS"},
+                    /* {"name": "image-005.jpg", "result": "CODE39"}, */
+                    {"name": "image-006.jpg", "result": "2/4-8/16-32"},
+                    {"name": "image-007.jpg", "result": "2/4-8/16-32"},
+                    {"name": "image-008.jpg", "result": "CODE39"},
+                    {"name": "image-009.jpg", "result": "2/4-8/16-32"},
+                    {"name": "image-010.jpg", "result": "CODE39"}
+                ];
+
+            testSet.forEach(function(sample) {
+                sample.format = "code_39";
+            });
 
             config.decoder.readers = ['code_39_reader'];
             _runTestSet(testSet, config);
@@ -103,17 +116,21 @@ define(['quagga', 'async'], function(Quagga, async) {
         describe("EAN-8", function() {
             var config = generateConfig(),
                 testSet = [
-                {"name": "image-001.jpg", "result": "42191605"},
-                {"name": "image-002.jpg", "result": "42191605"},
-                {"name": "image-003.jpg", "result": "90311208"},
-                {"name": "image-004.jpg", "result": "24057257"},
-                {"name": "image-005.jpg", "result": "90162602"},
-                {"name": "image-006.jpg", "result": "24036153"},
-                {"name": "image-007.jpg", "result": "42176817"},
-                /*{"name": "image-008.jpg", "result": "42191605"},*/
-                {"name": "image-009.jpg", "result": "42242215"},
-                {"name": "image-010.jpg", "result": "42184799"}
-            ];
+                    {"name": "image-001.jpg", "result": "42191605"},
+                    {"name": "image-002.jpg", "result": "42191605"},
+                    {"name": "image-003.jpg", "result": "90311208"},
+                    {"name": "image-004.jpg", "result": "24057257"},
+                    {"name": "image-005.jpg", "result": "90162602"},
+                    {"name": "image-006.jpg", "result": "24036153"},
+                    {"name": "image-007.jpg", "result": "42176817"},
+                    /*{"name": "image-008.jpg", "result": "42191605"},*/
+                    {"name": "image-009.jpg", "result": "42242215"},
+                    {"name": "image-010.jpg", "result": "42184799"}
+                ];
+
+            testSet.forEach(function(sample) {
+                sample.format = "ean_8";
+            });
 
             config.decoder.readers = ['ean_8_reader'];
             _runTestSet(testSet, config);
@@ -134,6 +151,10 @@ define(['quagga', 'async'], function(Quagga, async) {
                     {"name": "image-010.jpg", "result": "039047013551"}
                 ];
 
+            testSet.forEach(function(sample) {
+                sample.format = "upc_a";
+            });
+
             config.decoder.readers = ['upc_reader'];
             _runTestSet(testSet, config);
         });
@@ -153,6 +174,10 @@ define(['quagga', 'async'], function(Quagga, async) {
                     {"name": "image-010.jpg", "result": "01264904"}
                 ];
 
+            testSet.forEach(function(sample) {
+                sample.format = "upc_e";
+            });
+
             config.decoder.readers = ['upc_e_reader'];
             _runTestSet(testSet, config);
         });
@@ -171,6 +196,10 @@ define(['quagga', 'async'], function(Quagga, async) {
                     {"name": "image-009.jpg", "result": "C$399.95A"},
                     {"name": "image-010.jpg", "result": "C$399.95A"}
                 ];
+
+            testSet.forEach(function(sample) {
+                sample.format = "codabar";
+            });
 
             config.decoder.readers = ['codabar_reader'];
             _runTestSet(testSet, config);

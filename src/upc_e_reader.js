@@ -16,7 +16,8 @@ define(
             CODE_FREQUENCY : {value: [
                 [ 56, 52, 50, 49, 44, 38, 35, 42, 41, 37 ],
                 [7, 11, 13, 14, 19, 25, 28, 21, 22, 26]]},
-            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]}
+            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]},
+            FORMAT: {value: "upc_e", writeable: false}
         };
 
         UPCEReader.prototype = Object.create(EANReader.prototype, properties);

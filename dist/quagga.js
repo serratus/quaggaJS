@@ -437,7 +437,7 @@ define("almond", function(){});
 
 define(
     'barcode_reader',[],function() {
-        
+        "use strict";
         
         function BarcodeReader() {
             this._row = [];
@@ -600,6 +600,9 @@ define(
             } else {
                 result.direction = BarcodeReader.DIRECTION.FORWARD;
             }
+            if (result) {
+                result.format = self.FORMAT;
+            }
             return result;
         };
 
@@ -614,6 +617,11 @@ define(
             }
             return true;
         };
+
+        Object.defineProperty(BarcodeReader.prototype, "FORMAT", {
+            value: 'unknown',
+            writeable: false
+        });
         
         BarcodeReader.DIRECTION = {
             FORWARD : 1,
@@ -638,7 +646,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
         
         function Code128Reader() {
             BarcodeReader.call(this);
@@ -764,7 +772,8 @@ define(
                 [2, 3, 3, 1, 1, 1, 2]
             ]},
             SINGLE_CODE_ERROR: {value: 1},
-            AVG_CODE_ERROR: {value: 0.5}
+            AVG_CODE_ERROR: {value: 0.5},
+            FORMAT: {value: "code_128", writeable: false}
         };
         
         Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -802,58 +811,6 @@ define(
                         }
                         bestMatch.end = i;
                         return bestMatch;
-                    } else {
-                        counterPos++;
-                    }
-                    counter[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
-            return null;
-        };
-        
-        Code128Reader.prototype._findEnd = function() {
-            var counter = [0, 0, 0, 0, 0, 0, 0],
-                i,
-                self = this,
-                offset = self._nextSet(self._row),
-                isWhite = !self._row[offset],
-                counterPos = 0,
-                    bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : 0,
-                    end : 0
-                },
-                error,
-                j,
-                sum,
-                normalized;
-                
-            for ( i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    counter[counterPos]++;
-                } else {
-                    if (counterPos === counter.length - 1) {
-                        sum = 0;
-                        for ( j = 0; j < counter.length; j++) {
-                            sum += counter[j];
-                        }
-                        normalized = self._normalize(counter, 13);
-                        error = self._matchPattern(normalized, self.CODE_PATTERN[self.STOP_CODE]);
-                        if (error < self.AVG_CODE_ERROR) {
-                            bestMatch.error = error;
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
-                        }
-
-                        for ( j = 0; j < 5; j++) {
-                            counter[j] = counter[j + 2];
-                        }
-                        counter[5] = 0;
-                        counter[6] = 0;
-                        counterPos--;
                     } else {
                         counterPos++;
                     }
@@ -1052,7 +1009,7 @@ define(
 
             // find end bar
             code.end = self._nextUnset(self._row, code.end);
-            if (code.end === self._row.length) {
+            if(!self._verifyTrailingWhitespace(code)){
                 return null;
             }
 
@@ -1063,8 +1020,14 @@ define(
                 return null;
             }
 
+            if (!result.length) {
+                return null;
+            }
+
             // remove last code from result (checksum)
             result.splice(result.length - 1, 1);
+
+
 
             return {
                 code : result.join(""),
@@ -1075,6 +1038,20 @@ define(
                 decodedCodes : decodedCodes,
                 endInfo : code
             };
+        };
+
+
+        BarcodeReader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
         };
         
         return (Code128Reader);
@@ -1088,7 +1065,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
         
         function EANReader(opts) {
             BarcodeReader.call(this, opts);
@@ -1125,7 +1102,8 @@ define(
             ]},
             CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
             SINGLE_CODE_ERROR: {value: 0.7},
-            AVG_CODE_ERROR: {value: 0.3}
+            AVG_CODE_ERROR: {value: 0.3},
+            FORMAT: {value: "ean_13", writeable: false}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -1416,7 +1394,7 @@ define(
 /* global define */
 
 define('image_loader',[],function() {
-    
+    "use strict";
 
     var ImageLoader = {};
     ImageLoader.load = function(directory, callback, offset, size, sequence) {
@@ -1480,7 +1458,7 @@ define('image_loader',[],function() {
 /* global define */
 
 define('input_stream',["image_loader"], function(ImageLoader) {
-    
+    "use strict";
 
     var InputStream = {};
     InputStream.createVideoStream = function(video) {
@@ -1827,7 +1805,7 @@ define("typedefs", (function (global) {
 /* global define */
 
 define('subImage',["typedefs"], function() {
-    
+    "use strict";
 
     /**
      * Construct representing a part of another {ImageWrapper}. Shares data
@@ -1924,7 +1902,7 @@ define('subImage',["typedefs"], function() {
 /* global define, vec2 */
 
 define('cluster',[],function() {
-    
+    "use strict";
     
     /**
      * Creates a cluster for grouping similar orientations of datapoints 
@@ -4269,7 +4247,7 @@ define("glMatrixAddon", ["glMatrix"], (function (global) {
 /* global define */
 
 define('array_helper',[],function() {
-    
+    "use strict";
 
     return {
         init : function(arr, val) {
@@ -4356,7 +4334,7 @@ define('array_helper',[],function() {
 
 define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrixAddon, ArrayHelper) {
 
-    
+    "use strict";
     /*
     * cv_utils.js
     * Collection of CV functions and libraries
@@ -5073,7 +5051,7 @@ define('image_wrapper',[
     ], 
     function(SubImage, CVUtils, ArrayHelper) {
     
-    
+    'use strict';
 
     /**
      * Represents a basic image combining the data and size.
@@ -5494,7 +5472,7 @@ define('image_wrapper',[
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('tracer',[],function() {
-    
+    "use strict";
     
     var Tracer = {
         searchDirections : [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
@@ -5603,7 +5581,7 @@ define('tracer',[],function() {
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('rasterizer',["tracer"], function(Tracer) {
-    
+    "use strict";
 
     var Rasterizer = {
         createContour2D : function() {
@@ -5799,7 +5777,7 @@ define('rasterizer',["tracer"], function(Tracer) {
 /* global define */
 
 define('skeletonizer',[],function() {
-    
+    "use strict";
 
     /* @preserve ASM BEGIN */
     function Skeletonizer(stdlib, foreign, buffer) {
@@ -6004,7 +5982,7 @@ define('skeletonizer',[],function() {
 /* global define */
 
 define('image_debug',[],function() {
-    
+    "use strict";
     
     return {
         drawRect: function(pos, size, ctx, style){
@@ -6595,7 +6573,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 /* global define */
 
 define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
-    
+    "use strict";
     var Bresenham = {};
 
     var Slope = {
@@ -6815,7 +6793,7 @@ define(
         "./array_helper"
     ],
     function(BarcodeReader, ArrayHelper) {
-        
+        "use strict";
 
         function Code39Reader() {
             BarcodeReader.call(this);
@@ -6825,7 +6803,8 @@ define(
             ALPHABETH_STRING: {value: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%"},
             ALPHABET: {value: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 45, 46, 32, 42, 36, 47, 43, 37]},
             CHARACTER_ENCODINGS: {value: [0x034, 0x121, 0x061, 0x160, 0x031, 0x130, 0x070, 0x025, 0x124, 0x064, 0x109, 0x049, 0x148, 0x019, 0x118, 0x058, 0x00D, 0x10C, 0x04C, 0x01C, 0x103, 0x043, 0x142, 0x013, 0x112, 0x052, 0x007, 0x106, 0x046, 0x016, 0x181, 0x0C1, 0x1C0, 0x091, 0x190, 0x0D0, 0x085, 0x184, 0x0C4, 0x094, 0x0A8, 0x0A2, 0x08A, 0x02A]},
-            ASTERISK: {value: 0x094}
+            ASTERISK: {value: 0x094},
+            FORMAT: {value: "code_39", writeable: false}
         };
 
         Code39Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -7034,7 +7013,7 @@ define(
         "./code_39_reader"
     ],
     function(Code39Reader) {
-        
+        "use strict";
 
         function Code39VINReader() {
             Code39Reader.call(this);
@@ -7094,7 +7073,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
 
         function CodabarReader() {
             BarcodeReader.call(this);
@@ -7108,7 +7087,8 @@ define(
             START_END: {value: [0x01A, 0x029, 0x00B, 0x00E]},
             MIN_ENCODED_CHARS: {value: 4},
             MAX_ACCEPTABLE: {value: 2.0},
-            PADDING: {value: 1.5}
+            PADDING: {value: 1.5},
+            FORMAT: {value: "codabar", writeable: false}
         };
 
         CodabarReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -7407,13 +7387,17 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function UPCReader() {
             EANReader.call(this);
         }
 
-        UPCReader.prototype = Object.create(EANReader.prototype);
+        var properties = {
+            FORMAT: {value: "upc_a", writeable: false}
+        };
+
+        UPCReader.prototype = Object.create(EANReader.prototype, properties);
         UPCReader.prototype.constructor = UPCReader;
 
         UPCReader.prototype._decode = function() {
@@ -7438,13 +7422,17 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function EAN8Reader() {
             EANReader.call(this);
         }
 
-        EAN8Reader.prototype = Object.create(EANReader.prototype);
+        var properties = {
+            FORMAT: {value: "ean_8", writeable: false}
+        };
+
+        EAN8Reader.prototype = Object.create(EANReader.prototype, properties);
         EAN8Reader.prototype.constructor = EAN8Reader;
 
         EAN8Reader.prototype._decodePayload = function(code, result, decodedCodes) {
@@ -7489,7 +7477,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function UPCEReader() {
             EANReader.call(this);
@@ -7499,7 +7487,8 @@ define(
             CODE_FREQUENCY : {value: [
                 [ 56, 52, 50, 49, 44, 38, 35, 42, 41, 37 ],
                 [7, 11, 13, 14, 19, 25, 28, 21, 22, 26]]},
-            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]}
+            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]},
+            FORMAT: {value: "upc_e", writeable: false}
         };
 
         UPCEReader.prototype = Object.create(EANReader.prototype, properties);
@@ -7618,7 +7607,7 @@ define('barcode_decoder',[
     UPCReader,
     EAN8Reader,
     UPCEReader) {
-    
+    "use strict";
 
     var readers = {
         code_128_reader: Code128Reader,
@@ -7644,8 +7633,7 @@ define('barcode_decoder',[
                         overlay : null
                     }
                 },
-                _barcodeReaders = [],
-                _barcodeReader = null;
+                _barcodeReaders = [];
 
             initCanvas();
             initReaders();
@@ -7766,9 +7754,6 @@ define('barcode_decoder',[
 
                 for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                     result = _barcodeReaders[i].decodePattern(barcodeLine.line);
-                    if (result !== null) {
-                        _barcodeReader = _barcodeReaders[i];
-                    }
                 }
                 if(result === null){
                     return null;
@@ -7897,7 +7882,7 @@ define('barcode_decoder',[
 /* global define */
 
 define('frame_grabber',["cv_utils"], function(CVUtils) {
-    
+    "use strict";
 
     var FrameGrabber = {};
 
@@ -7976,7 +7961,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
 /* global define */
 
 define('html_utils',[], function() {
-    
+    "use strict";
 
     function createNode(htmlStr) {
         var temp = document.createElement('div');
@@ -8076,7 +8061,7 @@ define('config',[],function(){
 /* global define */
 
 define('events',[],function() {
-    
+    "use strict";
 
     var _events = function() {
         var events = {};
@@ -8167,7 +8152,7 @@ define('events',[],function() {
 /* global define, MediaStreamTrack */
 
 define('camera_access',["html_utils"], function(HtmlUtils) {
-    
+    "use strict";
     var streamRef,
         loadedDataHandler;
 
@@ -8332,7 +8317,7 @@ function(Code128Reader,
          Events,
          CameraAccess,
          ImageDebug) {
-    
+    "use strict";
     
     var _inputStream,
         _framegrabber,

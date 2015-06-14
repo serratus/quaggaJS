@@ -12,7 +12,11 @@ define(
             EANReader.call(this);
         }
 
-        UPCReader.prototype = Object.create(EANReader.prototype);
+        var properties = {
+            FORMAT: {value: "upc_a", writeable: false}
+        };
+
+        UPCReader.prototype = Object.create(EANReader.prototype, properties);
         UPCReader.prototype.constructor = UPCReader;
 
         UPCReader.prototype._decode = function() {

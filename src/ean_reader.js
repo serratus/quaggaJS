@@ -43,7 +43,8 @@ define(
             ]},
             CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
             SINGLE_CODE_ERROR: {value: 0.7},
-            AVG_CODE_ERROR: {value: 0.3}
+            AVG_CODE_ERROR: {value: 0.3},
+            FORMAT: {value: "ean_13", writeable: false}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
