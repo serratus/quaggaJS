@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-06-13)
+- [Changelog](#changelog) (2015-06-14)
 
 ## What is QuaggaJS?
 
@@ -149,8 +149,8 @@ empty.
 ```javascript
 {
   "codeResult": {
-    "code": "FANAVF1461710",
-    "start": 355,
+    "code": "FANAVF1461710",  // the decoded code as a string
+    "format": "code_128", // or code_39, codabar, ean_13, ean_8, upc_a, upc_e
     "end": 26,
     "codeset": 100,
     "startInfo": {
@@ -299,6 +299,9 @@ work.
 
 ## <a name="changelog">Changelog</a>
 
+### 2015-06-14
+- Improvements
+  - Added ``format`` property to ``codeResult`` (in [result](#resultobject))
 
 ### 2015-06-13
 - Improvements
