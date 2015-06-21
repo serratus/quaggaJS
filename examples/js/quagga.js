@@ -4815,13 +4815,19 @@ define('cv_utils',['cluster', 'glMatrixAddon', "array_helper"], function(Cluster
 
     };
 
-    CVUtils.computeGray = function(imageData, outArray) {
-        var l = imageData.length / 4;
-        var i = 0;
-        for ( i = 0; i < l; i++) {
-            //outArray[i] = (0.299*imageData[i*4+0] + 0.587*imageData[i*4+1] + 0.114*imageData[i*4+2]);
+    CVUtils.computeGray = function(imageData, outArray, config) {
+        var l = (imageData.length / 4) | 0,
+            i,
+            singleChannel = config && config.singleChannel === true;
 
-            outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+        if (singleChannel) {
+            for (i = 0; i < l; i++) {
+                outArray[i] = imageData[i * 4 + 0];
+            }
+        } else {
+            for (i = 0; i < l; i++) {
+                outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+            }
         }
     };
 
@@ -6003,6 +6009,26 @@ define('image_debug',[],function() {
             }
             ctx.closePath();
             ctx.stroke();
+        },
+        drawImage: function(imageData, size, ctx) {
+            var canvasData = ctx.getImageData(0, 0, size.x, size.y),
+                data = canvasData.data,
+                imageDataPos = imageData.length,
+                canvasDataPos = data.length,
+                value;
+
+            if (canvasDataPos/imageDataPos !== 4) {
+                return false;
+            }
+            while(imageDataPos--){
+                value = imageData[imageDataPos];
+                data[--canvasDataPos] = 255;
+                data[--canvasDataPos] = value;
+                data[--canvasDataPos] = value;
+                data[--canvasDataPos] = value;
+            }
+            ctx.putImageData(canvasData, 0, 0);
+            return true;
         }
     };
     
@@ -7939,7 +7965,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
                 if(doHalfSample){
                     CVUtils.grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
                 } else {
-                    CVUtils.computeGray(ctxData, _data);
+                    CVUtils.computeGray(ctxData, _data, _streamConfig);
                 }
                 return true;
             } else {
@@ -8017,7 +8043,8 @@ define('config',[],function(){
               right: "0%",
               left: "0%",
               bottom: "0%"
-          }
+          },
+          singleChannel: false // true: only the red color-channel is read
       },
       tracking: false,
       debug: false,
@@ -8288,8 +8315,68 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
     };
 });
 
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define('result_collector',["image_debug"], function(ImageDebug) {
+    "use strict";
+
+    function contains(codeResult, list) {
+        if (list) {
+            return list.some(function (item) {
+                return Object.keys(item).every(function (key) {
+                    return item[key] === codeResult[key];
+                });
+            });
+        }
+        return false;
+    }
+
+    function passesFilter(codeResult, filter) {
+        if (typeof filter === 'function') {
+            return filter(codeResult);
+        }
+        return true;
+    }
+
+    return {
+        create: function(config) {
+            var canvas = document.createElement("canvas"),
+                ctx = canvas.getContext("2d"),
+                results = [],
+                capacity = config.capacity || 20,
+                capture = config.capture === true;
+
+            function matchesConstraints(codeResult) {
+                return capacity && codeResult && !contains(codeResult, config.blacklist) && passesFilter(codeResult, config.filter);
+            }
+
+            return {
+                addResult: function(data, imageSize, codeResult) {
+                    var result = {};
+
+                    if (matchesConstraints(codeResult)) {
+                        capacity--;
+                        result.codeResult = codeResult;
+                        if (capture) {
+                            canvas.width = imageSize.x;
+                            canvas.height = imageSize.y;
+                            ImageDebug.drawImage(data, imageSize, ctx);
+                            result.frame = canvas.toDataURL();
+                        }
+                        results.push(result);
+                    }
+                },
+                getResults: function() {
+                    return results;
+                }
+            };
+        }
+    };
+});
+
 /* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
-/* global define,  vec2 */
+/* global define, vec2 */
 
 
 define('quagga',[
@@ -8304,7 +8391,8 @@ define('quagga',[
         "config",
         "events",
         "camera_access",
-        "image_debug"],
+        "image_debug",
+        "result_collector"],
 function(Code128Reader,
          EANReader,
          InputStream,
@@ -8316,7 +8404,8 @@ function(Code128Reader,
          _config,
          Events,
          CameraAccess,
-         ImageDebug) {
+         ImageDebug,
+         ResultCollector) {
     "use strict";
     
     var _inputStream,
@@ -8336,7 +8425,8 @@ function(Code128Reader,
         _boxSize,
         _decoder,
         _workerPool = [],
-        _onUIThread = true;
+        _onUIThread = true,
+        _resultCollector;
 
     function initializeData(imageWrapper) {
         initBuffers(imageWrapper);
@@ -8344,20 +8434,22 @@ function(Code128Reader,
     }
 
     function initConfig() {
-        var vis = [{
-            node : document.querySelector("div[data-controls]"),
-            prop : _config.controls
-        }, {
-            node : _canvasContainer.dom.overlay,
-            prop : _config.visual.show
-        }];
+        if (typeof document !== "undefined") {
+            var vis = [{
+                node: document.querySelector("div[data-controls]"),
+                prop: _config.controls
+            }, {
+                node: _canvasContainer.dom.overlay,
+                prop: _config.visual.show
+            }];
 
-        for (var i = 0; i < vis.length; i++) {
-            if (vis[i].node) {
-                if (vis[i].prop === true) {
-                    vis[i].node.style.display = "block";
-                } else {
-                    vis[i].node.style.display = "none";
+            for (var i = 0; i < vis.length; i++) {
+                if (vis[i].node) {
+                    if (vis[i].prop === true) {
+                        vis[i].node.style.display = "block";
+                    } else {
+                        vis[i].node.style.display = "none";
+                    }
                 }
             }
         }
@@ -8420,35 +8512,37 @@ function(Code128Reader,
     }
 
     function initCanvas() {
-        var $viewport = document.querySelector("#interactive.viewport");
-        _canvasContainer.dom.image = document.querySelector("canvas.imgBuffer");
-        if (!_canvasContainer.dom.image) {
-            _canvasContainer.dom.image = document.createElement("canvas");
-            _canvasContainer.dom.image.className = "imgBuffer";
-            if($viewport && _config.inputStream.type == "ImageStream") {
-                $viewport.appendChild(_canvasContainer.dom.image);
+        if (typeof document !== "undefined") {
+            var $viewport = document.querySelector("#interactive.viewport");
+            _canvasContainer.dom.image = document.querySelector("canvas.imgBuffer");
+            if (!_canvasContainer.dom.image) {
+                _canvasContainer.dom.image = document.createElement("canvas");
+                _canvasContainer.dom.image.className = "imgBuffer";
+                if ($viewport && _config.inputStream.type == "ImageStream") {
+                    $viewport.appendChild(_canvasContainer.dom.image);
+                }
             }
-        }
-        _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
-        _canvasContainer.dom.image.width = _inputStream.getCanvasSize().x;
-        _canvasContainer.dom.image.height = _inputStream.getCanvasSize().y;
+            _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
+            _canvasContainer.dom.image.width = _inputStream.getCanvasSize().x;
+            _canvasContainer.dom.image.height = _inputStream.getCanvasSize().y;
 
-        _canvasContainer.dom.overlay = document.querySelector("canvas.drawingBuffer");
-        if (!_canvasContainer.dom.overlay) {
-            _canvasContainer.dom.overlay = document.createElement("canvas");
-            _canvasContainer.dom.overlay.className = "drawingBuffer";
-            if($viewport) {
-                $viewport.appendChild(_canvasContainer.dom.overlay);
+            _canvasContainer.dom.overlay = document.querySelector("canvas.drawingBuffer");
+            if (!_canvasContainer.dom.overlay) {
+                _canvasContainer.dom.overlay = document.createElement("canvas");
+                _canvasContainer.dom.overlay.className = "drawingBuffer";
+                if ($viewport) {
+                    $viewport.appendChild(_canvasContainer.dom.overlay);
+                }
+                var clearFix = document.createElement("br");
+                clearFix.setAttribute("clear", "all");
+                if ($viewport) {
+                    $viewport.appendChild(clearFix);
+                }
             }
-            var clearFix = document.createElement("br");
-            clearFix.setAttribute("clear", "all");
-            if($viewport) {
-                $viewport.appendChild(clearFix);
-            }
+            _canvasContainer.ctx.overlay = _canvasContainer.dom.overlay.getContext("2d");
+            _canvasContainer.dom.overlay.width = _inputStream.getCanvasSize().x;
+            _canvasContainer.dom.overlay.height = _inputStream.getCanvasSize().y;
         }
-        _canvasContainer.ctx.overlay = _canvasContainer.dom.overlay.getContext("2d");
-        _canvasContainer.dom.overlay.width = _inputStream.getCanvasSize().x;
-        _canvasContainer.dom.overlay.height = _inputStream.getCanvasSize().y;
     }
 
     function initBuffers(imageWrapper) {
@@ -8516,10 +8610,16 @@ function(Code128Reader,
         }
     }
 
-    function publishResult(result) {
+    function publishResult(result, imageData) {
         if (_onUIThread) {
             transformResult(result);
+            if (imageData && result && result.codeResult) {
+                if (_resultCollector) {
+                    _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
+                }
+            }
         }
+
         Events.publish("processed", result);
         if (result && result.codeResult) {
             Events.publish("detected", result);
@@ -8535,7 +8635,7 @@ function(Code128Reader,
             result = _decoder.decodeFromBoundingBoxes(boxes);
             result = result || {};
             result.boxes = boxes;
-            publishResult(result);
+            publishResult(result, _inputImageWrapper.data);
         } else {
             publishResult();
         }
@@ -8604,7 +8704,7 @@ function(Code128Reader,
     function initWorker(cb) {
         var blobURL,
             workerThread = {
-                worker: null,
+                worker: undefined,
                 imageData: new Uint8Array(_inputStream.getWidth() * _inputStream.getHeight()),
                 busy: true
             };
@@ -8622,7 +8722,7 @@ function(Code128Reader,
             } else if (e.data.event === 'processed') {
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
-                publishResult(e.data.result);
+                publishResult(e.data.result, workerThread.imageData);
             }
         };
 
@@ -8737,6 +8837,11 @@ function(Code128Reader,
         setReaders: function(readers) {
             setReaders(readers);
         },
+        registerResultCollector: function(resultCollector) {
+            if (resultCollector && typeof resultCollector.addResult === 'function') {
+                _resultCollector = resultCollector;
+            }
+        },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
             config = HtmlUtils.mergeObjects({
@@ -8764,7 +8869,8 @@ function(Code128Reader,
           Code128Reader : Code128Reader
         },
         ImageWrapper: ImageWrapper,
-        ImageDebug: ImageDebug
+        ImageDebug: ImageDebug,
+        ResultCollector: ResultCollector
     };
 });
 

@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-06-14)
+- [Changelog](#changelog) (2015-06-21)
 
 ## What is QuaggaJS?
 
@@ -223,7 +223,14 @@ The default `config` object is set as followed:
          width: 640,
          height: 480,
          facing: "environment"
-       }
+       },
+       area: { // defines rectangle of the detection/localization area
+           top: "0%",    // top offset
+           right: "0%",  // right offset
+           left: "0%",   // left offset
+           bottom: "0%"  // bottom offset
+       },
+       singleChannel: false // true: only the red color-channel is read
   },
   tracking: false,
   debug: false,
@@ -297,7 +304,70 @@ web-workers, and their restriction not to have access to the DOM, the
 configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
+## <a name="resultcollector">ResultCollector</a>
+
+Quagga is not perfect by any means and may produce false positives from time
+to time. In order to find out which images produced those false positives,
+the built-in ``ResultCollector`` will support you and me helping squashing
+bugs in the implementation.
+
+### Creating a ``ResultCollector``
+
+You can easily create a new ``ResultCollector`` by calling its ``create``
+method with a configuration.
+
+```javascript
+var resultCollector = Quagga.ResultCollector.create({
+    capture: true, // keep track of the image producing this result
+    capacity: 20,  // maximum number of results to store
+    blacklist: [   // list containing codes which should not be recorded
+        {code: "3574660239843", format: "ean_13"}],
+    filter: function(codeResult) {
+        // only store results which match this constraint
+        // returns true/false
+        // e.g.: return codeResult.format === "ean_13";
+        return true;
+    }
+});
+```
+
+### Using a ``ResultCollector``
+
+After creating a ``ResultCollector`` you have to attach it to Quagga by
+calling ``Quagga.registerResultCollector(resultCollector)``.
+
+### Reading results
+
+After a test/recording session, you can now print the collected results which
+do not fit into a certain schema. Calling ``getResults`` on the
+``resultCollector`` returns an ``Array`` containing objects with:
+
+```javascript
+{
+    codeResult: {}, // same as in onDetected event
+    frame: "data:image/png;base64,iVBOR..." // dataURL of the gray-scaled image
+}
+```
+
+The ``frame`` property is an internal representation of the image and
+therefore only available in gray-scale. The dataURL representation allows
+easy saving/rendering of the image.
+
+### Comparing results
+
+Now, having the frames available on disk, you can load each single image by
+calling ``decodeSingle`` with the same configuration as used during recording
+. In order to reproduce the exact same result, you have to make sure to turn
+on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
+
 ## <a name="changelog">Changelog</a>
+
+### 2015-06-21
+- Features
+  - Added ``singleChannel`` configuration to ``inputStream`` (in [config]
+  (#configobject))
+  - Added ``ResultCollector`` functionality (see [ResultCollector]
+  (#resultcollector))
 
 ### 2015-06-14
 - Improvements
