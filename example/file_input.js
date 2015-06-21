@@ -88,11 +88,12 @@ $(function() {
         },
         state: {
             inputStream: {
-                size: 640
+                size: 640,
+                singleChannel: false
             },
             locator: {
-                patchSize: "large",
-                halfSample: false
+                patchSize: "medium",
+                halfSample: true
             },
             numOfWorkers: 0,
             decoder: {

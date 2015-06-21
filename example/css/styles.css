@@ -74,7 +74,7 @@
   padding: 10px 0;
 }
 /* line 50, ../sass/_viewport.scss */
-#result_strip ul.thumbnails {
+#result_strip > ul {
   padding: 0;
   margin: 0;
   list-style-type: none;
@@ -84,34 +84,34 @@
   white-space: nowrap;
 }
 /* line 59, ../sass/_viewport.scss */
-#result_strip ul.thumbnails > li {
+#result_strip > ul > li {
   display: inline-block;
   vertical-align: middle;
   width: 160px;
 }
 /* line 63, ../sass/_viewport.scss */
-#result_strip ul.thumbnails > li .thumbnail {
+#result_strip > ul > li .thumbnail {
   padding: 5px;
   margin: 4px;
   border: 1px dashed #CCC;
 }
 /* line 68, ../sass/_viewport.scss */
-#result_strip ul.thumbnails > li .thumbnail img {
+#result_strip > ul > li .thumbnail img {
   max-width: 140px;
 }
 /* line 71, ../sass/_viewport.scss */
-#result_strip ul.thumbnails > li .thumbnail .caption {
+#result_strip > ul > li .thumbnail .caption {
   white-space: normal;
 }
 /* line 73, ../sass/_viewport.scss */
-#result_strip ul.thumbnails > li .thumbnail .caption h4 {
+#result_strip > ul > li .thumbnail .caption h4 {
   text-align: center;
   word-wrap: break-word;
   height: 40px;
   margin: 0px;
 }
 /* line 83, ../sass/_viewport.scss */
-#result_strip ul.thumbnails:after {
+#result_strip > ul:after {
   content: "";
   display: table;
   clear: both;

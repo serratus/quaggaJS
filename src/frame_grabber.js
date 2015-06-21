@@ -59,7 +59,7 @@ define(["cv_utils"], function(CVUtils) {
                 if(doHalfSample){
                     CVUtils.grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
                 } else {
-                    CVUtils.computeGray(ctxData, _data);
+                    CVUtils.computeGray(ctxData, _data, _streamConfig);
                 }
                 return true;
             } else {

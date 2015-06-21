@@ -71,9 +71,9 @@ define(['quagga', 'async'], function(Quagga, async) {
             var config = generateConfig(),
                 testSet = [
                     {"name": "image-001.jpg", "result": "0001285112001000040801"},
-                    // {"name": "image-002.jpg", "result": "FANAVF1461710"},
+                    {"name": "image-002.jpg", "result": "FANAVF1461710"},
                     // {"name": "image-003.jpg", "result": "673023"},
-                    {"name": "image-004.jpg", "result": "010210150301625334"},
+                    // {"name": "image-004.jpg", "result": "010210150301625334"},
                     {"name": "image-005.jpg", "result": "419055603900009001012999"},
                     {"name": "image-006.jpg", "result": "419055603900009001012999"},
                     {"name": "image-007.jpg", "result": "T 000003552345"},
