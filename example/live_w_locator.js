@@ -117,9 +117,9 @@ $(function() {
                 patchSize: "medium",
                 halfSample: true
             },
-            numOfWorkers: 1,
+            numOfWorkers: 4,
             decoder: {
-                readers : ["ean_reader"]
+                readers : ["code_128_reader"]
             },
             locate: true
         },

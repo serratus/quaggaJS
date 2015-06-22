@@ -92,14 +92,12 @@ $(function() {
                 singleChannel: false
             },
             locator: {
-                patchSize: "medium",
-                halfSample: true
+                patchSize: "large",
+                halfSample: false
             },
-            numOfWorkers: 0,
+            numOfWorkers: 1,
             decoder: {
-                readers: ["code_128_reader"],
-                showFrequency: true,
-                showPattern: true
+                readers: ["code_128_reader"]
             },
             locate: true,
             src: null

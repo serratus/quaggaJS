@@ -111,9 +111,7 @@ function(Code128Reader,
     }
 
     function canRecord(cb) {
-        if (_config.locate) {
-            BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
-        }
+        BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();
@@ -180,10 +178,10 @@ function(Code128Reader,
 
         console.log(_inputImageWrapper.size);
         _boxSize = [
-                vec2.create([20, _inputImageWrapper.size.y / 2 - 100]),
-                vec2.create([20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.create([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.create([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 - 100])
+                vec2.create([0, 0]),
+                vec2.create([0, _inputImageWrapper.size.y]),
+                vec2.create([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
+                vec2.create([_inputImageWrapper.size.x, 0])
             ];
         BarcodeLocator.init(_inputImageWrapper, _config.locator);
     }

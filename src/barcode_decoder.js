@@ -134,12 +134,9 @@ define([
 
                 // check if inside image
                 extendLine(ext);
-                while (ext > 1 && !inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
-                    ext -= Math.floor(ext/2);
+                while (ext > 1 && (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0))) {
+                    ext -= Math.ceil(ext/2);
                     extendLine(-ext);
-                }
-                if (ext <= 1) {
-                    return null;
                 }
                 return line;
             }
