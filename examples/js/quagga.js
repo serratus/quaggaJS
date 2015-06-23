@@ -8564,7 +8564,11 @@ function(Code128Reader,
         if (_config.locate) {
             return BarcodeLocator.locate();
         } else {
-            return [_boxSize];
+            return [[
+                vec2.create(_boxSize[0]),
+                vec2.create(_boxSize[1]),
+                vec2.create(_boxSize[2]),
+                vec2.create(_boxSize[3])]];
         }
     }
 
