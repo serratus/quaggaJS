@@ -1,7 +1,11 @@
 $(function() {
     var App = {
         init : function() {
-            Quagga.init(this.state, function() {
+            Quagga.init(this.state, function(err) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
                 App.attachListeners();
                 Quagga.start();
             });
