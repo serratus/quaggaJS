@@ -99,7 +99,7 @@ function(Code128Reader,
                 if (!err) {
                     _inputStream.trigger("canrecord");
                 } else {
-                    console.log(err);
+                    return cb(err);
                 }
             });
         }

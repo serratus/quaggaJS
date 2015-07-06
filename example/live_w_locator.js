@@ -11,11 +11,19 @@ $(function() {
     });
     var App = {
         init : function() {
-            Quagga.init(this.state, function() {
+            var self = this;
+
+            Quagga.init(this.state, function(err) {
+                if (err) {
+                    return self.handleError(err);
+                }
                 Quagga.registerResultCollector(resultCollector);
                 App.attachListeners();
                 Quagga.start();
             });
+        },
+        handleError: function(err) {
+            console.log(err);
         },
         attachListeners: function() {
             var self = this;

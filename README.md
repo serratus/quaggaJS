@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-06-21)
+- [Changelog](#changelog) (2015-07-06)
 
 ## What is QuaggaJS?
 
@@ -80,12 +80,16 @@ version `quagga.min.js` and places both files in the `dist` folder.
 You can check out the [examples][github_examples] to get an idea of how to
 use QuaggaJS. Basically the library exposes the following API:
 
-### Quagga.init(config, callback)
+### <a name="quaggainit">Quagga.init(config, callback)</a>
 
 This method initializes the library for a given configuration `config` (see
-below) and invokes the `callback` when Quagga is ready to start. The
-initialization process also requests for camera access if real-time detection is
-configured.
+below) and invokes the `callback(err)` when Quagga has finished its
+bootstrapping phase. The initialization process also requests for camera
+access if real-time detection is configured. In case of an error, the `err`
+parameter is set and contains information about the cause. A potential cause
+may be the `inputStream.type` is set to `LiveStream`, but the browser does
+not support this API, or simply if the user denies the permission to use the
+camera.
 
 ```javascript
 Quagga.init({
@@ -96,7 +100,11 @@ Quagga.init({
     decoder : {
       readers : ["code_128_reader"]
     }
-  }, function() {
+  }, function(err) {
+      if (err) {
+          console.log(err);
+          return
+      }
       console.log("Initialization finished. Ready to start");
       Quagga.start();
   });
@@ -356,6 +364,11 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-07-06
+- Improvements
+  - Added `err` parameter to [Quagga.init()](#quaggainit) callback
+  function
 
 ### 2015-06-21
 - Features
