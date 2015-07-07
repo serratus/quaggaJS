@@ -32,7 +32,7 @@ define(
                 decodedCodes.push(code);
             }
 
-            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {
                 return null;
             }

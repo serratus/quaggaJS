@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-07-06)
+- [Changelog](#changelog) (2015-07-08)
 
 ## What is QuaggaJS?
 
@@ -364,6 +364,13 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-07-08
+- Improvements
+  - Parameter tweaking to reduce false-positives significantly (for the
+  entire EAN and UPC family)
+  - Fixing bug in parity check for UPC-E codes
+  - Fixing bug in alignment for EAN-8 codes
 
 ### 2015-07-06
 - Improvements

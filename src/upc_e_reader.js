@@ -36,13 +36,13 @@ define(
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
-                } else {
-                    codeFrequency |= 0 << (5 - i);
                 }
                 result.push(code.code);
                 decodedCodes.push(code);
             }
-            self._determineParity(codeFrequency, result);
+            if (!self._determineParity(codeFrequency, result)) {
+                return null;
+            }
 
             return code;
         };
@@ -57,10 +57,11 @@ define(
                     if (codeFrequency === self.CODE_FREQUENCY[nrSystem][i]) {
                         result.unshift(nrSystem);
                         result.push(i);
-                        return;
+                        return true;
                     }
                 }
             }
+            return false;
         };
 
         UPCEReader.prototype._convertToUPCA = function(result) {

@@ -117,6 +117,7 @@ define(["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
             max = result.max,
             line = result.line,
             slope,
+            slope2,
             center = min + (max - min) / 2,
             extrema = [],
             currentDir,
@@ -132,11 +133,12 @@ define(["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
             pos : 0,
             val : line[0]
         });
-        for ( i = 0; i < line.length - 1; i++) {
+        for ( i = 0; i < line.length - 2; i++) {
             slope = (line[i + 1] - line[i]);
-            if (slope < rThreshold && line[i + 1] < (center*1.5)) {
+            slope2 = (line[i + 2] - line[i + 1]);
+            if ((slope + slope2) < rThreshold && line[i + 1] < (center*1.5)) {
                 dir = Slope.DIR.DOWN;
-            } else if (slope > threshold && line[i + 1] > (center*0.5)) {
+            } else if ((slope + slope2) > threshold && line[i + 1] > (center*0.5)) {
                 dir = Slope.DIR.UP;
             } else {
                 dir = currentDir;

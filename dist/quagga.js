@@ -802,15 +802,17 @@ define(
                 } else {
                     if (counterPos === counter.length - 1) {
                         normalized = self._normalize(counter);
-                        for ( code = 0; code < self.CODE_PATTERN.length; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = 0; code < self.CODE_PATTERN.length; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
+                            bestMatch.end = i;
+                            return bestMatch;
                         }
-                        bestMatch.end = i;
-                        return bestMatch;
                     } else {
                         counterPos++;
                     }
@@ -850,17 +852,19 @@ define(
                             sum += counter[j];
                         }
                         normalized = self._normalize(counter);
-                        for ( code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
-                        }
-                        if (bestMatch.error < self.AVG_CODE_ERROR) {
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
+                            if (bestMatch.error < self.AVG_CODE_ERROR) {
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
                         }
 
                         for ( j = 0; j < 4; j++) {
@@ -1101,8 +1105,8 @@ define(
                 [2, 1, 1, 3]
             ]},
             CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
-            SINGLE_CODE_ERROR: {value: 0.7},
-            AVG_CODE_ERROR: {value: 0.3},
+            SINGLE_CODE_ERROR: {value: 0.67},
+            AVG_CODE_ERROR: {value: 0.27},
             FORMAT: {value: "ean_13", writeable: false}
         };
         
@@ -1136,18 +1140,20 @@ define(
                 } else {
                     if (counterPos === counter.length - 1) {
                         normalized = self._normalize(counter);
-                        for ( code = 0; code < coderange; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = 0; code < coderange; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
+                            bestMatch.end = i;
+                            if (bestMatch.error > self.AVG_CODE_ERROR) {
+                                return null;
+                            }
+                            return bestMatch;
                         }
-                        bestMatch.end = i;
-                        if (bestMatch.error > self.AVG_CODE_ERROR) {
-                            return null;
-                        }
-                        return bestMatch;
                     } else {
                         counterPos++;
                     }
@@ -1204,13 +1210,15 @@ define(
                             sum += counter[j];
                         }
                         normalized = self._normalize(counter);
-                        error = self._matchPattern(normalized, pattern);
+                        if (normalized) {
+                            error = self._matchPattern(normalized, pattern);
 
-                        if (error < epsilon) {
-                            bestMatch.error = error;
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
+                            if (error < epsilon) {
+                                bestMatch.error = error;
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
                         }
                         if (tryHarder) {
                             for ( j = 0; j < counter.length - 2; j++) {
@@ -6714,6 +6722,7 @@ define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper
             max = result.max,
             line = result.line,
             slope,
+            slope2,
             center = min + (max - min) / 2,
             extrema = [],
             currentDir,
@@ -6729,11 +6738,12 @@ define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper
             pos : 0,
             val : line[0]
         });
-        for ( i = 0; i < line.length - 1; i++) {
+        for ( i = 0; i < line.length - 2; i++) {
             slope = (line[i + 1] - line[i]);
-            if (slope < rThreshold && line[i + 1] < (center*1.5)) {
+            slope2 = (line[i + 2] - line[i + 1]);
+            if ((slope + slope2) < rThreshold && line[i + 1] < (center*1.5)) {
                 dir = Slope.DIR.DOWN;
-            } else if (slope > threshold && line[i + 1] > (center*0.5)) {
+            } else if ((slope + slope2) > threshold && line[i + 1] > (center*0.5)) {
                 dir = Slope.DIR.UP;
             } else {
                 dir = currentDir;
@@ -7474,7 +7484,7 @@ define(
                 decodedCodes.push(code);
             }
 
-            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {
                 return null;
             }
@@ -7533,13 +7543,13 @@ define(
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
-                } else {
-                    codeFrequency |= 0 << (5 - i);
                 }
                 result.push(code.code);
                 decodedCodes.push(code);
             }
-            self._determineParity(codeFrequency, result);
+            if (!self._determineParity(codeFrequency, result)) {
+                return null;
+            }
 
             return code;
         };
@@ -7554,10 +7564,11 @@ define(
                     if (codeFrequency === self.CODE_FREQUENCY[nrSystem][i]) {
                         result.unshift(nrSystem);
                         result.push(i);
-                        return;
+                        return true;
                     }
                 }
             }
+            return false;
         };
 
         UPCEReader.prototype._convertToUPCA = function(result) {

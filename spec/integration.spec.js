@@ -73,7 +73,7 @@ define(['quagga', 'async'], function(Quagga, async) {
                     {"name": "image-001.jpg", "result": "0001285112001000040801"},
                     {"name": "image-002.jpg", "result": "FANAVF1461710"},
                     // {"name": "image-003.jpg", "result": "673023"},
-                    // {"name": "image-004.jpg", "result": "010210150301625334"},
+                    {"name": "image-004.jpg", "result": "010210150301625334"},
                     {"name": "image-005.jpg", "result": "419055603900009001012999"},
                     {"name": "image-006.jpg", "result": "419055603900009001012999"},
                     {"name": "image-007.jpg", "result": "T 000003552345"},
@@ -94,10 +94,9 @@ define(['quagga', 'async'], function(Quagga, async) {
             var config = generateConfig(),
                 testSet = [
                     {"name": "image-001.jpg", "result": "B3% $DAD$"},
-                    /*{"name": "image-002.jpg", "result": "QUAGGAJS"},*/
                     {"name": "image-003.jpg", "result": "CODE39"},
                     {"name": "image-004.jpg", "result": "QUAGGAJS"},
-                    /* {"name": "image-005.jpg", "result": "CODE39"}, */
+                    {"name": "image-005.jpg", "result": "CODE39"},
                     {"name": "image-006.jpg", "result": "2/4-8/16-32"},
                     {"name": "image-007.jpg", "result": "2/4-8/16-32"},
                     {"name": "image-008.jpg", "result": "CODE39"},
@@ -123,7 +122,7 @@ define(['quagga', 'async'], function(Quagga, async) {
                     {"name": "image-005.jpg", "result": "90162602"},
                     {"name": "image-006.jpg", "result": "24036153"},
                     {"name": "image-007.jpg", "result": "42176817"},
-                    /*{"name": "image-008.jpg", "result": "42191605"},*/
+                    {"name": "image-008.jpg", "result": "42191605"},
                     {"name": "image-009.jpg", "result": "42242215"},
                     {"name": "image-010.jpg", "result": "42184799"}
                 ];
@@ -144,7 +143,7 @@ define(['quagga', 'async'], function(Quagga, async) {
                     {"name": "image-003.jpg", "result": "882428015084"},
                     {"name": "image-004.jpg", "result": "882428015343"},
                     {"name": "image-005.jpg", "result": "882428015343"},
-                    {"name": "image-006.jpg", "result": "882428015046"},
+                    /* {"name": "image-006.jpg", "result": "882428015046"}, */
                     {"name": "image-007.jpg", "result": "882428015084"},
                     {"name": "image-008.jpg", "result": "882428015046"},
                     {"name": "image-009.jpg", "result": "039047013551"},
@@ -192,7 +191,7 @@ define(['quagga', 'async'], function(Quagga, async) {
                     {"name": "image-005.jpg", "result": "C$399.95A"},
                     {"name": "image-006.jpg", "result": "B546745735B"},
                     {"name": "image-007.jpg", "result": "C$399.95A"},
-                    /* {"name": "image-008.jpg", "result": "01264904"}, */
+                    {"name": "image-008.jpg", "result": "A16:9/4:3/3:2D"},
                     {"name": "image-009.jpg", "result": "C$399.95A"},
                     {"name": "image-010.jpg", "result": "C$399.95A"}
                 ];

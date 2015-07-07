@@ -162,15 +162,17 @@ define(
                 } else {
                     if (counterPos === counter.length - 1) {
                         normalized = self._normalize(counter);
-                        for ( code = 0; code < self.CODE_PATTERN.length; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = 0; code < self.CODE_PATTERN.length; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
+                            bestMatch.end = i;
+                            return bestMatch;
                         }
-                        bestMatch.end = i;
-                        return bestMatch;
                     } else {
                         counterPos++;
                     }
@@ -210,17 +212,19 @@ define(
                             sum += counter[j];
                         }
                         normalized = self._normalize(counter);
-                        for ( code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
-                        }
-                        if (bestMatch.error < self.AVG_CODE_ERROR) {
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
+                            if (bestMatch.error < self.AVG_CODE_ERROR) {
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
                         }
 
                         for ( j = 0; j < 4; j++) {
