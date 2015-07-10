@@ -34,6 +34,7 @@ module.exports = function(grunt) {
                     },
                     "baseUrl" : "src",
                     "name" : "quagga",
+                    "useStrict": true,
                     "out" : "dist/quagga.js",
                     "include" : ['quagga'],
                     "optimize" : "none",

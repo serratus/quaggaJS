@@ -18,7 +18,8 @@ define(function(){
               right: "0%",
               left: "0%",
               bottom: "0%"
-          }
+          },
+          singleChannel: false // true: only the red color-channel is read
       },
       tracking: false,
       debug: false,

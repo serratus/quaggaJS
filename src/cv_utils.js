@@ -486,13 +486,19 @@ define(['cluster', "array_helper", "gl-matrix"], function(Cluster2, ArrayHelper,
 
     };
 
-    CVUtils.computeGray = function(imageData, outArray) {
-        var l = imageData.length / 4;
-        var i = 0;
-        for ( i = 0; i < l; i++) {
-            //outArray[i] = (0.299*imageData[i*4+0] + 0.587*imageData[i*4+1] + 0.114*imageData[i*4+2]);
+    CVUtils.computeGray = function(imageData, outArray, config) {
+        var l = (imageData.length / 4) | 0,
+            i,
+            singleChannel = config && config.singleChannel === true;
 
-            outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+        if (singleChannel) {
+            for (i = 0; i < l; i++) {
+                outArray[i] = imageData[i * 4 + 0];
+            }
+        } else {
+            for (i = 0; i < l; i++) {
+                outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+            }
         }
     };
 

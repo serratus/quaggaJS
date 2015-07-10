@@ -1,6 +1,6 @@
 {
   "name": "quagga",
-  "version": "0.6.8",
+  "version": "0.6.13",
   "description": "An advanced barcode-scanner written in JavaScript",
   "main": "lib/quagga.js",
   "browser": "dist/quagga.js",
@@ -43,6 +43,8 @@
     "ean",
     "code128",
     "code39",
+    "codabar",
+    "upc",
     "getusermedia",
     "imageprocessing"
   ],

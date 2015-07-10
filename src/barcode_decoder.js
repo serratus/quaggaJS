@@ -49,8 +49,7 @@ define([
                         overlay : null
                     }
                 },
-                _barcodeReaders = [],
-                _barcodeReader = null;
+                _barcodeReaders = [];
 
             initCanvas();
             initReaders();
@@ -135,12 +134,9 @@ define([
 
                 // check if inside image
                 extendLine(ext);
-                while (ext > 1 && !inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
-                    ext -= Math.floor(ext/2);
+                while (ext > 1 && (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0))) {
+                    ext -= Math.ceil(ext/2);
                     extendLine(-ext);
-                }
-                if (ext <= 1) {
-                    return null;
                 }
                 return line;
             }
@@ -171,9 +167,6 @@ define([
 
                 for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                     result = _barcodeReaders[i].decodePattern(barcodeLine.line);
-                    if (result !== null) {
-                        _barcodeReader = _barcodeReaders[i];
-                    }
                 }
                 if(result === null){
                     return null;

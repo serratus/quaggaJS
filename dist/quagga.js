@@ -437,7 +437,7 @@ define("almond", function(){});
 
 define(
     'barcode_reader',[],function() {
-        
+        "use strict";
         
         function BarcodeReader() {
             this._row = [];
@@ -600,6 +600,9 @@ define(
             } else {
                 result.direction = BarcodeReader.DIRECTION.FORWARD;
             }
+            if (result) {
+                result.format = self.FORMAT;
+            }
             return result;
         };
 
@@ -614,6 +617,11 @@ define(
             }
             return true;
         };
+
+        Object.defineProperty(BarcodeReader.prototype, "FORMAT", {
+            value: 'unknown',
+            writeable: false
+        });
         
         BarcodeReader.DIRECTION = {
             FORWARD : 1,
@@ -638,7 +646,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
         
         function Code128Reader() {
             BarcodeReader.call(this);
@@ -764,7 +772,8 @@ define(
                 [2, 3, 3, 1, 1, 1, 2]
             ]},
             SINGLE_CODE_ERROR: {value: 1},
-            AVG_CODE_ERROR: {value: 0.5}
+            AVG_CODE_ERROR: {value: 0.5},
+            FORMAT: {value: "code_128", writeable: false}
         };
         
         Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -793,67 +802,17 @@ define(
                 } else {
                     if (counterPos === counter.length - 1) {
                         normalized = self._normalize(counter);
-                        for ( code = 0; code < self.CODE_PATTERN.length; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = 0; code < self.CODE_PATTERN.length; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
-                        }
-                        bestMatch.end = i;
-                        return bestMatch;
-                    } else {
-                        counterPos++;
-                    }
-                    counter[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
-            return null;
-        };
-        
-        Code128Reader.prototype._findEnd = function() {
-            var counter = [0, 0, 0, 0, 0, 0, 0],
-                i,
-                self = this,
-                offset = self._nextSet(self._row),
-                isWhite = !self._row[offset],
-                counterPos = 0,
-                    bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : 0,
-                    end : 0
-                },
-                error,
-                j,
-                sum,
-                normalized;
-                
-            for ( i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    counter[counterPos]++;
-                } else {
-                    if (counterPos === counter.length - 1) {
-                        sum = 0;
-                        for ( j = 0; j < counter.length; j++) {
-                            sum += counter[j];
-                        }
-                        normalized = self._normalize(counter, 13);
-                        error = self._matchPattern(normalized, self.CODE_PATTERN[self.STOP_CODE]);
-                        if (error < self.AVG_CODE_ERROR) {
-                            bestMatch.error = error;
-                            bestMatch.start = i - sum;
                             bestMatch.end = i;
                             return bestMatch;
                         }
-
-                        for ( j = 0; j < 5; j++) {
-                            counter[j] = counter[j + 2];
-                        }
-                        counter[5] = 0;
-                        counter[6] = 0;
-                        counterPos--;
                     } else {
                         counterPos++;
                     }
@@ -893,17 +852,19 @@ define(
                             sum += counter[j];
                         }
                         normalized = self._normalize(counter);
-                        for ( code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
-                        }
-                        if (bestMatch.error < self.AVG_CODE_ERROR) {
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
+                            if (bestMatch.error < self.AVG_CODE_ERROR) {
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
                         }
 
                         for ( j = 0; j < 4; j++) {
@@ -1052,7 +1013,7 @@ define(
 
             // find end bar
             code.end = self._nextUnset(self._row, code.end);
-            if (code.end === self._row.length) {
+            if(!self._verifyTrailingWhitespace(code)){
                 return null;
             }
 
@@ -1063,8 +1024,14 @@ define(
                 return null;
             }
 
+            if (!result.length) {
+                return null;
+            }
+
             // remove last code from result (checksum)
             result.splice(result.length - 1, 1);
+
+
 
             return {
                 code : result.join(""),
@@ -1075,6 +1042,20 @@ define(
                 decodedCodes : decodedCodes,
                 endInfo : code
             };
+        };
+
+
+        BarcodeReader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
         };
         
         return (Code128Reader);
@@ -1088,7 +1069,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
         
         function EANReader(opts) {
             BarcodeReader.call(this, opts);
@@ -1124,8 +1105,9 @@ define(
                 [2, 1, 1, 3]
             ]},
             CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
-            SINGLE_CODE_ERROR: {value: 0.7},
-            AVG_CODE_ERROR: {value: 0.3}
+            SINGLE_CODE_ERROR: {value: 0.67},
+            AVG_CODE_ERROR: {value: 0.27},
+            FORMAT: {value: "ean_13", writeable: false}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -1158,18 +1140,20 @@ define(
                 } else {
                     if (counterPos === counter.length - 1) {
                         normalized = self._normalize(counter);
-                        for ( code = 0; code < coderange; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = 0; code < coderange; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
+                            bestMatch.end = i;
+                            if (bestMatch.error > self.AVG_CODE_ERROR) {
+                                return null;
+                            }
+                            return bestMatch;
                         }
-                        bestMatch.end = i;
-                        if (bestMatch.error > self.AVG_CODE_ERROR) {
-                            return null;
-                        }
-                        return bestMatch;
                     } else {
                         counterPos++;
                     }
@@ -1226,13 +1210,15 @@ define(
                             sum += counter[j];
                         }
                         normalized = self._normalize(counter);
-                        error = self._matchPattern(normalized, pattern);
+                        if (normalized) {
+                            error = self._matchPattern(normalized, pattern);
 
-                        if (error < epsilon) {
-                            bestMatch.error = error;
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
+                            if (error < epsilon) {
+                                bestMatch.error = error;
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
                         }
                         if (tryHarder) {
                             for ( j = 0; j < counter.length - 2; j++) {
@@ -1416,7 +1402,7 @@ define(
 /* global define */
 
 define('image_loader',[],function() {
-    
+    "use strict";
 
     var ImageLoader = {};
     ImageLoader.load = function(directory, callback, offset, size, sequence) {
@@ -1480,7 +1466,7 @@ define('image_loader',[],function() {
 /* global define */
 
 define('input_stream',["image_loader"], function(ImageLoader) {
-    
+    "use strict";
 
     var InputStream = {};
     InputStream.createVideoStream = function(video) {
@@ -1827,7 +1813,7 @@ define("typedefs", (function (global) {
 /* global define */
 
 define('subImage',["typedefs"], function() {
-    
+    "use strict";
 
     /**
      * Construct representing a part of another {ImageWrapper}. Shares data
@@ -1951,7 +1937,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 
 (function() {
-  
+  "use strict";
 
   var shim = {};
   if (typeof(exports) === 'undefined') {
@@ -5796,7 +5782,7 @@ if(typeof(exports) !== 'undefined') {
 /* global define */
 
 define('cluster',["gl-matrix"], function(glMatrix) {
-    
+    "use strict";
 
     var vec2 = glMatrix.vec2;
     /**
@@ -5869,7 +5855,7 @@ define('cluster',["gl-matrix"], function(glMatrix) {
 /* global define */
 
 define('array_helper',[],function() {
-    
+    "use strict";
 
     return {
         init : function(arr, val) {
@@ -5956,7 +5942,7 @@ define('array_helper',[],function() {
 
 define('cv_utils',['cluster', "array_helper", "gl-matrix"], function(Cluster2, ArrayHelper, glMatrix) {
 
-    
+    "use strict";
     /*
     * cv_utils.js
     * Collection of CV functions and libraries
@@ -6439,13 +6425,19 @@ define('cv_utils',['cluster', "array_helper", "gl-matrix"], function(Cluster2, A
 
     };
 
-    CVUtils.computeGray = function(imageData, outArray) {
-        var l = imageData.length / 4;
-        var i = 0;
-        for ( i = 0; i < l; i++) {
-            //outArray[i] = (0.299*imageData[i*4+0] + 0.587*imageData[i*4+1] + 0.114*imageData[i*4+2]);
+    CVUtils.computeGray = function(imageData, outArray, config) {
+        var l = (imageData.length / 4) | 0,
+            i,
+            singleChannel = config && config.singleChannel === true;
 
-            outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+        if (singleChannel) {
+            for (i = 0; i < l; i++) {
+                outArray[i] = imageData[i * 4 + 0];
+            }
+        } else {
+            for (i = 0; i < l; i++) {
+                outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+            }
         }
     };
 
@@ -6676,7 +6668,7 @@ define('image_wrapper',[
     ], 
     function(SubImage, CVUtils, ArrayHelper, glMatrix) {
     
-    
+    'use strict';
     var vec2 = glMatrix.vec2,
         mat2 = glMatrix.mat2;
 
@@ -7099,7 +7091,7 @@ define('image_wrapper',[
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('tracer',[],function() {
-    
+    "use strict";
     
     var Tracer = {
         searchDirections : [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
@@ -7208,7 +7200,7 @@ define('tracer',[],function() {
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 define('rasterizer',["tracer"], function(Tracer) {
-    
+    "use strict";
 
     var Rasterizer = {
         createContour2D : function() {
@@ -7404,7 +7396,7 @@ define('rasterizer',["tracer"], function(Tracer) {
 /* global define */
 
 define('skeletonizer',[],function() {
-    
+    "use strict";
 
     Math.imul = Math.imul || function(a, b) {
         var ah = (a >>> 16) & 0xffff;
@@ -7619,7 +7611,7 @@ define('skeletonizer',[],function() {
 /* global define */
 
 define('image_debug',[],function() {
-    
+    "use strict";
     
     return {
         drawRect: function(pos, size, ctx, style){
@@ -7640,6 +7632,26 @@ define('image_debug',[],function() {
             }
             ctx.closePath();
             ctx.stroke();
+        },
+        drawImage: function(imageData, size, ctx) {
+            var canvasData = ctx.getImageData(0, 0, size.x, size.y),
+                data = canvasData.data,
+                imageDataPos = imageData.length,
+                canvasDataPos = data.length,
+                value;
+
+            if (canvasDataPos/imageDataPos !== 4) {
+                return false;
+            }
+            while(imageDataPos--){
+                value = imageData[imageDataPos];
+                data[--canvasDataPos] = 255;
+                data[--canvasDataPos] = value;
+                data[--canvasDataPos] = value;
+                data[--canvasDataPos] = value;
+            }
+            ctx.putImageData(canvasData, 0, 0);
+            return true;
         }
     };
     
@@ -8211,7 +8223,7 @@ function(ImageWrapper, CVUtils, Rasterizer, Tracer, skeletonizer, ArrayHelper, I
 /* global define */
 
 define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper) {
-    
+    "use strict";
     var Bresenham = {};
 
     var Slope = {
@@ -8326,6 +8338,7 @@ define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper
             max = result.max,
             line = result.line,
             slope,
+            slope2,
             center = min + (max - min) / 2,
             extrema = [],
             currentDir,
@@ -8341,11 +8354,12 @@ define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper
             pos : 0,
             val : line[0]
         });
-        for ( i = 0; i < line.length - 1; i++) {
+        for ( i = 0; i < line.length - 2; i++) {
             slope = (line[i + 1] - line[i]);
-            if (slope < rThreshold && line[i + 1] < (center*1.5)) {
+            slope2 = (line[i + 2] - line[i + 1]);
+            if ((slope + slope2) < rThreshold && line[i + 1] < (center*1.5)) {
                 dir = Slope.DIR.DOWN;
-            } else if (slope > threshold && line[i + 1] > (center*0.5)) {
+            } else if ((slope + slope2) > threshold && line[i + 1] > (center*0.5)) {
                 dir = Slope.DIR.UP;
             } else {
                 dir = currentDir;
@@ -8431,7 +8445,7 @@ define(
         "./array_helper"
     ],
     function(BarcodeReader, ArrayHelper) {
-        
+        "use strict";
 
         function Code39Reader() {
             BarcodeReader.call(this);
@@ -8441,7 +8455,8 @@ define(
             ALPHABETH_STRING: {value: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%"},
             ALPHABET: {value: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 45, 46, 32, 42, 36, 47, 43, 37]},
             CHARACTER_ENCODINGS: {value: [0x034, 0x121, 0x061, 0x160, 0x031, 0x130, 0x070, 0x025, 0x124, 0x064, 0x109, 0x049, 0x148, 0x019, 0x118, 0x058, 0x00D, 0x10C, 0x04C, 0x01C, 0x103, 0x043, 0x142, 0x013, 0x112, 0x052, 0x007, 0x106, 0x046, 0x016, 0x181, 0x0C1, 0x1C0, 0x091, 0x190, 0x0D0, 0x085, 0x184, 0x0C4, 0x094, 0x0A8, 0x0A2, 0x08A, 0x02A]},
-            ASTERISK: {value: 0x094}
+            ASTERISK: {value: 0x094},
+            FORMAT: {value: "code_39", writeable: false}
         };
 
         Code39Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -8650,7 +8665,7 @@ define(
         "./code_39_reader"
     ],
     function(Code39Reader) {
-        
+        "use strict";
 
         function Code39VINReader() {
             Code39Reader.call(this);
@@ -8710,7 +8725,7 @@ define(
         "./barcode_reader"
     ],
     function(BarcodeReader) {
-        
+        "use strict";
 
         function CodabarReader() {
             BarcodeReader.call(this);
@@ -8724,7 +8739,8 @@ define(
             START_END: {value: [0x01A, 0x029, 0x00B, 0x00E]},
             MIN_ENCODED_CHARS: {value: 4},
             MAX_ACCEPTABLE: {value: 2.0},
-            PADDING: {value: 1.5}
+            PADDING: {value: 1.5},
+            FORMAT: {value: "codabar", writeable: false}
         };
 
         CodabarReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -9023,13 +9039,17 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function UPCReader() {
             EANReader.call(this);
         }
 
-        UPCReader.prototype = Object.create(EANReader.prototype);
+        var properties = {
+            FORMAT: {value: "upc_a", writeable: false}
+        };
+
+        UPCReader.prototype = Object.create(EANReader.prototype, properties);
         UPCReader.prototype.constructor = UPCReader;
 
         UPCReader.prototype._decode = function() {
@@ -9054,13 +9074,17 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function EAN8Reader() {
             EANReader.call(this);
         }
 
-        EAN8Reader.prototype = Object.create(EANReader.prototype);
+        var properties = {
+            FORMAT: {value: "ean_8", writeable: false}
+        };
+
+        EAN8Reader.prototype = Object.create(EANReader.prototype, properties);
         EAN8Reader.prototype.constructor = EAN8Reader;
 
         EAN8Reader.prototype._decodePayload = function(code, result, decodedCodes) {
@@ -9076,7 +9100,7 @@ define(
                 decodedCodes.push(code);
             }
 
-            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {
                 return null;
             }
@@ -9105,7 +9129,7 @@ define(
         "./ean_reader"
     ],
     function(EANReader) {
-        
+        "use strict";
 
         function UPCEReader() {
             EANReader.call(this);
@@ -9115,7 +9139,8 @@ define(
             CODE_FREQUENCY : {value: [
                 [ 56, 52, 50, 49, 44, 38, 35, 42, 41, 37 ],
                 [7, 11, 13, 14, 19, 25, 28, 21, 22, 26]]},
-            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]}
+            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]},
+            FORMAT: {value: "upc_e", writeable: false}
         };
 
         UPCEReader.prototype = Object.create(EANReader.prototype, properties);
@@ -9134,13 +9159,13 @@ define(
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
-                } else {
-                    codeFrequency |= 0 << (5 - i);
                 }
                 result.push(code.code);
                 decodedCodes.push(code);
             }
-            self._determineParity(codeFrequency, result);
+            if (!self._determineParity(codeFrequency, result)) {
+                return null;
+            }
 
             return code;
         };
@@ -9155,10 +9180,11 @@ define(
                     if (codeFrequency === self.CODE_FREQUENCY[nrSystem][i]) {
                         result.unshift(nrSystem);
                         result.push(i);
-                        return;
+                        return true;
                     }
                 }
             }
+            return false;
         };
 
         UPCEReader.prototype._convertToUPCA = function(result) {
@@ -9234,7 +9260,7 @@ define('barcode_decoder',[
     UPCReader,
     EAN8Reader,
     UPCEReader) {
-    
+    "use strict";
 
     var readers = {
         code_128_reader: Code128Reader,
@@ -9260,8 +9286,7 @@ define('barcode_decoder',[
                         overlay : null
                     }
                 },
-                _barcodeReaders = [],
-                _barcodeReader = null;
+                _barcodeReaders = [];
 
             initCanvas();
             initReaders();
@@ -9346,12 +9371,9 @@ define('barcode_decoder',[
 
                 // check if inside image
                 extendLine(ext);
-                while (ext > 1 && !inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0)) {
-                    ext -= Math.floor(ext/2);
+                while (ext > 1 && (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0))) {
+                    ext -= Math.ceil(ext/2);
                     extendLine(-ext);
-                }
-                if (ext <= 1) {
-                    return null;
                 }
                 return line;
             }
@@ -9382,9 +9404,6 @@ define('barcode_decoder',[
 
                 for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                     result = _barcodeReaders[i].decodePattern(barcodeLine.line);
-                    if (result !== null) {
-                        _barcodeReader = _barcodeReaders[i];
-                    }
                 }
                 if(result === null){
                     return null;
@@ -9513,7 +9532,7 @@ define('barcode_decoder',[
 /* global define */
 
 define('frame_grabber',["cv_utils"], function(CVUtils) {
-    
+    "use strict";
 
     var FrameGrabber = {};
 
@@ -9570,7 +9589,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
                 if(doHalfSample){
                     CVUtils.grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
                 } else {
-                    CVUtils.computeGray(ctxData, _data);
+                    CVUtils.computeGray(ctxData, _data, _streamConfig);
                 }
                 return true;
             } else {
@@ -9592,7 +9611,7 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
 /* global define */
 
 define('html_utils',[], function() {
-    
+    "use strict";
 
     function createNode(htmlStr) {
         var temp = document.createElement('div');
@@ -9648,7 +9667,8 @@ define('config',[],function(){
               right: "0%",
               left: "0%",
               bottom: "0%"
-          }
+          },
+          singleChannel: false // true: only the red color-channel is read
       },
       tracking: false,
       debug: false,
@@ -9692,7 +9712,7 @@ define('config',[],function(){
 /* global define */
 
 define('events',[],function() {
-    
+    "use strict";
 
     var _events = function() {
         var events = {};
@@ -9783,7 +9803,7 @@ define('events',[],function() {
 /* global define, MediaStreamTrack */
 
 define('camera_access',["html_utils"], function(HtmlUtils) {
-    
+    "use strict";
     var streamRef,
         loadedDataHandler;
 
@@ -9794,11 +9814,15 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
      * @param {Object} failure Callback
      */
     function getUserMedia(constraints, success, failure) {
-        navigator.getUserMedia(constraints, function(stream) {
-            streamRef = stream;
-            var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
-            success.apply(null, [videoSrc]);
-        }, failure);
+        if (typeof navigator.getUserMedia !== 'undefined') {
+            navigator.getUserMedia(constraints, function (stream) {
+                streamRef = stream;
+                var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
+                success.apply(null, [videoSrc]);
+            }, failure);
+        } else {
+            failure(new TypeError("getUserMedia not available"));
+        }
     }
 
     function loadedData(video, callback) {
@@ -9837,7 +9861,7 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
             video.addEventListener('loadeddata', loadedDataHandler, false);
             video.play();
         }, function(e) {
-            console.log(e);
+            callback(e);
         });
     }
 
@@ -9860,7 +9884,7 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
                 facing: "environment"
             }, config);
 
-        if ( typeof MediaStreamTrack.getSources !== 'undefined') {
+        if ( typeof MediaStreamTrack !== 'undefined' && typeof MediaStreamTrack.getSources !== 'undefined') {
             MediaStreamTrack.getSources(function(sourceInfos) {
                 var videoSourceId;
                 for (var i = 0; i != sourceInfos.length; ++i) {
@@ -9919,10 +9943,68 @@ define('camera_access',["html_utils"], function(HtmlUtils) {
     };
 });
 
-/* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
+/* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
+define('result_collector',["image_debug"], function(ImageDebug) {
+    "use strict";
 
+    function contains(codeResult, list) {
+        if (list) {
+            return list.some(function (item) {
+                return Object.keys(item).every(function (key) {
+                    return item[key] === codeResult[key];
+                });
+            });
+        }
+        return false;
+    }
+
+    function passesFilter(codeResult, filter) {
+        if (typeof filter === 'function') {
+            return filter(codeResult);
+        }
+        return true;
+    }
+
+    return {
+        create: function(config) {
+            var canvas = document.createElement("canvas"),
+                ctx = canvas.getContext("2d"),
+                results = [],
+                capacity = config.capacity || 20,
+                capture = config.capture === true;
+
+            function matchesConstraints(codeResult) {
+                return capacity && codeResult && !contains(codeResult, config.blacklist) && passesFilter(codeResult, config.filter);
+            }
+
+            return {
+                addResult: function(data, imageSize, codeResult) {
+                    var result = {};
+
+                    if (matchesConstraints(codeResult)) {
+                        capacity--;
+                        result.codeResult = codeResult;
+                        if (capture) {
+                            canvas.width = imageSize.x;
+                            canvas.height = imageSize.y;
+                            ImageDebug.drawImage(data, imageSize, ctx);
+                            result.frame = canvas.toDataURL();
+                        }
+                        results.push(result);
+                    }
+                },
+                getResults: function() {
+                    return results;
+                }
+            };
+        }
+    };
+});
+
+/* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
+/* global define */
 define('quagga',[
         "code_128_reader",
         "ean_reader",
@@ -9936,7 +10018,8 @@ define('quagga',[
         "events",
         "camera_access",
         "image_debug",
-        "gl-matrix"],
+        "gl-matrix",
+        "result_collector"],
 function(Code128Reader,
          EANReader,
          InputStream,
@@ -9949,8 +10032,9 @@ function(Code128Reader,
          Events,
          CameraAccess,
          ImageDebug,
-         glMatrix) {
-    
+         glMatrix,
+         ResultCollector) {
+    "use strict";
     
     var _inputStream,
         _framegrabber,
@@ -9970,7 +10054,8 @@ function(Code128Reader,
         _decoder,
         _workerPool = [],
         _onUIThread = true,
-        vec2 = glMatrix.vec2;
+        vec2 = glMatrix.vec2,
+        _resultCollector;
 
     function initializeData(imageWrapper) {
         initBuffers(imageWrapper);
@@ -10020,7 +10105,7 @@ function(Code128Reader,
                 if (!err) {
                     _inputStream.trigger("canrecord");
                 } else {
-                    console.log(err);
+                    return cb(err);
                 }
             });
         }
@@ -10032,9 +10117,7 @@ function(Code128Reader,
     }
 
     function canRecord(cb) {
-        if (_config.locate) {
-            BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
-        }
+        BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();
@@ -10101,10 +10184,10 @@ function(Code128Reader,
 
         console.log(_inputImageWrapper.size);
         _boxSize = [
-                vec2.clone([20, _inputImageWrapper.size.y / 2 - 100]),
-                vec2.clone([20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.clone([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.clone([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 - 100])
+                vec2.clone([0, 0]),
+                vec2.clone([0, _inputImageWrapper.size.y]),
+                vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
+                vec2.clone([_inputImageWrapper.size.x, 0])
             ];
         BarcodeLocator.init(_inputImageWrapper, _config.locator);
     }
@@ -10113,7 +10196,11 @@ function(Code128Reader,
         if (_config.locate) {
             return BarcodeLocator.locate();
         } else {
-            return [_boxSize];
+            return [[
+                vec2.clone(_boxSize[0]),
+                vec2.clone(_boxSize[1]),
+                vec2.clone(_boxSize[2]),
+                vec2.clone(_boxSize[3])]];
         }
     }
 
@@ -10154,10 +10241,16 @@ function(Code128Reader,
         }
     }
 
-    function publishResult(result) {
+    function publishResult(result, imageData) {
         if (_onUIThread) {
             transformResult(result);
+            if (imageData && result && result.codeResult) {
+                if (_resultCollector) {
+                    _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
+                }
+            }
         }
+
         Events.publish("processed", result);
         if (result && result.codeResult) {
             Events.publish("detected", result);
@@ -10173,7 +10266,7 @@ function(Code128Reader,
             result = _decoder.decodeFromBoundingBoxes(boxes);
             result = result || {};
             result.boxes = boxes;
-            publishResult(result);
+            publishResult(result, _inputImageWrapper.data);
         } else {
             publishResult();
         }
@@ -10242,7 +10335,7 @@ function(Code128Reader,
     function initWorker(cb) {
         var blobURL,
             workerThread = {
-                worker: null,
+                worker: undefined,
                 imageData: new Uint8Array(_inputStream.getWidth() * _inputStream.getHeight()),
                 busy: true
             };
@@ -10260,7 +10353,7 @@ function(Code128Reader,
             } else if (e.data.event === 'processed') {
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
-                publishResult(e.data.result);
+                publishResult(e.data.result, workerThread.imageData);
             }
         };
 
@@ -10375,6 +10468,11 @@ function(Code128Reader,
         setReaders: function(readers) {
             setReaders(readers);
         },
+        registerResultCollector: function(resultCollector) {
+            if (resultCollector && typeof resultCollector.addResult === 'function') {
+                _resultCollector = resultCollector;
+            }
+        },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
             config = HtmlUtils.mergeObjects({
@@ -10402,7 +10500,8 @@ function(Code128Reader,
           Code128Reader : Code128Reader
         },
         ImageWrapper: ImageWrapper,
-        ImageDebug: ImageDebug
+        ImageDebug: ImageDebug,
+        ResultCollector: ResultCollector
     };
 });
 

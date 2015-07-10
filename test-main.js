@@ -46,7 +46,8 @@ require.config({
     'upc_e_reader': 'src/upc_e_reader',
     'upc_reader': 'src/upc_reader',
     'async': 'node_modules/async/lib/async',
-    'gl-matrix': 'node_modules/gl-matrix/dist/gl-matrix'
+    'gl-matrix': 'node_modules/gl-matrix/dist/gl-matrix',
+    'result_collector': 'src/result_collector'
   },
   deps: allTestFiles,
   callback: window.__karma__.start

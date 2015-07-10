@@ -12,7 +12,11 @@ define(
             EANReader.call(this);
         }
 
-        EAN8Reader.prototype = Object.create(EANReader.prototype);
+        var properties = {
+            FORMAT: {value: "ean_8", writeable: false}
+        };
+
+        EAN8Reader.prototype = Object.create(EANReader.prototype, properties);
         EAN8Reader.prototype.constructor = EAN8Reader;
 
         EAN8Reader.prototype._decodePayload = function(code, result, decodedCodes) {
@@ -28,7 +32,7 @@ define(
                 decodedCodes.push(code);
             }
 
-            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true);
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
             if (code === null) {
                 return null;
             }

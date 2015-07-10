@@ -1,7 +1,5 @@
 /* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
 /* global define */
-
-
 define([
         "code_128_reader",
         "ean_reader",
@@ -15,7 +13,8 @@ define([
         "events",
         "camera_access",
         "image_debug",
-        "gl-matrix"],
+        "gl-matrix",
+        "result_collector"],
 function(Code128Reader,
          EANReader,
          InputStream,
@@ -28,7 +27,8 @@ function(Code128Reader,
          Events,
          CameraAccess,
          ImageDebug,
-         glMatrix) {
+         glMatrix,
+         ResultCollector) {
     "use strict";
     
     var _inputStream,
@@ -49,7 +49,8 @@ function(Code128Reader,
         _decoder,
         _workerPool = [],
         _onUIThread = true,
-        vec2 = glMatrix.vec2;
+        vec2 = glMatrix.vec2,
+        _resultCollector;
 
     function initializeData(imageWrapper) {
         initBuffers(imageWrapper);
@@ -99,7 +100,7 @@ function(Code128Reader,
                 if (!err) {
                     _inputStream.trigger("canrecord");
                 } else {
-                    console.log(err);
+                    return cb(err);
                 }
             });
         }
@@ -111,9 +112,7 @@ function(Code128Reader,
     }
 
     function canRecord(cb) {
-        if (_config.locate) {
-            BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
-        }
+        BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
         initCanvas();
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
         initConfig();
@@ -180,10 +179,10 @@ function(Code128Reader,
 
         console.log(_inputImageWrapper.size);
         _boxSize = [
-                vec2.clone([20, _inputImageWrapper.size.y / 2 - 100]),
-                vec2.clone([20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.clone([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 + 100]),
-                vec2.clone([_inputImageWrapper.size.x - 20, _inputImageWrapper.size.y / 2 - 100])
+                vec2.clone([0, 0]),
+                vec2.clone([0, _inputImageWrapper.size.y]),
+                vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
+                vec2.clone([_inputImageWrapper.size.x, 0])
             ];
         BarcodeLocator.init(_inputImageWrapper, _config.locator);
     }
@@ -192,7 +191,11 @@ function(Code128Reader,
         if (_config.locate) {
             return BarcodeLocator.locate();
         } else {
-            return [_boxSize];
+            return [[
+                vec2.clone(_boxSize[0]),
+                vec2.clone(_boxSize[1]),
+                vec2.clone(_boxSize[2]),
+                vec2.clone(_boxSize[3])]];
         }
     }
 
@@ -233,10 +236,16 @@ function(Code128Reader,
         }
     }
 
-    function publishResult(result) {
+    function publishResult(result, imageData) {
         if (_onUIThread) {
             transformResult(result);
+            if (imageData && result && result.codeResult) {
+                if (_resultCollector) {
+                    _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
+                }
+            }
         }
+
         Events.publish("processed", result);
         if (result && result.codeResult) {
             Events.publish("detected", result);
@@ -252,7 +261,7 @@ function(Code128Reader,
             result = _decoder.decodeFromBoundingBoxes(boxes);
             result = result || {};
             result.boxes = boxes;
-            publishResult(result);
+            publishResult(result, _inputImageWrapper.data);
         } else {
             publishResult();
         }
@@ -321,7 +330,7 @@ function(Code128Reader,
     function initWorker(cb) {
         var blobURL,
             workerThread = {
-                worker: null,
+                worker: undefined,
                 imageData: new Uint8Array(_inputStream.getWidth() * _inputStream.getHeight()),
                 busy: true
             };
@@ -339,7 +348,7 @@ function(Code128Reader,
             } else if (e.data.event === 'processed') {
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
-                publishResult(e.data.result);
+                publishResult(e.data.result, workerThread.imageData);
             }
         };
 
@@ -454,6 +463,11 @@ function(Code128Reader,
         setReaders: function(readers) {
             setReaders(readers);
         },
+        registerResultCollector: function(resultCollector) {
+            if (resultCollector && typeof resultCollector.addResult === 'function') {
+                _resultCollector = resultCollector;
+            }
+        },
         canvas : _canvasContainer,
         decodeSingle : function(config, resultCallback) {
             config = HtmlUtils.mergeObjects({
@@ -481,6 +495,7 @@ function(Code128Reader,
           Code128Reader : Code128Reader
         },
         ImageWrapper: ImageWrapper,
-        ImageDebug: ImageDebug
+        ImageDebug: ImageDebug,
+        ResultCollector: ResultCollector
     };
 });

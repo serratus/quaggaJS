@@ -42,8 +42,9 @@ define(
                 [2, 1, 1, 3]
             ]},
             CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
-            SINGLE_CODE_ERROR: {value: 0.7},
-            AVG_CODE_ERROR: {value: 0.3}
+            SINGLE_CODE_ERROR: {value: 0.67},
+            AVG_CODE_ERROR: {value: 0.27},
+            FORMAT: {value: "ean_13", writeable: false}
         };
         
         EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -76,18 +77,20 @@ define(
                 } else {
                     if (counterPos === counter.length - 1) {
                         normalized = self._normalize(counter);
-                        for ( code = 0; code < coderange; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = 0; code < coderange; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
+                            bestMatch.end = i;
+                            if (bestMatch.error > self.AVG_CODE_ERROR) {
+                                return null;
+                            }
+                            return bestMatch;
                         }
-                        bestMatch.end = i;
-                        if (bestMatch.error > self.AVG_CODE_ERROR) {
-                            return null;
-                        }
-                        return bestMatch;
                     } else {
                         counterPos++;
                     }
@@ -144,13 +147,15 @@ define(
                             sum += counter[j];
                         }
                         normalized = self._normalize(counter);
-                        error = self._matchPattern(normalized, pattern);
+                        if (normalized) {
+                            error = self._matchPattern(normalized, pattern);
 
-                        if (error < epsilon) {
-                            bestMatch.error = error;
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
+                            if (error < epsilon) {
+                                bestMatch.error = error;
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
                         }
                         if (tryHarder) {
                             for ( j = 0; j < counter.length - 2; j++) {

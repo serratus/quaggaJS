@@ -20,7 +20,8 @@ define(
             START_END: {value: [0x01A, 0x029, 0x00B, 0x00E]},
             MIN_ENCODED_CHARS: {value: 4},
             MAX_ACCEPTABLE: {value: 2.0},
-            PADDING: {value: 1.5}
+            PADDING: {value: 1.5},
+            FORMAT: {value: "codabar", writeable: false}
         };
 
         CodabarReader.prototype = Object.create(BarcodeReader.prototype, properties);
