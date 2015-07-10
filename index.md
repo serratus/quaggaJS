@@ -284,11 +284,13 @@ locating-mechanism for more robust results.
 
 ```javascript
 Quagga.decodeSingle({
-  readers: ['code_128_reader'],
-  locate: true, // try to locate the barcode in the image
-  src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
+    decoder: {
+        readers: ["code_128_reader"] // List of active readers
+    },
+    locate: true, // try to locate the barcode in the image
+    src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
 }, function(result){
-  console.log(result);
+    console.log(result);
 });
 ```
 
