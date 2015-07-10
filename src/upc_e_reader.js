@@ -16,7 +16,8 @@ define(
             CODE_FREQUENCY : {value: [
                 [ 56, 52, 50, 49, 44, 38, 35, 42, 41, 37 ],
                 [7, 11, 13, 14, 19, 25, 28, 21, 22, 26]]},
-            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]}
+            STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]},
+            FORMAT: {value: "upc_e", writeable: false}
         };
 
         UPCEReader.prototype = Object.create(EANReader.prototype, properties);
@@ -35,13 +36,13 @@ define(
                 if (code.code >= self.CODE_G_START) {
                     code.code = code.code - self.CODE_G_START;
                     codeFrequency |= 1 << (5 - i);
-                } else {
-                    codeFrequency |= 0 << (5 - i);
                 }
                 result.push(code.code);
                 decodedCodes.push(code);
             }
-            self._determineParity(codeFrequency, result);
+            if (!self._determineParity(codeFrequency, result)) {
+                return null;
+            }
 
             return code;
         };
@@ -56,10 +57,11 @@ define(
                     if (codeFrequency === self.CODE_FREQUENCY[nrSystem][i]) {
                         result.unshift(nrSystem);
                         result.push(i);
-                        return;
+                        return true;
                     }
                 }
             }
+            return false;
         };
 
         UPCEReader.prototype._convertToUPCA = function(result) {

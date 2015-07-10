@@ -12,7 +12,14 @@ define(function(){
               minAspectRatio: 0,
               maxAspectRatio: 100,
               facing: "environment" // or user
-          }
+          },
+          area: {
+              top: "0%",
+              right: "0%",
+              left: "0%",
+              bottom: "0%"
+          },
+          singleChannel: false // true: only the red color-channel is read
       },
       tracking: false,
       debug: false,

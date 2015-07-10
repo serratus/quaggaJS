@@ -132,7 +132,8 @@ define(
                 [2, 3, 3, 1, 1, 1, 2]
             ]},
             SINGLE_CODE_ERROR: {value: 1},
-            AVG_CODE_ERROR: {value: 0.5}
+            AVG_CODE_ERROR: {value: 0.5},
+            FORMAT: {value: "code_128", writeable: false}
         };
         
         Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -161,67 +162,17 @@ define(
                 } else {
                     if (counterPos === counter.length - 1) {
                         normalized = self._normalize(counter);
-                        for ( code = 0; code < self.CODE_PATTERN.length; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = 0; code < self.CODE_PATTERN.length; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
-                        }
-                        bestMatch.end = i;
-                        return bestMatch;
-                    } else {
-                        counterPos++;
-                    }
-                    counter[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
-            return null;
-        };
-        
-        Code128Reader.prototype._findEnd = function() {
-            var counter = [0, 0, 0, 0, 0, 0, 0],
-                i,
-                self = this,
-                offset = self._nextSet(self._row),
-                isWhite = !self._row[offset],
-                counterPos = 0,
-                    bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : 0,
-                    end : 0
-                },
-                error,
-                j,
-                sum,
-                normalized;
-                
-            for ( i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    counter[counterPos]++;
-                } else {
-                    if (counterPos === counter.length - 1) {
-                        sum = 0;
-                        for ( j = 0; j < counter.length; j++) {
-                            sum += counter[j];
-                        }
-                        normalized = self._normalize(counter, 13);
-                        error = self._matchPattern(normalized, self.CODE_PATTERN[self.STOP_CODE]);
-                        if (error < self.AVG_CODE_ERROR) {
-                            bestMatch.error = error;
-                            bestMatch.start = i - sum;
                             bestMatch.end = i;
                             return bestMatch;
                         }
-
-                        for ( j = 0; j < 5; j++) {
-                            counter[j] = counter[j + 2];
-                        }
-                        counter[5] = 0;
-                        counter[6] = 0;
-                        counterPos--;
                     } else {
                         counterPos++;
                     }
@@ -261,17 +212,19 @@ define(
                             sum += counter[j];
                         }
                         normalized = self._normalize(counter);
-                        for ( code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
-                            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                            if (error < bestMatch.error) {
-                                bestMatch.code = code;
-                                bestMatch.error = error;
+                        if (normalized) {
+                            for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
                             }
-                        }
-                        if (bestMatch.error < self.AVG_CODE_ERROR) {
-                            bestMatch.start = i - sum;
-                            bestMatch.end = i;
-                            return bestMatch;
+                            if (bestMatch.error < self.AVG_CODE_ERROR) {
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
                         }
 
                         for ( j = 0; j < 4; j++) {
@@ -420,7 +373,7 @@ define(
 
             // find end bar
             code.end = self._nextUnset(self._row, code.end);
-            if (code.end === self._row.length) {
+            if(!self._verifyTrailingWhitespace(code)){
                 return null;
             }
 
@@ -431,8 +384,14 @@ define(
                 return null;
             }
 
+            if (!result.length) {
+                return null;
+            }
+
             // remove last code from result (checksum)
             result.splice(result.length - 1, 1);
+
+
 
             return {
                 code : result.join(""),
@@ -443,6 +402,20 @@ define(
                 decodedCodes : decodedCodes,
                 endInfo : code
             };
+        };
+
+
+        BarcodeReader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
         };
         
         return (Code128Reader);

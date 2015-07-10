@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-05-20)
+- [Changelog](#changelog) (2015-07-08)
 
 ## What is QuaggaJS?
 
@@ -80,12 +80,16 @@ version `quagga.min.js` and places both files in the `dist` folder.
 You can check out the [examples][github_examples] to get an idea of how to
 use QuaggaJS. Basically the library exposes the following API:
 
-### Quagga.init(config, callback)
+### <a name="quaggainit">Quagga.init(config, callback)</a>
 
 This method initializes the library for a given configuration `config` (see
-below) and invokes the `callback` when Quagga is ready to start. The
-initialization process also requests for camera access if real-time detection is
-configured.
+below) and invokes the `callback(err)` when Quagga has finished its
+bootstrapping phase. The initialization process also requests for camera
+access if real-time detection is configured. In case of an error, the `err`
+parameter is set and contains information about the cause. A potential cause
+may be the `inputStream.type` is set to `LiveStream`, but the browser does
+not support this API, or simply if the user denies the permission to use the
+camera.
 
 ```javascript
 Quagga.init({
@@ -96,7 +100,11 @@ Quagga.init({
     decoder : {
       readers : ["code_128_reader"]
     }
-  }, function() {
+  }, function(err) {
+      if (err) {
+          console.log(err);
+          return
+      }
       console.log("Initialization finished. Ready to start");
       Quagga.start();
   });
@@ -143,7 +151,8 @@ empty.
 ```javascript
 {
   "codeResult": {
-    "code": "FANAVF1461710",
+    "code": "FANAVF1461710",  // the decoded code as a string
+    "format": "code_128", // or code_39, codabar, ean_13, ean_8, upc_a, upc_e
     "start": 355,
     "end": 26,
     "codeset": 100,
@@ -212,12 +221,19 @@ The default `config` object is set as followed:
 ```javascript
 {
   inputStream: { name: "Live",
-       type: "LiveStream",
-       constraints: {
-         width: 640,
-         height: 480,
-         facing: "environment"
-       }
+      type: "LiveStream",
+      constraints: {
+          width: 640,
+          height: 480,
+          facing: "environment"
+      },
+      area: { // defines rectangle of the detection/localization area
+          top: "0%",    // top offset
+          right: "0%",  // right offset
+          left: "0%",   // left offset
+          bottom: "0%"  // bottom offset
+      },
+      singleChannel: false // true: only the red color-channel is read
   },
   tracking: false,
   debug: false,
@@ -263,11 +279,13 @@ locating-mechanism for more robust results.
 
 ```javascript
 Quagga.decodeSingle({
-  readers: ['code_128_reader'],
-  locate: true, // try to locate the barcode in the image
-  src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
+    decoder: {
+        readers: ["code_128_reader"] // List of active readers
+    },
+    locate: true, // try to locate the barcode in the image
+    src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
 }, function(result){
-  console.log(result);
+    console.log(result);
 });
 ```
 
@@ -291,7 +309,95 @@ web-workers, and their restriction not to have access to the DOM, the
 configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
+## <a name="resultcollector">ResultCollector</a>
+
+Quagga is not perfect by any means and may produce false positives from time
+to time. In order to find out which images produced those false positives,
+the built-in ``ResultCollector`` will support you and me helping squashing
+bugs in the implementation.
+
+### Creating a ``ResultCollector``
+
+You can easily create a new ``ResultCollector`` by calling its ``create``
+method with a configuration.
+
+```javascript
+var resultCollector = Quagga.ResultCollector.create({
+    capture: true, // keep track of the image producing this result
+    capacity: 20,  // maximum number of results to store
+    blacklist: [   // list containing codes which should not be recorded
+        {code: "3574660239843", format: "ean_13"}],
+    filter: function(codeResult) {
+        // only store results which match this constraint
+        // returns true/false
+        // e.g.: return codeResult.format === "ean_13";
+        return true;
+    }
+});
+```
+
+### Using a ``ResultCollector``
+
+After creating a ``ResultCollector`` you have to attach it to Quagga by
+calling ``Quagga.registerResultCollector(resultCollector)``.
+
+### Reading results
+
+After a test/recording session, you can now print the collected results which
+do not fit into a certain schema. Calling ``getResults`` on the
+``resultCollector`` returns an ``Array`` containing objects with:
+
+```javascript
+{
+    codeResult: {}, // same as in onDetected event
+    frame: "data:image/png;base64,iVBOR..." // dataURL of the gray-scaled image
+}
+```
+
+The ``frame`` property is an internal representation of the image and
+therefore only available in gray-scale. The dataURL representation allows
+easy saving/rendering of the image.
+
+### Comparing results
+
+Now, having the frames available on disk, you can load each single image by
+calling ``decodeSingle`` with the same configuration as used during recording
+. In order to reproduce the exact same result, you have to make sure to turn
+on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
+
 ## <a name="changelog">Changelog</a>
+
+### 2015-07-08
+- Improvements
+  - Parameter tweaking to reduce false-positives significantly (for the
+  entire EAN and UPC family)
+  - Fixing bug in parity check for UPC-E codes
+  - Fixing bug in alignment for EAN-8 codes
+
+### 2015-07-06
+- Improvements
+  - Added `err` parameter to [Quagga.init()](#quaggainit) callback
+  function
+
+### 2015-06-21
+- Features
+  - Added ``singleChannel`` configuration to ``inputStream`` (in [config]
+  (#configobject))
+  - Added ``ResultCollector`` functionality (see [ResultCollector]
+  (#resultcollector))
+
+### 2015-06-13
+- Improvements
+  - Added ``format`` property to ``codeResult`` (in [result](#resultobject))
+
+### 2015-06-13
+- Improvements
+  - Added fixes for ``Code39Reader`` (trailing whitespace was missing)
+
+### 2015-06-09
+- Features
+  - Introduced the ``area`` property
+  - Ability to define a rectangle where localization/decoding should be applied
 
 ### 2015-05-20
 - Improvements

@@ -13,11 +13,15 @@ define(["html_utils"], function(HtmlUtils) {
      * @param {Object} failure Callback
      */
     function getUserMedia(constraints, success, failure) {
-        navigator.getUserMedia(constraints, function(stream) {
-            streamRef = stream;
-            var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
-            success.apply(null, [videoSrc]);
-        }, failure);
+        if (typeof navigator.getUserMedia !== 'undefined') {
+            navigator.getUserMedia(constraints, function (stream) {
+                streamRef = stream;
+                var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
+                success.apply(null, [videoSrc]);
+            }, failure);
+        } else {
+            failure(new TypeError("getUserMedia not available"));
+        }
     }
 
     function loadedData(video, callback) {
@@ -56,7 +60,7 @@ define(["html_utils"], function(HtmlUtils) {
             video.addEventListener('loadeddata', loadedDataHandler, false);
             video.play();
         }, function(e) {
-            console.log(e);
+            callback(e);
         });
     }
 
@@ -79,7 +83,7 @@ define(["html_utils"], function(HtmlUtils) {
                 facing: "environment"
             }, config);
 
-        if ( typeof MediaStreamTrack.getSources !== 'undefined') {
+        if ( typeof MediaStreamTrack !== 'undefined' && typeof MediaStreamTrack.getSources !== 'undefined') {
             MediaStreamTrack.getSources(function(sourceInfos) {
                 var videoSourceId;
                 for (var i = 0; i != sourceInfos.length; ++i) {

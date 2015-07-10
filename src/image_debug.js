@@ -23,6 +23,26 @@ define(function() {
             }
             ctx.closePath();
             ctx.stroke();
+        },
+        drawImage: function(imageData, size, ctx) {
+            var canvasData = ctx.getImageData(0, 0, size.x, size.y),
+                data = canvasData.data,
+                imageDataPos = imageData.length,
+                canvasDataPos = data.length,
+                value;
+
+            if (canvasDataPos/imageDataPos !== 4) {
+                return false;
+            }
+            while(imageDataPos--){
+                value = imageData[imageDataPos];
+                data[--canvasDataPos] = 255;
+                data[--canvasDataPos] = value;
+                data[--canvasDataPos] = value;
+                data[--canvasDataPos] = value;
+            }
+            ctx.putImageData(canvasData, 0, 0);
+            return true;
         }
     };
     

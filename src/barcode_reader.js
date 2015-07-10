@@ -166,6 +166,9 @@ define(
             } else {
                 result.direction = BarcodeReader.DIRECTION.FORWARD;
             }
+            if (result) {
+                result.format = self.FORMAT;
+            }
             return result;
         };
 
@@ -180,6 +183,11 @@ define(
             }
             return true;
         };
+
+        Object.defineProperty(BarcodeReader.prototype, "FORMAT", {
+            value: 'unknown',
+            writeable: false
+        });
         
         BarcodeReader.DIRECTION = {
             FORWARD : 1,

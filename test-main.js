@@ -46,7 +46,8 @@ require.config({
     'tracer': 'src/tracer',
     'upc_e_reader': 'src/upc_e_reader',
     'upc_reader': 'src/upc_reader',
-    'async': 'node_modules/async/lib/async'
+    'async': 'node_modules/async/lib/async',
+    'result_collector': 'src/result_collector'
   },
   deps: allTestFiles,
   callback: window.__karma__.start

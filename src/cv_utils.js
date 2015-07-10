@@ -484,13 +484,19 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
 
     };
 
-    CVUtils.computeGray = function(imageData, outArray) {
-        var l = imageData.length / 4;
-        var i = 0;
-        for ( i = 0; i < l; i++) {
-            //outArray[i] = (0.299*imageData[i*4+0] + 0.587*imageData[i*4+1] + 0.114*imageData[i*4+2]);
+    CVUtils.computeGray = function(imageData, outArray, config) {
+        var l = (imageData.length / 4) | 0,
+            i,
+            singleChannel = config && config.singleChannel === true;
 
-            outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+        if (singleChannel) {
+            for (i = 0; i < l; i++) {
+                outArray[i] = imageData[i * 4 + 0];
+            }
+        } else {
+            for (i = 0; i < l; i++) {
+                outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+            }
         }
     };
 
@@ -647,21 +653,64 @@ define(['cluster', 'glMatrixAddon', "array_helper"], function(Cluster2, glMatrix
         optimalPatchSize = findPatchSizeForDivisors(common);
         if (!optimalPatchSize) {
             optimalPatchSize = findPatchSizeForDivisors(this._computeDivisors(wideSide));
-            throw new AdjustToSizeError("", optimalPatchSize);
+            if (!optimalPatchSize) {
+                optimalPatchSize = findPatchSizeForDivisors((this._computeDivisors(desiredPatchSize * nrOfPatches)));
+            }
         }
         return optimalPatchSize;
     };
 
-    function AdjustToSizeError(message, desiredPatchSize) {
-        this.name = 'AdjustToSizeError';
-        this.message = message || 'AdjustToSizeError';
-        this.patchSize = desiredPatchSize;
-    }
+    CVUtils._parseCSSDimensionValues = function(value) {
+        var dimension = {
+                value: parseFloat(value),
+                unit: value.indexOf("%") === value.length-1 ? "%" : "%"
+            };
 
-    AdjustToSizeError.prototype = Object.create(RangeError.prototype);
-    AdjustToSizeError.prototype.constructor = AdjustToSizeError;
+        return dimension;
+    };
 
-    CVUtils.AdjustToSizeError = AdjustToSizeError;
+    CVUtils._dimensionsConverters = {
+        top: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.height * (dimension.value / 100));
+            }
+        },
+        right: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.width - (context.width * (dimension.value / 100)));
+            }
+        },
+        bottom: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.height - (context.height * (dimension.value / 100)));
+            }
+        },
+        left: function(dimension, context) {
+            if (dimension.unit === "%") {
+                return Math.floor(context.width * (dimension.value / 100));
+            }
+        }
+    };
+
+    CVUtils.computeImageArea = function(inputWidth, inputHeight, area) {
+        var context = {width: inputWidth, height: inputHeight};
+
+        var parsedArea = Object.keys(area).reduce(function(result, key) {
+            var value = area[key],
+                parsed = CVUtils._parseCSSDimensionValues(value),
+                calculated = CVUtils._dimensionsConverters[key](parsed, context);
+
+            result[key] = calculated;
+            return result;
+        }, {});
+
+        return {
+            sx: parsedArea.left,
+            sy: parsedArea.top,
+            sw: parsedArea.right - parsedArea.left,
+            sh: parsedArea.bottom - parsedArea.top
+        };
+    };
 
     return (CVUtils);
 });
