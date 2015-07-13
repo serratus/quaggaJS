@@ -3,8 +3,6 @@
 
 
 define([
-        "code_128_reader",
-        "ean_reader",
         "input_stream",
         "image_wrapper",
         "barcode_locator",
@@ -16,9 +14,7 @@ define([
         "camera_access",
         "image_debug",
         "result_collector"],
-function(Code128Reader,
-         EANReader,
-         InputStream,
+function(InputStream,
          ImageWrapper,
          BarcodeLocator,
          BarcodeDecoder,
@@ -488,10 +484,6 @@ function(Code128Reader,
                 }, true);
                 start();
             });
-        },
-        Reader: {
-          EANReader : EANReader,
-          Code128Reader : Code128Reader
         },
         ImageWrapper: ImageWrapper,
         ImageDebug: ImageDebug,

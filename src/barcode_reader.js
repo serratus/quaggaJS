@@ -184,6 +184,29 @@ define(
             return true;
         };
 
+        BarcodeReader.prototype._fillCounters = function(offset, end, isWhite) {
+            var self = this,
+                counterPos = 0,
+                i,
+                counters = [];
+
+            isWhite = (typeof isWhite !== 'undefined') ? isWhite : true;
+            offset = (typeof offset !== 'undefined') ? offset : self._nextUnset(self._row);
+            end = end || self._row.length;
+
+            counters[counterPos] = 0;
+            for (i = offset; i < end; i++) {
+                if (self._row[i] ^ isWhite) {
+                    counters[counterPos]++;
+                } else {
+                    counterPos++;
+                    counters[counterPos] = 1;
+                    isWhite = !isWhite;
+                }
+            }
+            return counters;
+        };
+
         Object.defineProperty(BarcodeReader.prototype, "FORMAT", {
             value: 'unknown',
             writeable: false

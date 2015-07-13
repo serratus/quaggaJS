@@ -11,7 +11,8 @@ define([
     'codabar_reader',
     'upc_reader',
     'ean_8_reader',
-    'upc_e_reader'
+    'upc_e_reader',
+    'i2of5_reader'
 ], function(
     Bresenham,
     ImageDebug,
@@ -22,7 +23,8 @@ define([
     CodabarReader,
     UPCReader,
     EAN8Reader,
-    UPCEReader) {
+    UPCEReader,
+    I2of5Reader) {
     "use strict";
 
     var readers = {
@@ -33,7 +35,8 @@ define([
         code_39_vin_reader: Code39VINReader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader,
-        upc_e_reader: UPCEReader
+        upc_e_reader: UPCEReader,
+        i2of5_reader: I2of5Reader
     };
     var BarcodeDecoder = {
         create : function(config, inputImageWrapper) {
