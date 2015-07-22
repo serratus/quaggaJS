@@ -38,7 +38,26 @@ define(
         I2of5Reader.prototype = Object.create(BarcodeReader.prototype, properties);
         I2of5Reader.prototype.constructor = I2of5Reader;
 
-        I2of5Reader.prototype._findPattern = function(pattern, offset) {
+        I2of5Reader.prototype._matchPattern = function(counter, code) {
+            var i,
+                counterSum = [0, 0],
+                codeSum = [0, 0],
+                correction = [0, 0];
+
+            for (i = 0; i < counter.length; i++) {
+                counterSum[i % 2] += counter[i];
+                codeSum[i % 2] += code[i]
+            }
+            correction[0] = codeSum[0]/counterSum[0];
+            correction[1] = codeSum[1]/counterSum[1];
+
+            for (i = 0; i < counter.length; i++) {
+                counter[i] *= correction[i % 2];
+            }
+            return BarcodeReader.prototype._matchPattern.call(this, counter, code);
+        };
+
+        I2of5Reader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder) {
             var counter = [],
                 self = this,
                 i,
@@ -53,8 +72,10 @@ define(
                 j,
                 sum,
                 normalized,
-                isWhite = false,
                 epsilon = self.AVG_CODE_ERROR;
+
+            isWhite = isWhite || false;
+            tryHarder = tryHarder || false;
 
             if (!offset) {
                 offset = self._nextSet(self._row);
@@ -84,12 +105,16 @@ define(
                                 return bestMatch;
                             }
                         }
-                        for ( j = 0; j < counter.length - 2; j++) {
-                            counter[j] = counter[j + 2];
+                        if (tryHarder) {
+                            for (j = 0; j < counter.length - 2; j++) {
+                                counter[j] = counter[j + 2];
+                            }
+                            counter[counter.length - 2] = 0;
+                            counter[counter.length - 1] = 0;
+                            counterPos--;
+                        } else {
+                            return null;
                         }
-                        counter[counter.length - 2] = 0;
-                        counter[counter.length - 1] = 0;
-                        counterPos--;
                     } else {
                         counterPos++;
                     }
@@ -107,7 +132,7 @@ define(
                 startInfo;
 
             while(!startInfo) {
-                startInfo = self._findPattern(self.START_PATTERN, offset);
+                startInfo = self._findPattern(self.START_PATTERN, offset, false, true);
                 if (!startInfo) {
                     return null;
                 }
@@ -271,11 +296,6 @@ define(
             }
             code = self._decodePayload(counters, result, decodedCodes);
             if (!code) {
-                return null;
-            }
-
-            // Checksum
-            if (!self._checksum(result)) {
                 return null;
             }
 
