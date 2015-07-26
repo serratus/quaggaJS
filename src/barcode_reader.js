@@ -5,8 +5,9 @@ define(
     function() {
         "use strict";
         
-        function BarcodeReader() {
+        function BarcodeReader(config) {
             this._row = [];
+            this.config = config || {};
             return this;
         }
         
@@ -222,6 +223,8 @@ define(
             CodeNotFoundException : "Code could not be found!",
             PatternNotFoundException : "Pattern could not be found!"
         };
+
+        BarcodeReader.CONFIG_KEYS = {};
         
         return (BarcodeReader);
     }

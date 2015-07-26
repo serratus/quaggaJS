@@ -89,11 +89,21 @@ define([
             }
 
             function initReaders() {
-                var i;
-                for ( i = 0; i < config.readers.length; i++) {
-                    console.log(config.readers[i]);
-                    _barcodeReaders.push(new readers[config.readers[i]]());
-                }
+                config.readers.forEach(function(readerConfig) {
+                    var reader,
+                        config = {};
+
+                    if (typeof readerConfig === 'object') {
+                        reader = readerConfig.format;
+                        config = readerConfig.config;
+                    } else if (typeof readerConfig === 'string') {
+                        reader = readerConfig;
+                    }
+                    _barcodeReaders.push(new readers[reader](config));
+                });
+                console.log("Registered Readers:" + _barcodeReaders
+                    .map(function(reader) {return reader.FORMAT;})
+                    .join(', '));
             }
 
             function initConfig() {
