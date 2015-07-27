@@ -31,14 +31,14 @@ define(
                 [W, N, N, W, N],
                 [N, W, N, W, N]
             ]},
-            SINGLE_CODE_ERROR: {value: 0.7},
-            AVG_CODE_ERROR: {value: 0.38},
-            MAX_CORRECTION_FACTOR: {value: 2},
+            SINGLE_CODE_ERROR: {value: 0.50},
+            AVG_CODE_ERROR: {value: 0.14},
+            MAX_CORRECTION_FACTOR: {value: 1.9},
             FORMAT: {value: "i2of5", writeable: false}
         };
 
         I2of5Reader.prototype = Object.create(BarcodeReader.prototype, properties);
-        I2of5Reader.prototype.consconstructor = I2of5Reader;
+        I2of5Reader.prototype.constructor = I2of5Reader;
 
         I2of5Reader.prototype._matchPattern = function(counter, code) {
             if (this.config.normalizeBarSpaceWidth) {
@@ -147,7 +147,7 @@ define(
                     return null;
                 }
                 narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / 4);
-                leadingWhitespaceStart = startInfo.start - narrowBarWidth*5;
+                leadingWhitespaceStart = startInfo.start - narrowBarWidth*10;
                 if (leadingWhitespaceStart >= 0) {
                     if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
                         return startInfo;
@@ -162,7 +162,7 @@ define(
             var self = this,
                 trailingWhitespaceEnd;
 
-            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
             if (trailingWhitespaceEnd < self._row.length) {
                 if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
                     return endInfo;
