@@ -234,8 +234,7 @@ define(['quagga', 'async'], function(Quagga, async) {
                 {"name": "image-002.jpg", "result": "2167361334"},
                 {"name": "image-003.jpg", "result": "2167361334"},
                 {"name": "image-004.jpg", "result": "2167361334"},
-                {"name": "image-005.jpg", "result": "2167361334"},
-                {"name": "image-006.jpg", "result": "2167361334"}
+                {"name": "image-005.jpg", "result": "2167361334"}
             ];
 
             testSet.forEach(function(sample) {
