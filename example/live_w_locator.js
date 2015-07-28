@@ -2,7 +2,7 @@ $(function() {
     var resultCollector = Quagga.ResultCollector.create({
         capture: true,
         capacity: 20,
-        blacklist: [{code: "3574660239843", format: "ean_13"}],
+        blacklist: [{code: "2167361334", format: "i2of5"}],
         filter: function(codeResult) {
             // only store results which match this constraint
             // e.g.: codeResult
@@ -127,7 +127,7 @@ $(function() {
             },
             numOfWorkers: 4,
             decoder: {
-                readers : ["code_128_reader"]
+                readers : [ "code_128_reader"]
             },
             locate: true
         },

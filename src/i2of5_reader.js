@@ -3,14 +3,29 @@
 
 define(
     [
-        "./barcode_reader"
+        "./barcode_reader",
+        "./html_utils"
     ],
-    function(BarcodeReader) {
+    function(BarcodeReader, HTMLUtils) {
         "use strict";
 
         function I2of5Reader(opts) {
+            opts = HTMLUtils.mergeObjects(getDefaulConfig(), opts);
             BarcodeReader.call(this, opts);
             this.barSpaceRatio = [1, 1];
+            if (opts.normalizeBarSpaceWidth) {
+                this.SINGLE_CODE_ERROR = 0.38;
+                this.AVG_CODE_ERROR = 0.09;
+            }
+        }
+
+        function getDefaulConfig() {
+            var config = {};
+
+            Object.keys(I2of5Reader.CONFIG_KEYS).forEach(function(key) {
+                config[key] = I2of5Reader.CONFIG_KEYS[key]['default'];
+            });
+            return config;
         }
 
         var N = 1,
@@ -31,10 +46,10 @@ define(
                 [W, N, N, W, N],
                 [N, W, N, W, N]
             ]},
-            SINGLE_CODE_ERROR: {value: 0.50},
-            AVG_CODE_ERROR: {value: 0.14},
-            MAX_CORRECTION_FACTOR: {value: 1.9},
-            FORMAT: {value: "i2of5", writeable: false}
+            SINGLE_CODE_ERROR: {value: 0.78, writable: true},
+            AVG_CODE_ERROR: {value: 0.38, writable: true},
+            MAX_CORRECTION_FACTOR: {value: 5},
+            FORMAT: {value: "i2of5"}
         };
 
         I2of5Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -51,7 +66,7 @@ define(
 
                 for (i = 0; i < counter.length; i++) {
                     counterSum[i % 2] += counter[i];
-                    codeSum[i % 2] += code[i]
+                    codeSum[i % 2] += code[i];
                 }
                 correction[0] = codeSum[0] / counterSum[0];
                 correction[1] = codeSum[1] / counterSum[1];

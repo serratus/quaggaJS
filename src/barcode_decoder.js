@@ -101,8 +101,8 @@ define([
                     }
                     _barcodeReaders.push(new readers[reader](config));
                 });
-                console.log("Registered Readers:" + _barcodeReaders
-                    .map(function(reader) {return reader.FORMAT;})
+                console.log("Registered Readers: " + _barcodeReaders
+                    .map(function(reader) {return JSON.stringify({format: reader.FORMAT, config: reader.config});})
                     .join(', '));
             }
 

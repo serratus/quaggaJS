@@ -5861,8 +5861,9 @@ define(
     'barcode_reader',[],function() {
         "use strict";
         
-        function BarcodeReader() {
+        function BarcodeReader(config) {
             this._row = [];
+            this.config = config || {};
             return this;
         }
         
@@ -6078,6 +6079,8 @@ define(
             CodeNotFoundException : "Code could not be found!",
             PatternNotFoundException : "Pattern could not be found!"
         };
+
+        BarcodeReader.CONFIG_KEYS = {};
         
         return (BarcodeReader);
     }
@@ -7625,15 +7628,71 @@ define(
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
+define('html_utils',[], function() {
+    "use strict";
+
+    function createNode(htmlStr) {
+        var temp = document.createElement('div');
+        
+        temp.innerHTML = htmlStr;
+        while (temp.firstChild) {
+            return temp.firstChild;
+        }
+    }
+
+    function mergeObjects(obj1, obj2) {
+        for (var p in obj2) {
+            try {
+                if (obj2[p].constructor == Object) {
+                    obj1[p] = mergeObjects(obj1[p], obj2[p]);
+                } else {
+                    obj1[p] = obj2[p];
+                }
+            } catch(e) {
+                obj1[p] = obj2[p];
+            }
+        }
+
+        return obj1;
+    }
+
+    return {
+        createNode : function(htmlStr) {
+            return createNode(htmlStr);
+        },
+        mergeObjects : function(obj1, obj2) {
+            return mergeObjects(obj1, obj2);
+        }
+    };
+}); 
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
 define(
     'i2of5_reader',[
-        "./barcode_reader"
+        "./barcode_reader",
+        "./html_utils"
     ],
-    function(BarcodeReader) {
+    function(BarcodeReader, HTMLUtils) {
         "use strict";
 
         function I2of5Reader(opts) {
+            opts = HTMLUtils.mergeObjects(getDefaulConfig(), opts);
             BarcodeReader.call(this, opts);
+            this.barSpaceRatio = [1, 1];
+            if (opts.normalizeBarSpaceWidth) {
+                this.SINGLE_CODE_ERROR = 0.38;
+                this.AVG_CODE_ERROR = 0.09;
+            }
+        }
+
+        function getDefaulConfig() {
+            var config = {};
+
+            Object.keys(I2of5Reader.CONFIG_KEYS).forEach(function(key) {
+                config[key] = I2of5Reader.CONFIG_KEYS[key]['default'];
+            });
+            return config;
         }
 
         var N = 1,
@@ -7654,15 +7713,42 @@ define(
                 [W, N, N, W, N],
                 [N, W, N, W, N]
             ]},
-            SINGLE_CODE_ERROR: {value: 1},
-            AVG_CODE_ERROR: {value: 0.38},
-            FORMAT: {value: "i2of5", writeable: false}
+            SINGLE_CODE_ERROR: {value: 0.78, writable: true},
+            AVG_CODE_ERROR: {value: 0.38, writable: true},
+            MAX_CORRECTION_FACTOR: {value: 5},
+            FORMAT: {value: "i2of5"}
         };
 
         I2of5Reader.prototype = Object.create(BarcodeReader.prototype, properties);
         I2of5Reader.prototype.constructor = I2of5Reader;
 
-        I2of5Reader.prototype._findPattern = function(pattern, offset) {
+        I2of5Reader.prototype._matchPattern = function(counter, code) {
+            if (this.config.normalizeBarSpaceWidth) {
+                var i,
+                    counterSum = [0, 0],
+                    codeSum = [0, 0],
+                    correction = [0, 0],
+                    correctionRatio = this.MAX_CORRECTION_FACTOR,
+                    correctionRatioInverse = 1 / correctionRatio;
+
+                for (i = 0; i < counter.length; i++) {
+                    counterSum[i % 2] += counter[i];
+                    codeSum[i % 2] += code[i];
+                }
+                correction[0] = codeSum[0] / counterSum[0];
+                correction[1] = codeSum[1] / counterSum[1];
+
+                correction[0] = Math.max(Math.min(correction[0], correctionRatio), correctionRatioInverse);
+                correction[1] = Math.max(Math.min(correction[1], correctionRatio), correctionRatioInverse);
+                this.barSpaceRatio = correction;
+                for (i = 0; i < counter.length; i++) {
+                    counter[i] *= this.barSpaceRatio[i % 2];
+                }
+            }
+            return BarcodeReader.prototype._matchPattern.call(this, counter, code);
+        };
+
+        I2of5Reader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder) {
             var counter = [],
                 self = this,
                 i,
@@ -7677,8 +7763,10 @@ define(
                 j,
                 sum,
                 normalized,
-                isWhite = false,
                 epsilon = self.AVG_CODE_ERROR;
+
+            isWhite = isWhite || false;
+            tryHarder = tryHarder || false;
 
             if (!offset) {
                 offset = self._nextSet(self._row);
@@ -7708,12 +7796,16 @@ define(
                                 return bestMatch;
                             }
                         }
-                        for ( j = 0; j < counter.length - 2; j++) {
-                            counter[j] = counter[j + 2];
+                        if (tryHarder) {
+                            for (j = 0; j < counter.length - 2; j++) {
+                                counter[j] = counter[j + 2];
+                            }
+                            counter[counter.length - 2] = 0;
+                            counter[counter.length - 1] = 0;
+                            counterPos--;
+                        } else {
+                            return null;
                         }
-                        counter[counter.length - 2] = 0;
-                        counter[counter.length - 1] = 0;
-                        counterPos--;
                     } else {
                         counterPos++;
                     }
@@ -7728,17 +7820,18 @@ define(
             var self = this,
                 leadingWhitespaceStart,
                 offset = self._nextSet(self._row),
-                startInfo;
+                startInfo,
+                narrowBarWidth = 1;
 
             while(!startInfo) {
-                startInfo = self._findPattern(self.START_PATTERN, offset);
+                startInfo = self._findPattern(self.START_PATTERN, offset, false, true);
                 if (!startInfo) {
                     return null;
                 }
-                leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
+                narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / 4);
+                leadingWhitespaceStart = startInfo.start - narrowBarWidth*10;
                 if (leadingWhitespaceStart >= 0) {
                     if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
-                        startInfo.narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / 4);
                         return startInfo;
                     }
                 }
@@ -7751,7 +7844,7 @@ define(
             var self = this,
                 trailingWhitespaceEnd;
 
-            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
             if (trailingWhitespaceEnd < self._row.length) {
                 if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
                     return endInfo;
@@ -7841,8 +7934,8 @@ define(
 
             while (pos < counterLength) {
                 for (i = 0; i < 5; i++) {
-                    counterPair[0][i] = counters[pos];
-                    counterPair[1][i] = counters[pos + 1];
+                    counterPair[0][i] = counters[pos]*this.barSpaceRatio[0];
+                    counterPair[1][i] = counters[pos + 1]*this.barSpaceRatio[1];
                     pos += 2;
                 }
                 codes = self._decodePair(counterPair);
@@ -7874,20 +7967,12 @@ define(
             if (!startInfo) {
                 return null;
             }
+            decodedCodes.push(startInfo);
 
             endInfo = self._findEnd();
             if (!endInfo) {
                 return null;
             }
-            console.log(startInfo);
-            console.log(endInfo);
-
-            code = {
-                code : startInfo.code,
-                start : startInfo.start,
-                end : startInfo.end
-            };
-            decodedCodes.push(code);
 
             counters = self._fillCounters(startInfo.end, endInfo.start, false);
             if (!self._verifyCounterLength(counters)) {
@@ -7897,19 +7982,28 @@ define(
             if (!code) {
                 return null;
             }
-
-            // Checksum
-            if (!self._checksum(result)) {
+            if (result.length % 2 !== 0 ||
+                    result.length < 6) {
                 return null;
             }
 
+            decodedCodes.push(endInfo);
             return {
                 code : result.join(""),
                 start : startInfo.start,
-                end : code.end,
+                end : endInfo.end,
                 startInfo : startInfo,
                 decodedCodes : decodedCodes
             };
+        };
+
+        I2of5Reader.CONFIG_KEYS = {
+            normalizeBarSpaceWidth: {
+                'type': 'boolean',
+                'default': false,
+                'description': 'If true, the reader tries to normalize the' +
+                'width-difference between bars and spaces'
+            }
         };
 
         return (I2of5Reader);
@@ -8006,11 +8100,21 @@ define('barcode_decoder',[
             }
 
             function initReaders() {
-                var i;
-                for ( i = 0; i < config.readers.length; i++) {
-                    console.log(config.readers[i]);
-                    _barcodeReaders.push(new readers[config.readers[i]]());
-                }
+                config.readers.forEach(function(readerConfig) {
+                    var reader,
+                        config = {};
+
+                    if (typeof readerConfig === 'object') {
+                        reader = readerConfig.format;
+                        config = readerConfig.config;
+                    } else if (typeof readerConfig === 'string') {
+                        reader = readerConfig;
+                    }
+                    _barcodeReaders.push(new readers[reader](config));
+                });
+                console.log("Registered Readers: " + _barcodeReaders
+                    .map(function(reader) {return JSON.stringify({format: reader.FORMAT, config: reader.config});})
+                    .join(', '));
             }
 
             function initConfig() {
@@ -8290,46 +8394,6 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
     return (FrameGrabber);
 });
 
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define */
-
-define('html_utils',[], function() {
-    "use strict";
-
-    function createNode(htmlStr) {
-        var temp = document.createElement('div');
-        
-        temp.innerHTML = htmlStr;
-        while (temp.firstChild) {
-            return temp.firstChild;
-        }
-    }
-
-    function mergeObjects(obj1, obj2) {
-        for (var p in obj2) {
-            try {
-                if (obj2[p].constructor == Object) {
-                    obj1[p] = mergeObjects(obj1[p], obj2[p]);
-                } else {
-                    obj1[p] = obj2[p];
-                }
-            } catch(e) {
-                obj1[p] = obj2[p];
-            }
-        }
-
-        return obj1;
-    }
-
-    return {
-        createNode : function(htmlStr) {
-            return createNode(htmlStr);
-        },
-        mergeObjects : function(obj1, obj2) {
-            return mergeObjects(obj1, obj2);
-        }
-    };
-}); 
 /**
  * The basic configuration
  */
