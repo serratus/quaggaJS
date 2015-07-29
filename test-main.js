@@ -47,7 +47,8 @@ require.config({
     'upc_e_reader': 'src/upc_e_reader',
     'upc_reader': 'src/upc_reader',
     'async': 'node_modules/async/lib/async',
-    'result_collector': 'src/result_collector'
+    'result_collector': 'src/result_collector',
+    'i2of5_reader': 'src/i2of5_reader'
   },
   deps: allTestFiles,
   callback: window.__karma__.start

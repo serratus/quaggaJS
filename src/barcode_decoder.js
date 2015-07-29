@@ -11,7 +11,8 @@ define([
     'codabar_reader',
     'upc_reader',
     'ean_8_reader',
-    'upc_e_reader'
+    'upc_e_reader',
+    'i2of5_reader'
 ], function(
     Bresenham,
     ImageDebug,
@@ -22,7 +23,8 @@ define([
     CodabarReader,
     UPCReader,
     EAN8Reader,
-    UPCEReader) {
+    UPCEReader,
+    I2of5Reader) {
     "use strict";
 
     var readers = {
@@ -33,7 +35,8 @@ define([
         code_39_vin_reader: Code39VINReader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader,
-        upc_e_reader: UPCEReader
+        upc_e_reader: UPCEReader,
+        i2of5_reader: I2of5Reader
     };
     var BarcodeDecoder = {
         create : function(config, inputImageWrapper) {
@@ -86,11 +89,21 @@ define([
             }
 
             function initReaders() {
-                var i;
-                for ( i = 0; i < config.readers.length; i++) {
-                    console.log(config.readers[i]);
-                    _barcodeReaders.push(new readers[config.readers[i]]());
-                }
+                config.readers.forEach(function(readerConfig) {
+                    var reader,
+                        config = {};
+
+                    if (typeof readerConfig === 'object') {
+                        reader = readerConfig.format;
+                        config = readerConfig.config;
+                    } else if (typeof readerConfig === 'string') {
+                        reader = readerConfig;
+                    }
+                    _barcodeReaders.push(new readers[reader](config));
+                });
+                console.log("Registered Readers: " + _barcodeReaders
+                    .map(function(reader) {return JSON.stringify({format: reader.FORMAT, config: reader.config});})
+                    .join(', '));
             }
 
             function initConfig() {

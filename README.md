@@ -1,17 +1,17 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-07-08)
+- [Changelog](#changelog) (2015-07-29)
 
 ## What is QuaggaJS?
 
 QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-
 time localization and decoding of various types of barcodes such as __EAN__,
-__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__ and  __CODABAR__.
-The library is also capable of using `getUserMedia` to get direct access to
-the user's camera stream. Although the code relies on heavy image-processing
-even recent smartphones are capable of locating and decoding barcodes in
-real-time.
+__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__, __I2of5__ and
+__CODABAR__. The library is also capable of using `getUserMedia` to get direct
+access to the user's camera stream. Although the code relies on heavy image-
+processing even recent smartphones are capable of locating and decoding
+barcodes in real-time.
 
 Try some [examples](http://serratus.github.io/quaggaJS/examples) and check out
 the blog post ([How barcode-localization works in QuaggaJS][oberhofer_co_how])
@@ -367,6 +367,10 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
 
+### 2015-07-29
+- Features
+  - Added basic support for [ITF][i2of5_wiki] barcodes (`i2of5_reader`)
+
 ### 2015-07-08
 - Improvements
   - Parameter tweaking to reduce false-positives significantly (for the
@@ -479,3 +483,4 @@ introduced to the API.
 [ean_8_wiki]: http://en.wikipedia.org/wiki/EAN-8
 [oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
 [github_examples]: http://serratus.github.io/quaggaJS/examples
+[i2of5_wiki]: https://en.wikipedia.org/wiki/Interleaved_2_of_5

@@ -116,12 +116,13 @@ define(['quagga'], function(Quagga) {
                 singleChannel: false
             },
             locator: {
-                patchSize: "medium",
-                halfSample: true
+                patchSize: "large",
+                halfSample: true,
+                showCanvas: true
             },
             numOfWorkers: 0,
             decoder: {
-                readers: ["code_128_reader"],
+                readers: ["i2of5_reader"],
                 showFrequency: true,
                 showPattern: true
             },

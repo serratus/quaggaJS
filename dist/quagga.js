@@ -435,972 +435,6 @@ define("almond", function(){});
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
-define(
-    'barcode_reader',[],function() {
-        "use strict";
-        
-        function BarcodeReader() {
-            this._row = [];
-            return this;
-        }
-        
-        BarcodeReader.prototype._nextUnset = function(line, start) {
-            var i;
-            
-            if (start === undefined) {
-                start = 0;
-            }
-            for (i = start; i < line.length; i++) {
-                if (!line[i]) {
-                    return i;
-                }
-            }
-            return line.length;
-        };
-        
-        BarcodeReader.prototype._matchPattern = function(counter, code) {
-            var i,
-                error = 0,
-                singleError = 0,
-                modulo = this.MODULO,
-                maxSingleError = this.SINGLE_CODE_ERROR || 1;
-                
-            for (i = 0; i < counter.length; i++) {
-                singleError = Math.abs(code[i] - counter[i]);
-                if (singleError > maxSingleError) {
-                    return Number.MAX_VALUE;
-                }
-                error += singleError;
-            }
-            return error/modulo;
-        };
-
-        BarcodeReader.prototype._nextSet = function(line, offset) {
-            var i;
-
-            offset = offset || 0;
-            for (i = offset; i < line.length; i++) {
-                if (line[i]) {
-                    return i;
-                }
-            }
-            return line.length;
-        };
-
-        BarcodeReader.prototype._normalize = function(counter, modulo) {
-            var i,
-                self = this,
-                sum = 0,
-                ratio,
-                numOnes = 0,
-                normalized = [],
-                norm = 0;
-                
-            if (!modulo) {
-                modulo = self.MODULO;
-            }
-            for (i = 0; i < counter.length; i++) {
-                if (counter[i] === 1) {
-                    numOnes++;
-                } else {
-                    sum += counter[i];
-                }
-            }
-            ratio = sum / (modulo - numOnes);
-            if (ratio > 1.0) {
-                for (i = 0; i < counter.length; i++) {
-                    norm = counter[i] === 1 ? counter[i] : counter[i] / ratio;
-                    normalized.push(norm);
-                }
-            } else {
-                ratio = (sum + numOnes)/modulo;
-                for (i = 0; i < counter.length; i++) {
-                    norm = counter[i] / ratio;
-                    normalized.push(norm);
-                }
-            }
-            return normalized;
-        };
-
-        BarcodeReader.prototype._matchTrace = function(cmpCounter, epsilon) {
-            var counter = [],
-                i,
-                self = this,
-                offset = self._nextSet(self._row),
-                isWhite = !self._row[offset],
-                counterPos = 0,
-                bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : 0
-                },
-                error;
-
-            if (cmpCounter) {
-                for ( i = 0; i < cmpCounter.length; i++) {
-                    counter.push(0);
-                }
-                for ( i = offset; i < self._row.length; i++) {
-                    if (self._row[i] ^ isWhite) {
-                        counter[counterPos]++;
-                    } else {
-                        if (counterPos === counter.length - 1) {
-                            error = self._matchPattern(counter, cmpCounter);
-
-                            if (error < epsilon) {
-                                bestMatch.start = i - offset;
-                                bestMatch.end = i;
-                                bestMatch.counter = counter;
-                                return bestMatch;
-                            } else {
-                                return null;
-                            }
-                        } else {
-                            counterPos++;
-                        }
-                        counter[counterPos] = 1;
-                        isWhite = !isWhite;
-                    }
-                }
-            } else {
-                counter.push(0);
-                for ( i = offset; i < self._row.length; i++) {
-                    if (self._row[i] ^ isWhite) {
-                        counter[counterPos]++;
-                    } else {
-                        counterPos++;
-                        counter.push(0);
-                        counter[counterPos] = 1;
-                        isWhite = !isWhite;
-                    }
-                }
-            }
-
-            // if cmpCounter was not given
-            bestMatch.start = offset;
-            bestMatch.end = self._row.length - 1;
-            bestMatch.counter = counter;
-            return bestMatch;
-        };
-        
-        BarcodeReader.prototype.decodePattern = function(pattern) {
-            var self = this,
-                result;
-            
-            self._row = pattern;
-            result = self._decode();
-            if (result === null) {
-                self._row.reverse();
-                result = self._decode();
-                if (result) {
-                    result.direction = BarcodeReader.DIRECTION.REVERSE;
-                    result.start = self._row.length - result.start;
-                    result.end = self._row.length - result.end;
-                }
-            } else {
-                result.direction = BarcodeReader.DIRECTION.FORWARD;
-            }
-            if (result) {
-                result.format = self.FORMAT;
-            }
-            return result;
-        };
-
-        BarcodeReader.prototype._matchRange = function(start, end, value) {
-            var i;
-
-            start = start < 0 ? 0 : start;
-            for (i = start; i < end; i++) {
-                if (this._row[i] !== value) {
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        Object.defineProperty(BarcodeReader.prototype, "FORMAT", {
-            value: 'unknown',
-            writeable: false
-        });
-        
-        BarcodeReader.DIRECTION = {
-            FORWARD : 1,
-            REVERSE : -1
-        };
-        
-        BarcodeReader.Exception = {
-            StartNotFoundException : "Start-Info was not found!",
-            CodeNotFoundException : "Code could not be found!",
-            PatternNotFoundException : "Pattern could not be found!"
-        };
-        
-        return (BarcodeReader);
-    }
-);
-
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define */
-
-define(
-     'code_128_reader',[
-        "./barcode_reader"
-    ],
-    function(BarcodeReader) {
-        "use strict";
-        
-        function Code128Reader() {
-            BarcodeReader.call(this);
-        }
-        
-        var properties = {
-            CODE_SHIFT : {value: 98},
-            CODE_C : {value: 99},
-            CODE_B : {value: 100},
-            CODE_A : {value: 101},
-            START_CODE_A : {value: 103},
-            START_CODE_B : {value: 104},
-            START_CODE_C : {value: 105},
-            STOP_CODE : {value: 106},
-            MODULO : {value: 11},
-            CODE_PATTERN : {value: [
-                [2, 1, 2, 2, 2, 2],
-                [2, 2, 2, 1, 2, 2],
-                [2, 2, 2, 2, 2, 1],
-                [1, 2, 1, 2, 2, 3],
-                [1, 2, 1, 3, 2, 2],
-                [1, 3, 1, 2, 2, 2],
-                [1, 2, 2, 2, 1, 3],
-                [1, 2, 2, 3, 1, 2],
-                [1, 3, 2, 2, 1, 2],
-                [2, 2, 1, 2, 1, 3],
-                [2, 2, 1, 3, 1, 2],
-                [2, 3, 1, 2, 1, 2],
-                [1, 1, 2, 2, 3, 2],
-                [1, 2, 2, 1, 3, 2],
-                [1, 2, 2, 2, 3, 1],
-                [1, 1, 3, 2, 2, 2],
-                [1, 2, 3, 1, 2, 2],
-                [1, 2, 3, 2, 2, 1],
-                [2, 2, 3, 2, 1, 1],
-                [2, 2, 1, 1, 3, 2],
-                [2, 2, 1, 2, 3, 1],
-                [2, 1, 3, 2, 1, 2],
-                [2, 2, 3, 1, 1, 2],
-                [3, 1, 2, 1, 3, 1],
-                [3, 1, 1, 2, 2, 2],
-                [3, 2, 1, 1, 2, 2],
-                [3, 2, 1, 2, 2, 1],
-                [3, 1, 2, 2, 1, 2],
-                [3, 2, 2, 1, 1, 2],
-                [3, 2, 2, 2, 1, 1],
-                [2, 1, 2, 1, 2, 3],
-                [2, 1, 2, 3, 2, 1],
-                [2, 3, 2, 1, 2, 1],
-                [1, 1, 1, 3, 2, 3],
-                [1, 3, 1, 1, 2, 3],
-                [1, 3, 1, 3, 2, 1],
-                [1, 1, 2, 3, 1, 3],
-                [1, 3, 2, 1, 1, 3],
-                [1, 3, 2, 3, 1, 1],
-                [2, 1, 1, 3, 1, 3],
-                [2, 3, 1, 1, 1, 3],
-                [2, 3, 1, 3, 1, 1],
-                [1, 1, 2, 1, 3, 3],
-                [1, 1, 2, 3, 3, 1],
-                [1, 3, 2, 1, 3, 1],
-                [1, 1, 3, 1, 2, 3],
-                [1, 1, 3, 3, 2, 1],
-                [1, 3, 3, 1, 2, 1],
-                [3, 1, 3, 1, 2, 1],
-                [2, 1, 1, 3, 3, 1],
-                [2, 3, 1, 1, 3, 1],
-                [2, 1, 3, 1, 1, 3],
-                [2, 1, 3, 3, 1, 1],
-                [2, 1, 3, 1, 3, 1],
-                [3, 1, 1, 1, 2, 3],
-                [3, 1, 1, 3, 2, 1],
-                [3, 3, 1, 1, 2, 1],
-                [3, 1, 2, 1, 1, 3],
-                [3, 1, 2, 3, 1, 1],
-                [3, 3, 2, 1, 1, 1],
-                [3, 1, 4, 1, 1, 1],
-                [2, 2, 1, 4, 1, 1],
-                [4, 3, 1, 1, 1, 1],
-                [1, 1, 1, 2, 2, 4],
-                [1, 1, 1, 4, 2, 2],
-                [1, 2, 1, 1, 2, 4],
-                [1, 2, 1, 4, 2, 1],
-                [1, 4, 1, 1, 2, 2],
-                [1, 4, 1, 2, 2, 1],
-                [1, 1, 2, 2, 1, 4],
-                [1, 1, 2, 4, 1, 2],
-                [1, 2, 2, 1, 1, 4],
-                [1, 2, 2, 4, 1, 1],
-                [1, 4, 2, 1, 1, 2],
-                [1, 4, 2, 2, 1, 1],
-                [2, 4, 1, 2, 1, 1],
-                [2, 2, 1, 1, 1, 4],
-                [4, 1, 3, 1, 1, 1],
-                [2, 4, 1, 1, 1, 2],
-                [1, 3, 4, 1, 1, 1],
-                [1, 1, 1, 2, 4, 2],
-                [1, 2, 1, 1, 4, 2],
-                [1, 2, 1, 2, 4, 1],
-                [1, 1, 4, 2, 1, 2],
-                [1, 2, 4, 1, 1, 2],
-                [1, 2, 4, 2, 1, 1],
-                [4, 1, 1, 2, 1, 2],
-                [4, 2, 1, 1, 1, 2],
-                [4, 2, 1, 2, 1, 1],
-                [2, 1, 2, 1, 4, 1],
-                [2, 1, 4, 1, 2, 1],
-                [4, 1, 2, 1, 2, 1],
-                [1, 1, 1, 1, 4, 3],
-                [1, 1, 1, 3, 4, 1],
-                [1, 3, 1, 1, 4, 1],
-                [1, 1, 4, 1, 1, 3],
-                [1, 1, 4, 3, 1, 1],
-                [4, 1, 1, 1, 1, 3],
-                [4, 1, 1, 3, 1, 1],
-                [1, 1, 3, 1, 4, 1],
-                [1, 1, 4, 1, 3, 1],
-                [3, 1, 1, 1, 4, 1],
-                [4, 1, 1, 1, 3, 1],
-                [2, 1, 1, 4, 1, 2],
-                [2, 1, 1, 2, 1, 4],
-                [2, 1, 1, 2, 3, 2],
-                [2, 3, 3, 1, 1, 1, 2]
-            ]},
-            SINGLE_CODE_ERROR: {value: 1},
-            AVG_CODE_ERROR: {value: 0.5},
-            FORMAT: {value: "code_128", writeable: false}
-        };
-        
-        Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
-        Code128Reader.prototype.constructor = Code128Reader;
-        
-        Code128Reader.prototype._decodeCode = function(start) {
-            var counter = [0, 0, 0, 0, 0, 0],
-                i,
-                self = this,
-                offset = start,
-                isWhite = !self._row[offset],
-                counterPos = 0,
-                bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : start,
-                    end : start
-                },
-                code,
-                error,
-                normalized;
-
-            for ( i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    counter[counterPos]++;
-                } else {
-                    if (counterPos === counter.length - 1) {
-                        normalized = self._normalize(counter);
-                        if (normalized) {
-                            for (code = 0; code < self.CODE_PATTERN.length; code++) {
-                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                                if (error < bestMatch.error) {
-                                    bestMatch.code = code;
-                                    bestMatch.error = error;
-                                }
-                            }
-                            bestMatch.end = i;
-                            return bestMatch;
-                        }
-                    } else {
-                        counterPos++;
-                    }
-                    counter[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
-            return null;
-        };
-
-        Code128Reader.prototype._findStart = function() {
-            var counter = [0, 0, 0, 0, 0, 0],
-                i,
-                self = this,
-                offset = self._nextSet(self._row),
-                isWhite = false,
-                counterPos = 0,
-                bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : 0,
-                    end : 0
-                },
-                code,
-                error,
-                j,
-                sum,
-                normalized;
-                
-            for ( i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    counter[counterPos]++;
-                } else {
-                    if (counterPos === counter.length - 1) {
-                        sum = 0;
-                        for ( j = 0; j < counter.length; j++) {
-                            sum += counter[j];
-                        }
-                        normalized = self._normalize(counter);
-                        if (normalized) {
-                            for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
-                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                                if (error < bestMatch.error) {
-                                    bestMatch.code = code;
-                                    bestMatch.error = error;
-                                }
-                            }
-                            if (bestMatch.error < self.AVG_CODE_ERROR) {
-                                bestMatch.start = i - sum;
-                                bestMatch.end = i;
-                                return bestMatch;
-                            }
-                        }
-
-                        for ( j = 0; j < 4; j++) {
-                            counter[j] = counter[j + 2];
-                        }
-                        counter[4] = 0;
-                        counter[5] = 0;
-                        counterPos--;
-                    } else {
-                        counterPos++;
-                    }
-                    counter[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
-            return null;
-        };
-
-        Code128Reader.prototype._decode = function() {
-            var self = this,
-                startInfo = self._findStart(),
-                code = null,
-                done = false,
-                result = [],
-                multiplier = 0,
-                checksum = 0,
-                codeset,
-                rawResult = [],
-                decodedCodes = [],
-                shiftNext = false,
-                unshift,
-                lastCharacterWasPrintable;
-
-            if (startInfo === null) {
-                return null;
-            }
-            code = {
-                code : startInfo.code,
-                start : startInfo.start,
-                end : startInfo.end
-            };
-            decodedCodes.push(code);
-            checksum = code.code;
-            switch(code.code) {
-            case self.START_CODE_A:
-                codeset = self.CODE_A;
-                break;
-            case self.START_CODE_B:
-                codeset = self.CODE_B;
-                break;
-            case self.START_CODE_C:
-                codeset = self.CODE_C;
-                break;
-            default:
-                return null;
-            }
-
-            while (!done) {
-                unshift = shiftNext;
-                shiftNext = false;
-                code = self._decodeCode(code.end);
-                if (code !== null) {
-                    if (code.code !== self.STOP_CODE) {
-                        rawResult.push(code.code);
-                        multiplier++;
-                        checksum += multiplier * code.code;
-                    }
-                    decodedCodes.push(code);
-
-                    switch(codeset) {
-                    case self.CODE_A:
-                        if (code.code < 64) {
-                            result.push(String.fromCharCode(32 + code.code));
-                        } else if (code.code < 96) {
-                            result.push(String.fromCharCode(code.code - 64));
-                        } else {
-                            switch (code.code) {
-                            case self.CODE_SHIFT:
-                                shiftNext = true;
-                                codeset = self.CODE_B;
-                                break;
-                            case self.CODE_B:
-                                codeset = self.CODE_B;
-                                break;
-                            case self.CODE_C:
-                                codeset = self.CODE_C;
-                                break;
-                            case self.STOP_CODE:
-                                done = true;
-                                break;
-                            }
-                        }
-                        break;
-                    case self.CODE_B:
-                        if (code.code < 96) {
-                            result.push(String.fromCharCode(32 + code.code));
-                        } else {
-                            if (code.code != self.STOP_CODE) {
-                                lastCharacterWasPrintable = false;
-                            }
-                            switch (code.code) {
-                            case self.CODE_SHIFT:
-                                shiftNext = true;
-                                codeset = self.CODE_A;
-                                break;
-                            case self.CODE_A:
-                                codeset = self.CODE_A;
-                                break;
-                            case self.CODE_C:
-                                codeset = self.CODE_C;
-                                break;
-                            case self.STOP_CODE:
-                                done = true;
-                                break;
-                            }
-                        }
-                        break;
-                    case self.CODE_C:
-                        if (code.code < 100) {
-                            result.push(code.code < 10 ? "0" + code.code : code.code);
-                        }
-                        switch (code.code) {
-                        case self.CODE_A:
-                            codeset = self.CODE_A;
-                            break;
-                        case self.CODE_B:
-                            codeset = self.CODE_B;
-                            break;
-                        case self.STOP_CODE:
-                            done = true;
-                            break;
-                        }
-                        break;
-                    }
-                } else {
-                    done = true;
-                }
-                if (unshift) {
-                    codeset = codeset == self.CODE_A ? self.CODE_B : self.CODE_A;
-                }
-            }
-
-            if (code === null) {
-                return null;
-            }
-
-            // find end bar
-            code.end = self._nextUnset(self._row, code.end);
-            if(!self._verifyTrailingWhitespace(code)){
-                return null;
-            }
-
-            // checksum
-            // Does not work correctly yet!!! startcode - endcode?
-            checksum -= multiplier * rawResult[rawResult.length - 1];
-            if (checksum % 103 != rawResult[rawResult.length - 1]) {
-                return null;
-            }
-
-            if (!result.length) {
-                return null;
-            }
-
-            // remove last code from result (checksum)
-            result.splice(result.length - 1, 1);
-
-
-
-            return {
-                code : result.join(""),
-                start : startInfo.start,
-                end : code.end,
-                codeset : codeset,
-                startInfo : startInfo,
-                decodedCodes : decodedCodes,
-                endInfo : code
-            };
-        };
-
-
-        BarcodeReader.prototype._verifyTrailingWhitespace = function(endInfo) {
-            var self = this,
-                trailingWhitespaceEnd;
-
-            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
-            if (trailingWhitespaceEnd < self._row.length) {
-                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
-                    return endInfo;
-                }
-            }
-            return null;
-        };
-        
-        return (Code128Reader);
-    }
-);
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define */
-
-define(
-     'ean_reader',[
-        "./barcode_reader"
-    ],
-    function(BarcodeReader) {
-        "use strict";
-        
-        function EANReader(opts) {
-            BarcodeReader.call(this, opts);
-        }
-        
-        var properties = {
-            CODE_L_START : {value: 0},
-            MODULO : {value: 7},
-            CODE_G_START : {value: 10},
-            START_PATTERN : {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
-            STOP_PATTERN : {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
-            MIDDLE_PATTERN : {value: [1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7]},
-            CODE_PATTERN : {value: [
-                [3, 2, 1, 1],
-                [2, 2, 2, 1],
-                [2, 1, 2, 2],
-                [1, 4, 1, 1],
-                [1, 1, 3, 2],
-                [1, 2, 3, 1],
-                [1, 1, 1, 4],
-                [1, 3, 1, 2],
-                [1, 2, 1, 3],
-                [3, 1, 1, 2],
-                [1, 1, 2, 3],
-                [1, 2, 2, 2],
-                [2, 2, 1, 2],
-                [1, 1, 4, 1],
-                [2, 3, 1, 1],
-                [1, 3, 2, 1],
-                [4, 1, 1, 1],
-                [2, 1, 3, 1],
-                [3, 1, 2, 1],
-                [2, 1, 1, 3]
-            ]},
-            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
-            SINGLE_CODE_ERROR: {value: 0.67},
-            AVG_CODE_ERROR: {value: 0.27},
-            FORMAT: {value: "ean_13", writeable: false}
-        };
-        
-        EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
-        EANReader.prototype.constructor = EANReader;
-        
-        EANReader.prototype._decodeCode = function(start, coderange) {
-            var counter = [0, 0, 0, 0],
-                i,
-                self = this,
-                offset = start,
-                isWhite = !self._row[offset],
-                counterPos = 0,
-                bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : start,
-                    end : start
-                },
-                code,
-                error,
-                normalized;
-
-            if (!coderange) {
-                coderange = self.CODE_PATTERN.length;
-            }
-
-            for ( i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    counter[counterPos]++;
-                } else {
-                    if (counterPos === counter.length - 1) {
-                        normalized = self._normalize(counter);
-                        if (normalized) {
-                            for (code = 0; code < coderange; code++) {
-                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                                if (error < bestMatch.error) {
-                                    bestMatch.code = code;
-                                    bestMatch.error = error;
-                                }
-                            }
-                            bestMatch.end = i;
-                            if (bestMatch.error > self.AVG_CODE_ERROR) {
-                                return null;
-                            }
-                            return bestMatch;
-                        }
-                    } else {
-                        counterPos++;
-                    }
-                    counter[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
-            return null;
-        };
-
-        EANReader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder, epsilon) {
-            var counter = [],
-                self = this,
-                i,
-                counterPos = 0,
-                bestMatch = {
-                    error : Number.MAX_VALUE,
-                    code : -1,
-                    start : 0,
-                    end : 0
-                },
-                error,
-                j,
-                sum,
-                normalized;
-
-            if (!offset) {
-                offset = self._nextSet(self._row);
-            }
-
-            if (isWhite === undefined) {
-                isWhite = false;
-            }
-
-            if (tryHarder === undefined) {
-                tryHarder = true;
-            }
-
-            if ( epsilon === undefined) {
-                epsilon = self.AVG_CODE_ERROR;
-            }
-
-            for ( i = 0; i < pattern.length; i++) {
-                counter[i] = 0;
-            }
-
-            for ( i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    counter[counterPos]++;
-                } else {
-                    if (counterPos === counter.length - 1) {
-                        sum = 0;
-                        for ( j = 0; j < counter.length; j++) {
-                            sum += counter[j];
-                        }
-                        normalized = self._normalize(counter);
-                        if (normalized) {
-                            error = self._matchPattern(normalized, pattern);
-
-                            if (error < epsilon) {
-                                bestMatch.error = error;
-                                bestMatch.start = i - sum;
-                                bestMatch.end = i;
-                                return bestMatch;
-                            }
-                        }
-                        if (tryHarder) {
-                            for ( j = 0; j < counter.length - 2; j++) {
-                                counter[j] = counter[j + 2];
-                            }
-                            counter[counter.length - 2] = 0;
-                            counter[counter.length - 1] = 0;
-                            counterPos--;
-                        } else {
-                            return null;
-                        }
-                    } else {
-                        counterPos++;
-                    }
-                    counter[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
-            return null;
-        };
-
-        EANReader.prototype._findStart = function() {
-            var self = this,
-                leadingWhitespaceStart,
-                offset = self._nextSet(self._row),
-                startInfo;
-
-            while(!startInfo) {
-                startInfo = self._findPattern(self.START_PATTERN, offset);
-                if (!startInfo) {
-                    return null;
-                }
-                leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
-                if (leadingWhitespaceStart >= 0) {
-                    if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
-                        return startInfo;
-                    }
-                }
-                offset = startInfo.end;
-                startInfo = null;
-            }
-        };
-
-        EANReader.prototype._verifyTrailingWhitespace = function(endInfo) {
-            var self = this,
-                trailingWhitespaceEnd;
-
-            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
-            if (trailingWhitespaceEnd < self._row.length) {
-                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
-                    return endInfo;
-                }
-            }
-            return null;
-        };
-
-        EANReader.prototype._findEnd = function(offset, isWhite) {
-            var self = this,
-                endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite, false);
-
-            return endInfo !== null ? self._verifyTrailingWhitespace(endInfo) : null;
-        };
-
-        EANReader.prototype._calculateFirstDigit = function(codeFrequency) {
-            var i,
-                self = this;
-
-            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
-                if (codeFrequency === self.CODE_FREQUENCY[i]) {
-                    return i;
-                }
-            }
-            return null;
-        };
-
-        EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
-            var i,
-                self = this,
-                codeFrequency = 0x0,
-                firstDigit;
-
-            for ( i = 0; i < 6; i++) {
-                code = self._decodeCode(code.end);
-                if (!code) {
-                    return null;
-                }
-                if (code.code >= self.CODE_G_START) {
-                    code.code = code.code - self.CODE_G_START;
-                    codeFrequency |= 1 << (5 - i);
-                } else {
-                    codeFrequency |= 0 << (5 - i);
-                }
-                result.push(code.code);
-                decodedCodes.push(code);
-            }
-
-            firstDigit = self._calculateFirstDigit(codeFrequency);
-            if (firstDigit === null) {
-                return null;
-            }
-            result.unshift(firstDigit);
-
-            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
-            if (code === null) {
-                return null;
-            }
-            decodedCodes.push(code);
-
-            for ( i = 0; i < 6; i++) {
-                code = self._decodeCode(code.end, self.CODE_G_START);
-                if (!code) {
-                    return null;
-                }
-                decodedCodes.push(code);
-                result.push(code.code);
-            }
-
-            return code;
-        };
-
-        EANReader.prototype._decode = function() {
-            var startInfo,
-                self = this,
-                code,
-                result = [],
-                decodedCodes = [];
-
-            startInfo = self._findStart();
-            if (!startInfo) {
-                return null;
-            }
-            code = {
-                code : startInfo.code,
-                start : startInfo.start,
-                end : startInfo.end
-            };
-            decodedCodes.push(code);
-            code = self._decodePayload(code, result, decodedCodes);
-            if (!code) {
-                return null;
-            }
-            code = self._findEnd(code.end, false);
-            if (!code){
-                return null;
-            }
-
-            decodedCodes.push(code);
-
-            // Checksum
-            if (!self._checksum(result)) {
-                return null;
-            }
-
-            return {
-                code : result.join(""),
-                start : startInfo.start,
-                end : code.end,
-                codeset : "",
-                startInfo : startInfo,
-                decodedCodes : decodedCodes
-            };
-        };
-
-        EANReader.prototype._checksum = function(result) {
-            var sum = 0, i;
-
-            for ( i = result.length - 2; i >= 0; i -= 2) {
-                sum += result[i];
-            }
-            sum *= 3;
-            for ( i = result.length - 1; i >= 0; i -= 2) {
-                sum += result[i];
-            }
-            return sum % 10 === 0;
-        };
-        
-        return (EANReader);
-    }
-);
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define */
-
 define('image_loader',[],function() {
     "use strict";
 
@@ -6824,6 +5858,998 @@ define('bresenham',["cv_utils", "image_wrapper"], function(CVUtils, ImageWrapper
 /* global define */
 
 define(
+    'barcode_reader',[],function() {
+        "use strict";
+        
+        function BarcodeReader(config) {
+            this._row = [];
+            this.config = config || {};
+            return this;
+        }
+        
+        BarcodeReader.prototype._nextUnset = function(line, start) {
+            var i;
+            
+            if (start === undefined) {
+                start = 0;
+            }
+            for (i = start; i < line.length; i++) {
+                if (!line[i]) {
+                    return i;
+                }
+            }
+            return line.length;
+        };
+        
+        BarcodeReader.prototype._matchPattern = function(counter, code) {
+            var i,
+                error = 0,
+                singleError = 0,
+                modulo = this.MODULO,
+                maxSingleError = this.SINGLE_CODE_ERROR || 1;
+                
+            for (i = 0; i < counter.length; i++) {
+                singleError = Math.abs(code[i] - counter[i]);
+                if (singleError > maxSingleError) {
+                    return Number.MAX_VALUE;
+                }
+                error += singleError;
+            }
+            return error/modulo;
+        };
+
+        BarcodeReader.prototype._nextSet = function(line, offset) {
+            var i;
+
+            offset = offset || 0;
+            for (i = offset; i < line.length; i++) {
+                if (line[i]) {
+                    return i;
+                }
+            }
+            return line.length;
+        };
+
+        BarcodeReader.prototype._normalize = function(counter, modulo) {
+            var i,
+                self = this,
+                sum = 0,
+                ratio,
+                numOnes = 0,
+                normalized = [],
+                norm = 0;
+                
+            if (!modulo) {
+                modulo = self.MODULO;
+            }
+            for (i = 0; i < counter.length; i++) {
+                if (counter[i] === 1) {
+                    numOnes++;
+                } else {
+                    sum += counter[i];
+                }
+            }
+            ratio = sum / (modulo - numOnes);
+            if (ratio > 1.0) {
+                for (i = 0; i < counter.length; i++) {
+                    norm = counter[i] === 1 ? counter[i] : counter[i] / ratio;
+                    normalized.push(norm);
+                }
+            } else {
+                ratio = (sum + numOnes)/modulo;
+                for (i = 0; i < counter.length; i++) {
+                    norm = counter[i] / ratio;
+                    normalized.push(norm);
+                }
+            }
+            return normalized;
+        };
+
+        BarcodeReader.prototype._matchTrace = function(cmpCounter, epsilon) {
+            var counter = [],
+                i,
+                self = this,
+                offset = self._nextSet(self._row),
+                isWhite = !self._row[offset],
+                counterPos = 0,
+                bestMatch = {
+                    error : Number.MAX_VALUE,
+                    code : -1,
+                    start : 0
+                },
+                error;
+
+            if (cmpCounter) {
+                for ( i = 0; i < cmpCounter.length; i++) {
+                    counter.push(0);
+                }
+                for ( i = offset; i < self._row.length; i++) {
+                    if (self._row[i] ^ isWhite) {
+                        counter[counterPos]++;
+                    } else {
+                        if (counterPos === counter.length - 1) {
+                            error = self._matchPattern(counter, cmpCounter);
+
+                            if (error < epsilon) {
+                                bestMatch.start = i - offset;
+                                bestMatch.end = i;
+                                bestMatch.counter = counter;
+                                return bestMatch;
+                            } else {
+                                return null;
+                            }
+                        } else {
+                            counterPos++;
+                        }
+                        counter[counterPos] = 1;
+                        isWhite = !isWhite;
+                    }
+                }
+            } else {
+                counter.push(0);
+                for ( i = offset; i < self._row.length; i++) {
+                    if (self._row[i] ^ isWhite) {
+                        counter[counterPos]++;
+                    } else {
+                        counterPos++;
+                        counter.push(0);
+                        counter[counterPos] = 1;
+                        isWhite = !isWhite;
+                    }
+                }
+            }
+
+            // if cmpCounter was not given
+            bestMatch.start = offset;
+            bestMatch.end = self._row.length - 1;
+            bestMatch.counter = counter;
+            return bestMatch;
+        };
+        
+        BarcodeReader.prototype.decodePattern = function(pattern) {
+            var self = this,
+                result;
+            
+            self._row = pattern;
+            result = self._decode();
+            if (result === null) {
+                self._row.reverse();
+                result = self._decode();
+                if (result) {
+                    result.direction = BarcodeReader.DIRECTION.REVERSE;
+                    result.start = self._row.length - result.start;
+                    result.end = self._row.length - result.end;
+                }
+            } else {
+                result.direction = BarcodeReader.DIRECTION.FORWARD;
+            }
+            if (result) {
+                result.format = self.FORMAT;
+            }
+            return result;
+        };
+
+        BarcodeReader.prototype._matchRange = function(start, end, value) {
+            var i;
+
+            start = start < 0 ? 0 : start;
+            for (i = start; i < end; i++) {
+                if (this._row[i] !== value) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        BarcodeReader.prototype._fillCounters = function(offset, end, isWhite) {
+            var self = this,
+                counterPos = 0,
+                i,
+                counters = [];
+
+            isWhite = (typeof isWhite !== 'undefined') ? isWhite : true;
+            offset = (typeof offset !== 'undefined') ? offset : self._nextUnset(self._row);
+            end = end || self._row.length;
+
+            counters[counterPos] = 0;
+            for (i = offset; i < end; i++) {
+                if (self._row[i] ^ isWhite) {
+                    counters[counterPos]++;
+                } else {
+                    counterPos++;
+                    counters[counterPos] = 1;
+                    isWhite = !isWhite;
+                }
+            }
+            return counters;
+        };
+
+        Object.defineProperty(BarcodeReader.prototype, "FORMAT", {
+            value: 'unknown',
+            writeable: false
+        });
+        
+        BarcodeReader.DIRECTION = {
+            FORWARD : 1,
+            REVERSE : -1
+        };
+        
+        BarcodeReader.Exception = {
+            StartNotFoundException : "Start-Info was not found!",
+            CodeNotFoundException : "Code could not be found!",
+            PatternNotFoundException : "Pattern could not be found!"
+        };
+
+        BarcodeReader.CONFIG_KEYS = {};
+        
+        return (BarcodeReader);
+    }
+);
+
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
+     'code_128_reader',[
+        "./barcode_reader"
+    ],
+    function(BarcodeReader) {
+        "use strict";
+        
+        function Code128Reader() {
+            BarcodeReader.call(this);
+        }
+        
+        var properties = {
+            CODE_SHIFT : {value: 98},
+            CODE_C : {value: 99},
+            CODE_B : {value: 100},
+            CODE_A : {value: 101},
+            START_CODE_A : {value: 103},
+            START_CODE_B : {value: 104},
+            START_CODE_C : {value: 105},
+            STOP_CODE : {value: 106},
+            MODULO : {value: 11},
+            CODE_PATTERN : {value: [
+                [2, 1, 2, 2, 2, 2],
+                [2, 2, 2, 1, 2, 2],
+                [2, 2, 2, 2, 2, 1],
+                [1, 2, 1, 2, 2, 3],
+                [1, 2, 1, 3, 2, 2],
+                [1, 3, 1, 2, 2, 2],
+                [1, 2, 2, 2, 1, 3],
+                [1, 2, 2, 3, 1, 2],
+                [1, 3, 2, 2, 1, 2],
+                [2, 2, 1, 2, 1, 3],
+                [2, 2, 1, 3, 1, 2],
+                [2, 3, 1, 2, 1, 2],
+                [1, 1, 2, 2, 3, 2],
+                [1, 2, 2, 1, 3, 2],
+                [1, 2, 2, 2, 3, 1],
+                [1, 1, 3, 2, 2, 2],
+                [1, 2, 3, 1, 2, 2],
+                [1, 2, 3, 2, 2, 1],
+                [2, 2, 3, 2, 1, 1],
+                [2, 2, 1, 1, 3, 2],
+                [2, 2, 1, 2, 3, 1],
+                [2, 1, 3, 2, 1, 2],
+                [2, 2, 3, 1, 1, 2],
+                [3, 1, 2, 1, 3, 1],
+                [3, 1, 1, 2, 2, 2],
+                [3, 2, 1, 1, 2, 2],
+                [3, 2, 1, 2, 2, 1],
+                [3, 1, 2, 2, 1, 2],
+                [3, 2, 2, 1, 1, 2],
+                [3, 2, 2, 2, 1, 1],
+                [2, 1, 2, 1, 2, 3],
+                [2, 1, 2, 3, 2, 1],
+                [2, 3, 2, 1, 2, 1],
+                [1, 1, 1, 3, 2, 3],
+                [1, 3, 1, 1, 2, 3],
+                [1, 3, 1, 3, 2, 1],
+                [1, 1, 2, 3, 1, 3],
+                [1, 3, 2, 1, 1, 3],
+                [1, 3, 2, 3, 1, 1],
+                [2, 1, 1, 3, 1, 3],
+                [2, 3, 1, 1, 1, 3],
+                [2, 3, 1, 3, 1, 1],
+                [1, 1, 2, 1, 3, 3],
+                [1, 1, 2, 3, 3, 1],
+                [1, 3, 2, 1, 3, 1],
+                [1, 1, 3, 1, 2, 3],
+                [1, 1, 3, 3, 2, 1],
+                [1, 3, 3, 1, 2, 1],
+                [3, 1, 3, 1, 2, 1],
+                [2, 1, 1, 3, 3, 1],
+                [2, 3, 1, 1, 3, 1],
+                [2, 1, 3, 1, 1, 3],
+                [2, 1, 3, 3, 1, 1],
+                [2, 1, 3, 1, 3, 1],
+                [3, 1, 1, 1, 2, 3],
+                [3, 1, 1, 3, 2, 1],
+                [3, 3, 1, 1, 2, 1],
+                [3, 1, 2, 1, 1, 3],
+                [3, 1, 2, 3, 1, 1],
+                [3, 3, 2, 1, 1, 1],
+                [3, 1, 4, 1, 1, 1],
+                [2, 2, 1, 4, 1, 1],
+                [4, 3, 1, 1, 1, 1],
+                [1, 1, 1, 2, 2, 4],
+                [1, 1, 1, 4, 2, 2],
+                [1, 2, 1, 1, 2, 4],
+                [1, 2, 1, 4, 2, 1],
+                [1, 4, 1, 1, 2, 2],
+                [1, 4, 1, 2, 2, 1],
+                [1, 1, 2, 2, 1, 4],
+                [1, 1, 2, 4, 1, 2],
+                [1, 2, 2, 1, 1, 4],
+                [1, 2, 2, 4, 1, 1],
+                [1, 4, 2, 1, 1, 2],
+                [1, 4, 2, 2, 1, 1],
+                [2, 4, 1, 2, 1, 1],
+                [2, 2, 1, 1, 1, 4],
+                [4, 1, 3, 1, 1, 1],
+                [2, 4, 1, 1, 1, 2],
+                [1, 3, 4, 1, 1, 1],
+                [1, 1, 1, 2, 4, 2],
+                [1, 2, 1, 1, 4, 2],
+                [1, 2, 1, 2, 4, 1],
+                [1, 1, 4, 2, 1, 2],
+                [1, 2, 4, 1, 1, 2],
+                [1, 2, 4, 2, 1, 1],
+                [4, 1, 1, 2, 1, 2],
+                [4, 2, 1, 1, 1, 2],
+                [4, 2, 1, 2, 1, 1],
+                [2, 1, 2, 1, 4, 1],
+                [2, 1, 4, 1, 2, 1],
+                [4, 1, 2, 1, 2, 1],
+                [1, 1, 1, 1, 4, 3],
+                [1, 1, 1, 3, 4, 1],
+                [1, 3, 1, 1, 4, 1],
+                [1, 1, 4, 1, 1, 3],
+                [1, 1, 4, 3, 1, 1],
+                [4, 1, 1, 1, 1, 3],
+                [4, 1, 1, 3, 1, 1],
+                [1, 1, 3, 1, 4, 1],
+                [1, 1, 4, 1, 3, 1],
+                [3, 1, 1, 1, 4, 1],
+                [4, 1, 1, 1, 3, 1],
+                [2, 1, 1, 4, 1, 2],
+                [2, 1, 1, 2, 1, 4],
+                [2, 1, 1, 2, 3, 2],
+                [2, 3, 3, 1, 1, 1, 2]
+            ]},
+            SINGLE_CODE_ERROR: {value: 1},
+            AVG_CODE_ERROR: {value: 0.5},
+            FORMAT: {value: "code_128", writeable: false}
+        };
+        
+        Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
+        Code128Reader.prototype.constructor = Code128Reader;
+        
+        Code128Reader.prototype._decodeCode = function(start) {
+            var counter = [0, 0, 0, 0, 0, 0],
+                i,
+                self = this,
+                offset = start,
+                isWhite = !self._row[offset],
+                counterPos = 0,
+                bestMatch = {
+                    error : Number.MAX_VALUE,
+                    code : -1,
+                    start : start,
+                    end : start
+                },
+                code,
+                error,
+                normalized;
+
+            for ( i = offset; i < self._row.length; i++) {
+                if (self._row[i] ^ isWhite) {
+                    counter[counterPos]++;
+                } else {
+                    if (counterPos === counter.length - 1) {
+                        normalized = self._normalize(counter);
+                        if (normalized) {
+                            for (code = 0; code < self.CODE_PATTERN.length; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
+                            }
+                            bestMatch.end = i;
+                            return bestMatch;
+                        }
+                    } else {
+                        counterPos++;
+                    }
+                    counter[counterPos] = 1;
+                    isWhite = !isWhite;
+                }
+            }
+            return null;
+        };
+
+        Code128Reader.prototype._findStart = function() {
+            var counter = [0, 0, 0, 0, 0, 0],
+                i,
+                self = this,
+                offset = self._nextSet(self._row),
+                isWhite = false,
+                counterPos = 0,
+                bestMatch = {
+                    error : Number.MAX_VALUE,
+                    code : -1,
+                    start : 0,
+                    end : 0
+                },
+                code,
+                error,
+                j,
+                sum,
+                normalized;
+                
+            for ( i = offset; i < self._row.length; i++) {
+                if (self._row[i] ^ isWhite) {
+                    counter[counterPos]++;
+                } else {
+                    if (counterPos === counter.length - 1) {
+                        sum = 0;
+                        for ( j = 0; j < counter.length; j++) {
+                            sum += counter[j];
+                        }
+                        normalized = self._normalize(counter);
+                        if (normalized) {
+                            for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
+                            }
+                            if (bestMatch.error < self.AVG_CODE_ERROR) {
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
+                        }
+
+                        for ( j = 0; j < 4; j++) {
+                            counter[j] = counter[j + 2];
+                        }
+                        counter[4] = 0;
+                        counter[5] = 0;
+                        counterPos--;
+                    } else {
+                        counterPos++;
+                    }
+                    counter[counterPos] = 1;
+                    isWhite = !isWhite;
+                }
+            }
+            return null;
+        };
+
+        Code128Reader.prototype._decode = function() {
+            var self = this,
+                startInfo = self._findStart(),
+                code = null,
+                done = false,
+                result = [],
+                multiplier = 0,
+                checksum = 0,
+                codeset,
+                rawResult = [],
+                decodedCodes = [],
+                shiftNext = false,
+                unshift,
+                lastCharacterWasPrintable;
+
+            if (startInfo === null) {
+                return null;
+            }
+            code = {
+                code : startInfo.code,
+                start : startInfo.start,
+                end : startInfo.end
+            };
+            decodedCodes.push(code);
+            checksum = code.code;
+            switch(code.code) {
+            case self.START_CODE_A:
+                codeset = self.CODE_A;
+                break;
+            case self.START_CODE_B:
+                codeset = self.CODE_B;
+                break;
+            case self.START_CODE_C:
+                codeset = self.CODE_C;
+                break;
+            default:
+                return null;
+            }
+
+            while (!done) {
+                unshift = shiftNext;
+                shiftNext = false;
+                code = self._decodeCode(code.end);
+                if (code !== null) {
+                    if (code.code !== self.STOP_CODE) {
+                        rawResult.push(code.code);
+                        multiplier++;
+                        checksum += multiplier * code.code;
+                    }
+                    decodedCodes.push(code);
+
+                    switch(codeset) {
+                    case self.CODE_A:
+                        if (code.code < 64) {
+                            result.push(String.fromCharCode(32 + code.code));
+                        } else if (code.code < 96) {
+                            result.push(String.fromCharCode(code.code - 64));
+                        } else {
+                            switch (code.code) {
+                            case self.CODE_SHIFT:
+                                shiftNext = true;
+                                codeset = self.CODE_B;
+                                break;
+                            case self.CODE_B:
+                                codeset = self.CODE_B;
+                                break;
+                            case self.CODE_C:
+                                codeset = self.CODE_C;
+                                break;
+                            case self.STOP_CODE:
+                                done = true;
+                                break;
+                            }
+                        }
+                        break;
+                    case self.CODE_B:
+                        if (code.code < 96) {
+                            result.push(String.fromCharCode(32 + code.code));
+                        } else {
+                            if (code.code != self.STOP_CODE) {
+                                lastCharacterWasPrintable = false;
+                            }
+                            switch (code.code) {
+                            case self.CODE_SHIFT:
+                                shiftNext = true;
+                                codeset = self.CODE_A;
+                                break;
+                            case self.CODE_A:
+                                codeset = self.CODE_A;
+                                break;
+                            case self.CODE_C:
+                                codeset = self.CODE_C;
+                                break;
+                            case self.STOP_CODE:
+                                done = true;
+                                break;
+                            }
+                        }
+                        break;
+                    case self.CODE_C:
+                        if (code.code < 100) {
+                            result.push(code.code < 10 ? "0" + code.code : code.code);
+                        }
+                        switch (code.code) {
+                        case self.CODE_A:
+                            codeset = self.CODE_A;
+                            break;
+                        case self.CODE_B:
+                            codeset = self.CODE_B;
+                            break;
+                        case self.STOP_CODE:
+                            done = true;
+                            break;
+                        }
+                        break;
+                    }
+                } else {
+                    done = true;
+                }
+                if (unshift) {
+                    codeset = codeset == self.CODE_A ? self.CODE_B : self.CODE_A;
+                }
+            }
+
+            if (code === null) {
+                return null;
+            }
+
+            // find end bar
+            code.end = self._nextUnset(self._row, code.end);
+            if(!self._verifyTrailingWhitespace(code)){
+                return null;
+            }
+
+            // checksum
+            // Does not work correctly yet!!! startcode - endcode?
+            checksum -= multiplier * rawResult[rawResult.length - 1];
+            if (checksum % 103 != rawResult[rawResult.length - 1]) {
+                return null;
+            }
+
+            if (!result.length) {
+                return null;
+            }
+
+            // remove last code from result (checksum)
+            result.splice(result.length - 1, 1);
+
+
+
+            return {
+                code : result.join(""),
+                start : startInfo.start,
+                end : code.end,
+                codeset : codeset,
+                startInfo : startInfo,
+                decodedCodes : decodedCodes,
+                endInfo : code
+            };
+        };
+
+
+        BarcodeReader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
+        };
+        
+        return (Code128Reader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
+     'ean_reader',[
+        "./barcode_reader"
+    ],
+    function(BarcodeReader) {
+        "use strict";
+        
+        function EANReader(opts) {
+            BarcodeReader.call(this, opts);
+        }
+        
+        var properties = {
+            CODE_L_START : {value: 0},
+            MODULO : {value: 7},
+            CODE_G_START : {value: 10},
+            START_PATTERN : {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
+            STOP_PATTERN : {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
+            MIDDLE_PATTERN : {value: [1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7]},
+            CODE_PATTERN : {value: [
+                [3, 2, 1, 1],
+                [2, 2, 2, 1],
+                [2, 1, 2, 2],
+                [1, 4, 1, 1],
+                [1, 1, 3, 2],
+                [1, 2, 3, 1],
+                [1, 1, 1, 4],
+                [1, 3, 1, 2],
+                [1, 2, 1, 3],
+                [3, 1, 1, 2],
+                [1, 1, 2, 3],
+                [1, 2, 2, 2],
+                [2, 2, 1, 2],
+                [1, 1, 4, 1],
+                [2, 3, 1, 1],
+                [1, 3, 2, 1],
+                [4, 1, 1, 1],
+                [2, 1, 3, 1],
+                [3, 1, 2, 1],
+                [2, 1, 1, 3]
+            ]},
+            CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
+            SINGLE_CODE_ERROR: {value: 0.67},
+            AVG_CODE_ERROR: {value: 0.27},
+            FORMAT: {value: "ean_13", writeable: false}
+        };
+        
+        EANReader.prototype = Object.create(BarcodeReader.prototype, properties);
+        EANReader.prototype.constructor = EANReader;
+        
+        EANReader.prototype._decodeCode = function(start, coderange) {
+            var counter = [0, 0, 0, 0],
+                i,
+                self = this,
+                offset = start,
+                isWhite = !self._row[offset],
+                counterPos = 0,
+                bestMatch = {
+                    error : Number.MAX_VALUE,
+                    code : -1,
+                    start : start,
+                    end : start
+                },
+                code,
+                error,
+                normalized;
+
+            if (!coderange) {
+                coderange = self.CODE_PATTERN.length;
+            }
+
+            for ( i = offset; i < self._row.length; i++) {
+                if (self._row[i] ^ isWhite) {
+                    counter[counterPos]++;
+                } else {
+                    if (counterPos === counter.length - 1) {
+                        normalized = self._normalize(counter);
+                        if (normalized) {
+                            for (code = 0; code < coderange; code++) {
+                                error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                                if (error < bestMatch.error) {
+                                    bestMatch.code = code;
+                                    bestMatch.error = error;
+                                }
+                            }
+                            bestMatch.end = i;
+                            if (bestMatch.error > self.AVG_CODE_ERROR) {
+                                return null;
+                            }
+                            return bestMatch;
+                        }
+                    } else {
+                        counterPos++;
+                    }
+                    counter[counterPos] = 1;
+                    isWhite = !isWhite;
+                }
+            }
+            return null;
+        };
+
+        EANReader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder, epsilon) {
+            var counter = [],
+                self = this,
+                i,
+                counterPos = 0,
+                bestMatch = {
+                    error : Number.MAX_VALUE,
+                    code : -1,
+                    start : 0,
+                    end : 0
+                },
+                error,
+                j,
+                sum,
+                normalized;
+
+            if (!offset) {
+                offset = self._nextSet(self._row);
+            }
+
+            if (isWhite === undefined) {
+                isWhite = false;
+            }
+
+            if (tryHarder === undefined) {
+                tryHarder = true;
+            }
+
+            if ( epsilon === undefined) {
+                epsilon = self.AVG_CODE_ERROR;
+            }
+
+            for ( i = 0; i < pattern.length; i++) {
+                counter[i] = 0;
+            }
+
+            for ( i = offset; i < self._row.length; i++) {
+                if (self._row[i] ^ isWhite) {
+                    counter[counterPos]++;
+                } else {
+                    if (counterPos === counter.length - 1) {
+                        sum = 0;
+                        for ( j = 0; j < counter.length; j++) {
+                            sum += counter[j];
+                        }
+                        normalized = self._normalize(counter);
+                        if (normalized) {
+                            error = self._matchPattern(normalized, pattern);
+
+                            if (error < epsilon) {
+                                bestMatch.error = error;
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
+                        }
+                        if (tryHarder) {
+                            for ( j = 0; j < counter.length - 2; j++) {
+                                counter[j] = counter[j + 2];
+                            }
+                            counter[counter.length - 2] = 0;
+                            counter[counter.length - 1] = 0;
+                            counterPos--;
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        counterPos++;
+                    }
+                    counter[counterPos] = 1;
+                    isWhite = !isWhite;
+                }
+            }
+            return null;
+        };
+
+        EANReader.prototype._findStart = function() {
+            var self = this,
+                leadingWhitespaceStart,
+                offset = self._nextSet(self._row),
+                startInfo;
+
+            while(!startInfo) {
+                startInfo = self._findPattern(self.START_PATTERN, offset);
+                if (!startInfo) {
+                    return null;
+                }
+                leadingWhitespaceStart = startInfo.start - (startInfo.end - startInfo.start);
+                if (leadingWhitespaceStart >= 0) {
+                    if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
+                        return startInfo;
+                    }
+                }
+                offset = startInfo.end;
+                startInfo = null;
+            }
+        };
+
+        EANReader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + (endInfo.end - endInfo.start);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
+        };
+
+        EANReader.prototype._findEnd = function(offset, isWhite) {
+            var self = this,
+                endInfo = self._findPattern(self.STOP_PATTERN, offset, isWhite, false);
+
+            return endInfo !== null ? self._verifyTrailingWhitespace(endInfo) : null;
+        };
+
+        EANReader.prototype._calculateFirstDigit = function(codeFrequency) {
+            var i,
+                self = this;
+
+            for ( i = 0; i < self.CODE_FREQUENCY.length; i++) {
+                if (codeFrequency === self.CODE_FREQUENCY[i]) {
+                    return i;
+                }
+            }
+            return null;
+        };
+
+        EANReader.prototype._decodePayload = function(code, result, decodedCodes) {
+            var i,
+                self = this,
+                codeFrequency = 0x0,
+                firstDigit;
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end);
+                if (!code) {
+                    return null;
+                }
+                if (code.code >= self.CODE_G_START) {
+                    code.code = code.code - self.CODE_G_START;
+                    codeFrequency |= 1 << (5 - i);
+                } else {
+                    codeFrequency |= 0 << (5 - i);
+                }
+                result.push(code.code);
+                decodedCodes.push(code);
+            }
+
+            firstDigit = self._calculateFirstDigit(codeFrequency);
+            if (firstDigit === null) {
+                return null;
+            }
+            result.unshift(firstDigit);
+
+            code = self._findPattern(self.MIDDLE_PATTERN, code.end, true, false);
+            if (code === null) {
+                return null;
+            }
+            decodedCodes.push(code);
+
+            for ( i = 0; i < 6; i++) {
+                code = self._decodeCode(code.end, self.CODE_G_START);
+                if (!code) {
+                    return null;
+                }
+                decodedCodes.push(code);
+                result.push(code.code);
+            }
+
+            return code;
+        };
+
+        EANReader.prototype._decode = function() {
+            var startInfo,
+                self = this,
+                code,
+                result = [],
+                decodedCodes = [];
+
+            startInfo = self._findStart();
+            if (!startInfo) {
+                return null;
+            }
+            code = {
+                code : startInfo.code,
+                start : startInfo.start,
+                end : startInfo.end
+            };
+            decodedCodes.push(code);
+            code = self._decodePayload(code, result, decodedCodes);
+            if (!code) {
+                return null;
+            }
+            code = self._findEnd(code.end, false);
+            if (!code){
+                return null;
+            }
+
+            decodedCodes.push(code);
+
+            // Checksum
+            if (!self._checksum(result)) {
+                return null;
+            }
+
+            return {
+                code : result.join(""),
+                start : startInfo.start,
+                end : code.end,
+                codeset : "",
+                startInfo : startInfo,
+                decodedCodes : decodedCodes
+            };
+        };
+
+        EANReader.prototype._checksum = function(result) {
+            var sum = 0, i;
+
+            for ( i = result.length - 2; i >= 0; i -= 2) {
+                sum += result[i];
+            }
+            sum *= 3;
+            for ( i = result.length - 1; i >= 0; i -= 2) {
+                sum += result[i];
+            }
+            return sum % 10 === 0;
+        };
+        
+        return (EANReader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
     'code_39_reader',[
         "./barcode_reader",
         "./array_helper"
@@ -7139,7 +7165,7 @@ define(
                 nextStart,
                 end;
 
-            self._fillCounters();
+            this._counters = self._fillCounters();
             start = self._findStart();
             if (!start) {
                 return null;
@@ -7287,26 +7313,6 @@ define(
                 pos += 8;
             }
             return true;
-        };
-
-        CodabarReader.prototype._fillCounters = function() {
-            var self = this,
-                counterPos = 0,
-                isWhite = true,
-                offset = self._nextUnset(self._row),
-                i;
-
-            self._counters.length = 0;
-            self._counters[counterPos] = 0;
-            for (i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    this._counters[counterPos]++;
-                } else {
-                    counterPos++;
-                    this._counters[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
         };
 
         CodabarReader.prototype._patternToChar = function(pattern) {
@@ -7622,6 +7628,390 @@ define(
 /* jshint undef: true, unused: true, browser:true, devel: true */
 /* global define */
 
+define('html_utils',[], function() {
+    "use strict";
+
+    function createNode(htmlStr) {
+        var temp = document.createElement('div');
+        
+        temp.innerHTML = htmlStr;
+        while (temp.firstChild) {
+            return temp.firstChild;
+        }
+    }
+
+    function mergeObjects(obj1, obj2) {
+        for (var p in obj2) {
+            try {
+                if (obj2[p].constructor == Object) {
+                    obj1[p] = mergeObjects(obj1[p], obj2[p]);
+                } else {
+                    obj1[p] = obj2[p];
+                }
+            } catch(e) {
+                obj1[p] = obj2[p];
+            }
+        }
+
+        return obj1;
+    }
+
+    return {
+        createNode : function(htmlStr) {
+            return createNode(htmlStr);
+        },
+        mergeObjects : function(obj1, obj2) {
+            return mergeObjects(obj1, obj2);
+        }
+    };
+}); 
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
+define(
+    'i2of5_reader',[
+        "./barcode_reader",
+        "./html_utils"
+    ],
+    function(BarcodeReader, HTMLUtils) {
+        "use strict";
+
+        function I2of5Reader(opts) {
+            opts = HTMLUtils.mergeObjects(getDefaulConfig(), opts);
+            BarcodeReader.call(this, opts);
+            this.barSpaceRatio = [1, 1];
+            if (opts.normalizeBarSpaceWidth) {
+                this.SINGLE_CODE_ERROR = 0.38;
+                this.AVG_CODE_ERROR = 0.09;
+            }
+        }
+
+        function getDefaulConfig() {
+            var config = {};
+
+            Object.keys(I2of5Reader.CONFIG_KEYS).forEach(function(key) {
+                config[key] = I2of5Reader.CONFIG_KEYS[key]['default'];
+            });
+            return config;
+        }
+
+        var N = 1,
+            W = 3,
+            properties = {
+            MODULO : {value: 10},
+            START_PATTERN : {value: [N*2.5, N*2.5, N*2.5, N*2.5]},
+            STOP_PATTERN : {value: [N*2, N*2, W*2]},
+            CODE_PATTERN : {value: [
+                [N, N, W, W, N],
+                [W, N, N, N, W],
+                [N, W, N, N, W],
+                [W, W, N, N, N],
+                [N, N, W, N, W],
+                [W, N, W, N, N],
+                [N, W, W, N, N],
+                [N, N, N, W, W],
+                [W, N, N, W, N],
+                [N, W, N, W, N]
+            ]},
+            SINGLE_CODE_ERROR: {value: 0.78, writable: true},
+            AVG_CODE_ERROR: {value: 0.38, writable: true},
+            MAX_CORRECTION_FACTOR: {value: 5},
+            FORMAT: {value: "i2of5"}
+        };
+
+        I2of5Reader.prototype = Object.create(BarcodeReader.prototype, properties);
+        I2of5Reader.prototype.constructor = I2of5Reader;
+
+        I2of5Reader.prototype._matchPattern = function(counter, code) {
+            if (this.config.normalizeBarSpaceWidth) {
+                var i,
+                    counterSum = [0, 0],
+                    codeSum = [0, 0],
+                    correction = [0, 0],
+                    correctionRatio = this.MAX_CORRECTION_FACTOR,
+                    correctionRatioInverse = 1 / correctionRatio;
+
+                for (i = 0; i < counter.length; i++) {
+                    counterSum[i % 2] += counter[i];
+                    codeSum[i % 2] += code[i];
+                }
+                correction[0] = codeSum[0] / counterSum[0];
+                correction[1] = codeSum[1] / counterSum[1];
+
+                correction[0] = Math.max(Math.min(correction[0], correctionRatio), correctionRatioInverse);
+                correction[1] = Math.max(Math.min(correction[1], correctionRatio), correctionRatioInverse);
+                this.barSpaceRatio = correction;
+                for (i = 0; i < counter.length; i++) {
+                    counter[i] *= this.barSpaceRatio[i % 2];
+                }
+            }
+            return BarcodeReader.prototype._matchPattern.call(this, counter, code);
+        };
+
+        I2of5Reader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder) {
+            var counter = [],
+                self = this,
+                i,
+                counterPos = 0,
+                bestMatch = {
+                    error : Number.MAX_VALUE,
+                    code : -1,
+                    start : 0,
+                    end : 0
+                },
+                error,
+                j,
+                sum,
+                normalized,
+                epsilon = self.AVG_CODE_ERROR;
+
+            isWhite = isWhite || false;
+            tryHarder = tryHarder || false;
+
+            if (!offset) {
+                offset = self._nextSet(self._row);
+            }
+
+            for ( i = 0; i < pattern.length; i++) {
+                counter[i] = 0;
+            }
+
+            for ( i = offset; i < self._row.length; i++) {
+                if (self._row[i] ^ isWhite) {
+                    counter[counterPos]++;
+                } else {
+                    if (counterPos === counter.length - 1) {
+                        sum = 0;
+                        for ( j = 0; j < counter.length; j++) {
+                            sum += counter[j];
+                        }
+                        normalized = self._normalize(counter);
+                        if (normalized) {
+                            error = self._matchPattern(normalized, pattern);
+
+                            if (error < epsilon) {
+                                bestMatch.error = error;
+                                bestMatch.start = i - sum;
+                                bestMatch.end = i;
+                                return bestMatch;
+                            }
+                        }
+                        if (tryHarder) {
+                            for (j = 0; j < counter.length - 2; j++) {
+                                counter[j] = counter[j + 2];
+                            }
+                            counter[counter.length - 2] = 0;
+                            counter[counter.length - 1] = 0;
+                            counterPos--;
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        counterPos++;
+                    }
+                    counter[counterPos] = 1;
+                    isWhite = !isWhite;
+                }
+            }
+            return null;
+        };
+
+        I2of5Reader.prototype._findStart = function() {
+            var self = this,
+                leadingWhitespaceStart,
+                offset = self._nextSet(self._row),
+                startInfo,
+                narrowBarWidth = 1;
+
+            while(!startInfo) {
+                startInfo = self._findPattern(self.START_PATTERN, offset, false, true);
+                if (!startInfo) {
+                    return null;
+                }
+                narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / 4);
+                leadingWhitespaceStart = startInfo.start - narrowBarWidth*10;
+                if (leadingWhitespaceStart >= 0) {
+                    if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
+                        return startInfo;
+                    }
+                }
+                offset = startInfo.end;
+                startInfo = null;
+            }
+        };
+
+        I2of5Reader.prototype._verifyTrailingWhitespace = function(endInfo) {
+            var self = this,
+                trailingWhitespaceEnd;
+
+            trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
+            if (trailingWhitespaceEnd < self._row.length) {
+                if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
+                    return endInfo;
+                }
+            }
+            return null;
+        };
+
+        I2of5Reader.prototype._findEnd = function() {
+            var self = this,
+                endInfo,
+                tmp;
+
+            self._row.reverse();
+            endInfo = self._findPattern(self.STOP_PATTERN);
+            self._row.reverse();
+
+            if (endInfo === null) {
+                return null;
+            }
+
+            // reverse numbers
+            tmp = endInfo.start;
+            endInfo.start = self._row.length - endInfo.end;
+            endInfo.end = self._row.length - tmp;
+
+            return endInfo !== null ? self._verifyTrailingWhitespace(endInfo) : null;
+        };
+
+        I2of5Reader.prototype._decodePair = function(counterPair) {
+            var i,
+                code,
+                codes = [],
+                self = this;
+
+            for (i = 0; i < counterPair.length; i++) {
+                code = self._decodeCode(counterPair[i]);
+                if (!code) {
+                    return null;
+                }
+                codes.push(code);
+            }
+            return codes;
+        };
+
+        I2of5Reader.prototype._decodeCode = function(counter) {
+            var j,
+                self = this,
+                sum = 0,
+                normalized,
+                error,
+                epsilon = self.AVG_CODE_ERROR,
+                code,
+                bestMatch = {
+                    error : Number.MAX_VALUE,
+                    code : -1,
+                    start : 0,
+                    end : 0
+                };
+
+            for ( j = 0; j < counter.length; j++) {
+                sum += counter[j];
+            }
+            normalized = self._normalize(counter);
+            if (normalized) {
+                for (code = 0; code < self.CODE_PATTERN.length; code++) {
+                    error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
+                    if (error < bestMatch.error) {
+                        bestMatch.code = code;
+                        bestMatch.error = error;
+                    }
+                }
+                if (bestMatch.error < epsilon) {
+                    return bestMatch;
+                }
+            }
+            return null;
+        };
+
+        I2of5Reader.prototype._decodePayload = function(counters, result, decodedCodes) {
+            var i,
+                self = this,
+                pos = 0,
+                counterLength = counters.length,
+                counterPair = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]],
+                codes;
+
+            while (pos < counterLength) {
+                for (i = 0; i < 5; i++) {
+                    counterPair[0][i] = counters[pos]*this.barSpaceRatio[0];
+                    counterPair[1][i] = counters[pos + 1]*this.barSpaceRatio[1];
+                    pos += 2;
+                }
+                codes = self._decodePair(counterPair);
+                if (!codes) {
+                    return null;
+                }
+                for (i = 0; i < codes.length; i++) {
+                    result.push(codes[i].code + "");
+                    decodedCodes.push(codes[i]);
+                }
+            }
+            return codes;
+        };
+
+        I2of5Reader.prototype._verifyCounterLength = function(counters) {
+            return (counters.length % 10 === 0);
+        };
+
+        I2of5Reader.prototype._decode = function() {
+            var startInfo,
+                endInfo,
+                self = this,
+                code,
+                result = [],
+                decodedCodes = [],
+                counters;
+
+            startInfo = self._findStart();
+            if (!startInfo) {
+                return null;
+            }
+            decodedCodes.push(startInfo);
+
+            endInfo = self._findEnd();
+            if (!endInfo) {
+                return null;
+            }
+
+            counters = self._fillCounters(startInfo.end, endInfo.start, false);
+            if (!self._verifyCounterLength(counters)) {
+                return null;
+            }
+            code = self._decodePayload(counters, result, decodedCodes);
+            if (!code) {
+                return null;
+            }
+            if (result.length % 2 !== 0 ||
+                    result.length < 6) {
+                return null;
+            }
+
+            decodedCodes.push(endInfo);
+            return {
+                code : result.join(""),
+                start : startInfo.start,
+                end : endInfo.end,
+                startInfo : startInfo,
+                decodedCodes : decodedCodes
+            };
+        };
+
+        I2of5Reader.CONFIG_KEYS = {
+            normalizeBarSpaceWidth: {
+                'type': 'boolean',
+                'default': false,
+                'description': 'If true, the reader tries to normalize the' +
+                'width-difference between bars and spaces'
+            }
+        };
+
+        return (I2of5Reader);
+    }
+);
+/* jshint undef: true, unused: true, browser:true, devel: true */
+/* global define */
+
 define('barcode_decoder',[
     "bresenham",
     "image_debug",
@@ -7632,7 +8022,8 @@ define('barcode_decoder',[
     'codabar_reader',
     'upc_reader',
     'ean_8_reader',
-    'upc_e_reader'
+    'upc_e_reader',
+    'i2of5_reader'
 ], function(
     Bresenham,
     ImageDebug,
@@ -7643,7 +8034,8 @@ define('barcode_decoder',[
     CodabarReader,
     UPCReader,
     EAN8Reader,
-    UPCEReader) {
+    UPCEReader,
+    I2of5Reader) {
     "use strict";
 
     var readers = {
@@ -7654,7 +8046,8 @@ define('barcode_decoder',[
         code_39_vin_reader: Code39VINReader,
         codabar_reader: CodabarReader,
         upc_reader: UPCReader,
-        upc_e_reader: UPCEReader
+        upc_e_reader: UPCEReader,
+        i2of5_reader: I2of5Reader
     };
     var BarcodeDecoder = {
         create : function(config, inputImageWrapper) {
@@ -7707,11 +8100,21 @@ define('barcode_decoder',[
             }
 
             function initReaders() {
-                var i;
-                for ( i = 0; i < config.readers.length; i++) {
-                    console.log(config.readers[i]);
-                    _barcodeReaders.push(new readers[config.readers[i]]());
-                }
+                config.readers.forEach(function(readerConfig) {
+                    var reader,
+                        config = {};
+
+                    if (typeof readerConfig === 'object') {
+                        reader = readerConfig.format;
+                        config = readerConfig.config;
+                    } else if (typeof readerConfig === 'string') {
+                        reader = readerConfig;
+                    }
+                    _barcodeReaders.push(new readers[reader](config));
+                });
+                console.log("Registered Readers: " + _barcodeReaders
+                    .map(function(reader) {return JSON.stringify({format: reader.FORMAT, config: reader.config});})
+                    .join(', '));
             }
 
             function initConfig() {
@@ -7991,46 +8394,6 @@ define('frame_grabber',["cv_utils"], function(CVUtils) {
     return (FrameGrabber);
 });
 
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define */
-
-define('html_utils',[], function() {
-    "use strict";
-
-    function createNode(htmlStr) {
-        var temp = document.createElement('div');
-        
-        temp.innerHTML = htmlStr;
-        while (temp.firstChild) {
-            return temp.firstChild;
-        }
-    }
-
-    function mergeObjects(obj1, obj2) {
-        for (var p in obj2) {
-            try {
-                if (obj2[p].constructor == Object) {
-                    obj1[p] = mergeObjects(obj1[p], obj2[p]);
-                } else {
-                    obj1[p] = obj2[p];
-                }
-            } catch(e) {
-                obj1[p] = obj2[p];
-            }
-        }
-
-        return obj1;
-    }
-
-    return {
-        createNode : function(htmlStr) {
-            return createNode(htmlStr);
-        },
-        mergeObjects : function(obj1, obj2) {
-            return mergeObjects(obj1, obj2);
-        }
-    };
-}); 
 /**
  * The basic configuration
  */
@@ -8392,8 +8755,6 @@ define('result_collector',["image_debug"], function(ImageDebug) {
 
 
 define('quagga',[
-        "code_128_reader",
-        "ean_reader",
         "input_stream",
         "image_wrapper",
         "barcode_locator",
@@ -8405,9 +8766,7 @@ define('quagga',[
         "camera_access",
         "image_debug",
         "result_collector"],
-function(Code128Reader,
-         EANReader,
-         InputStream,
+function(InputStream,
          ImageWrapper,
          BarcodeLocator,
          BarcodeDecoder,
@@ -8877,10 +9236,6 @@ function(Code128Reader,
                 }, true);
                 start();
             });
-        },
-        Reader: {
-          EANReader : EANReader,
-          Code128Reader : Code128Reader
         },
         ImageWrapper: ImageWrapper,
         ImageDebug: ImageDebug,
