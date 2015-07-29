@@ -32,9 +32,6 @@ $(function() {
                 }
             }
         },
-        getState: function(reader) {
-            return this.config[reader] || this.config.default;
-        },
         attachListeners: function() {
             var self = this;
 
@@ -109,7 +106,7 @@ $(function() {
         },
         state: {
             inputStream: {
-                src: "../test/fixtures/code_128/",
+                src: "../test/fixtures/code_128/"
             },
             decoder : {
                 readers : ["code_128_reader"]
