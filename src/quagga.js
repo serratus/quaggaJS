@@ -1,8 +1,6 @@
 /* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
 /* global define */
 define([
-        "code_128_reader",
-        "ean_reader",
         "input_stream",
         "image_wrapper",
         "barcode_locator",
@@ -15,9 +13,7 @@ define([
         "image_debug",
         "gl-matrix",
         "result_collector"],
-function(Code128Reader,
-         EANReader,
-         InputStream,
+function(InputStream,
          ImageWrapper,
          BarcodeLocator,
          BarcodeDecoder,
@@ -457,8 +453,14 @@ function(Code128Reader,
         onDetected : function(callback) {
             Events.subscribe("detected", callback);
         },
+        offDetected: function(callback) {
+            Events.unsubscribe("detected", callback);
+        },
         onProcessed: function(callback) {
             Events.subscribe("processed", callback);
+        },
+        offProcessed: function(callback) {
+            Events.unsubscribe("processed", callback);
         },
         setReaders: function(readers) {
             setReaders(readers);
@@ -489,10 +491,6 @@ function(Code128Reader,
                 }, true);
                 start();
             });
-        },
-        Reader: {
-          EANReader : EANReader,
-          Code128Reader : Code128Reader
         },
         ImageWrapper: ImageWrapper,
         ImageDebug: ImageDebug,

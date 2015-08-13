@@ -1,14 +1,36 @@
 $(function() {
     var App = {
         init: function() {
-            Quagga.init(this.state, function() {
+            var config = this.config[this.state.decoder.readers[0]] || this.config.default;
+            config = $.extend(true, {}, config, this.state);
+            Quagga.init(config, function() {
                 App.attachListeners();
                 Quagga.start();
             });
         },
         config: {
-            reader: "code_128",
-            length: 10
+            "default": {
+                inputStream: { name: "Test",
+                    type: "ImageStream",
+                    length: 10,
+                    size: 800
+                },
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true
+                }
+            },
+            "i2of5_reader": {
+                inputStream: {
+                    size: 800,
+                    type: "ImageStream",
+                    length: 5
+                },
+                locator: {
+                    patchSize: "small",
+                    halfSample: false
+                }
+            }
         },
         attachListeners: function() {
             var self = this;
@@ -58,6 +80,7 @@ $(function() {
 
             paths.forEach(function(path) {
                 var mappedValue;
+
                 if (typeof self._accessByPath(self.inputMapper, path) === "function") {
                     mappedValue = self._accessByPath(self.inputMapper, path)(value);
                 }
@@ -82,10 +105,8 @@ $(function() {
             }
         },
         state: {
-            inputStream: { name: "Test",
-                type: "ImageStream",
-                src: "../test/fixtures/code_128/",
-                length: 10
+            inputStream: {
+                src: "../test/fixtures/code_128/"
             },
             decoder : {
                 readers : ["code_128_reader"]

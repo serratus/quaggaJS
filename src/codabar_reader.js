@@ -36,7 +36,7 @@ define(
                 nextStart,
                 end;
 
-            self._fillCounters();
+            this._counters = self._fillCounters();
             start = self._findStart();
             if (!start) {
                 return null;
@@ -184,26 +184,6 @@ define(
                 pos += 8;
             }
             return true;
-        };
-
-        CodabarReader.prototype._fillCounters = function() {
-            var self = this,
-                counterPos = 0,
-                isWhite = true,
-                offset = self._nextUnset(self._row),
-                i;
-
-            self._counters.length = 0;
-            self._counters[counterPos] = 0;
-            for (i = offset; i < self._row.length; i++) {
-                if (self._row[i] ^ isWhite) {
-                    this._counters[counterPos]++;
-                } else {
-                    counterPos++;
-                    this._counters[counterPos] = 1;
-                    isWhite = !isWhite;
-                }
-            }
         };
 
         CodabarReader.prototype._patternToChar = function(pattern) {

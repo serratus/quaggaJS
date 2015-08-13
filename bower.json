@@ -1,9 +1,23 @@
 {
   "name": "quagga",
-  "version": "0.6.15",
+  "version": "0.6.14",
   "description": "An advanced barcode-scanner written in JavaScript",
-  "main": "lib/quagga.js",
-  "browser": "dist/quagga.js",
+  "main": "dist/quagga.js",
+  "ignore": [
+    "build",
+    "doc",
+    "spec",
+    "src",
+    "tasks",
+    "test",
+    ".gitignore",
+    ".npmignore",
+    "Gruntfile.js",
+    "karma-integration.conf.js",
+    "karma.conf.js",
+    "package.json",
+    "test-main.js"
+  ],
   "devDependencies": {
     "async": "^0.9.0",
     "grunt": "~0.4.5",
@@ -50,9 +64,5 @@
     "imageprocessing"
   ],
   "author": "Christoph Oberhofer <ch.oberhofer@gmail.com>",
-  "license": "MIT",
-  "dependencies": {
-    "get-pixels": "^3.2.2",
-    "gl-matrix": "^2.1.0"
-  }
+  "license": "MIT"
 }
