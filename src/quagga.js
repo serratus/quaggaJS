@@ -452,8 +452,14 @@ function(InputStream,
         onDetected : function(callback) {
             Events.subscribe("detected", callback);
         },
+        offDetected: function(callback) {
+            Events.unsubscribe("detected", callback);
+        },
         onProcessed: function(callback) {
             Events.subscribe("processed", callback);
+        },
+        offProcessed: function(callback) {
+            Events.unsubscribe("processed", callback);
         },
         setReaders: function(readers) {
             setReaders(readers);
