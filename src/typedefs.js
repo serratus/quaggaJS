@@ -19,3 +19,12 @@ if (typeof window !== 'undefined') {
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
     window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
 }
+Math.imul = Math.imul || function(a, b) {
+    var ah = (a >>> 16) & 0xffff,
+        al = a & 0xffff,
+        bh = (b >>> 16) & 0xffff,
+        bl = b & 0xffff;
+    // the shift by 0 fixes the sign on the high part
+    // the final |0 converts the unsigned value into a signed value
+    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
+};
