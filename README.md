@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-08-13)
+- [Changelog](#changelog) (2015-08-29)
 
 ## What is QuaggaJS?
 
@@ -34,10 +34,10 @@ be aligned with the viewport.
 
 In order to take full advantage of quaggaJS, the browser needs to support the
 `getUserMedia` API which is already implemented in recent versions of Firefox,
-Chrome and Opera. The API is also available on their mobile counterparts
-installed on Android. Safari and IE do not allow the access to the camera yet,
-neither on desktop, nor on mobile. You can check [caniuse][caniuse_getusermedia]
-for updates.
+Chrome, IE (Edge) and Opera. The API is also available on their mobile 
+counterparts installed on Android (except IE). Safari does not allow the access
+to the camera yet, neither on desktop, nor on mobile. You can check 
+[caniuse][caniuse_getusermedia] for updates.
 
 In cases where real-time decoding is not needed, or the platform does not
 support `getUserMedia` QuaggaJS is also capable of decoding image-files using
@@ -376,6 +376,10 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-08-29
+- Improvements
+  - Added support for Internet Explorer (only Edge+ supports `getUserMedia`)
 
 ### 2015-08-13
 - Improvements
