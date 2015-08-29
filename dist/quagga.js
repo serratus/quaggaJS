@@ -835,7 +835,15 @@ if (typeof window !== 'undefined') {
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
     window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
 }
-
+Math.imul = Math.imul || function(a, b) {
+    var ah = (a >>> 16) & 0xffff,
+        al = a & 0xffff,
+        bh = (b >>> 16) & 0xffff,
+        bl = b & 0xffff;
+    // the shift by 0 fixes the sign on the high part
+    // the final |0 converts the unsigned value into a signed value
+    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
+};
 define("typedefs", (function (global) {
     return function () {
         var ret, fn;
@@ -9084,10 +9092,10 @@ function(InputStream,
 
         blobURL = generateWorkerBlob();
         workerThread.worker = new Worker(blobURL);
-        URL.revokeObjectURL(blobURL);
 
         workerThread.worker.onmessage = function(e) {
             if (e.data.event === 'initialized') {
+                URL.revokeObjectURL(blobURL);
                 workerThread.busy = false;
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 console.log("Worker initialized");
@@ -9096,6 +9104,8 @@ function(InputStream,
                 workerThread.imageData = new Uint8Array(e.data.imageData);
                 workerThread.busy = false;
                 publishResult(e.data.result, workerThread.imageData);
+            } else if (e.data.event === 'error') {
+                console.log("Worker error: " + e.data.message);
             }
         };
 
@@ -9110,10 +9120,13 @@ function(InputStream,
 
     function workerInterface(factory) {
         if (factory) {
+            /* jshint ignore:start */
             var Quagga = factory();
             if (!Quagga) {
+                self.postMessage({'event': 'error', message: 'Quagga could not be created'});
                 return;
             }
+            /* jshint ignore:end */
         }
         /* jshint ignore:start */
         var imageWrapper;
