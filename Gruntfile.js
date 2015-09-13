@@ -50,7 +50,7 @@ module.exports = function(grunt) {
 
                     "paths" : {
                         "typedefs" : "typedefs",
-                        "gl-matrix": "../node_modules/gl-matrix/dist/gl-matrix"
+                        "gl-matrix": "../node_modules/gl-matrix/dist/gl-matrix-min"
                     }
                 }
             }
