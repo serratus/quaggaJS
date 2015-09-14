@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-08-29)
+- [Changelog](#changelog) (2015-09-15)
 
 ## What is QuaggaJS?
 
@@ -43,12 +43,12 @@ In cases where real-time decoding is not needed, or the platform does not
 support `getUserMedia` QuaggaJS is also capable of decoding image-files using
 the File API or other URL sources.
 
-## Getting Started
+## Installing
 
-You can simply include `dist/quagga.min.js` in your project and you are ready
-to go.
+QuaggaJS can be installed using __npm__, __bower__, or by including it with
+the __script__ tag.
 
-If you want to keep your project modular, you can also install QuaggaJS via npm:
+### NPM
 
 ```console
 > npm install quagga
@@ -57,11 +57,32 @@ If you want to keep your project modular, you can also install QuaggaJS via npm:
 And then import it as dependency in your project:
 
 ```javascript
-var quagga = require('quagga');
+var Quagga = require('quagga');
 ```
+
+Currently, the full functionality is only available through the browser. When
+using QuaggaJS within __node__, only file-based decoding is available. See the
+example for [node_examples](node-example).
+
+### Bower
+
+You can also install QuaggaJS through __bower__:
+
+```console
+> bower install quagga
+```
+
+### Script-Tag Anno 1998
+
+You can simply include `dist/quagga.min.js` in your project and you are ready
+to go.
+
+
+## Getting Started
 
 For starters, have a look at the [examples][github_examples] to get an idea
 where to go from here.
+
 
 ## <a name="Building">Building</a>
 
@@ -295,7 +316,39 @@ Quagga.decodeSingle({
     locate: true, // try to locate the barcode in the image
     src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
 }, function(result){
-    console.log(result);
+    if(result.codeResult) {
+        console.log("result", result.codeResult.code);
+    } else {
+        console.log("not detected");
+    }
+});
+```
+
+### <a name="node-example">Using node</a>
+
+The following example illustrates the use of QuaggaJS within a node
+environment. It's almost identical to the browser version with the difference
+that node does not support web-workers out of the box. Therefore the config
+property `numOfWorkers` must be explicitly set to `0`.
+
+```javascript
+var Quagga = require('quagga');
+
+Quagga.decodeSingle({
+    src: "image-abc-123.jpg",
+    numOfWorkers: 0,  // Needs to be 0 when used within node
+    inputStream: {
+        size: 800  // restrict input-size to be 800px in width (long-side)
+    },
+    decoder: {
+        readers: ["code_128_reader"] // List of active readers
+    },
+}, function(result) {
+    if(result.codeResult) {
+        console.log("result", result.codeResult.code);
+    } else {
+        console.log("not detected");
+    }
 });
 ```
 
@@ -376,6 +429,11 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-09-15
+- Features
+  - Added basic support for running QuaggaJS inside __node__ (see [example]
+  (#node-example))
 
 ### 2015-08-29
 - Improvements
