@@ -18,7 +18,6 @@ require.config({
     'array_helper': 'src/array_helper',
     'cv_utils': 'src/cv_utils',
     'typedefs': 'src/typedefs',
-    'glMatrixAddon': 'src/glMatrixAddon',
     'cluster': 'src/cluster',
     'camera_access': 'src/camera_access',
     'events': 'src/events',
@@ -47,6 +46,7 @@ require.config({
     'upc_e_reader': 'src/upc_e_reader',
     'upc_reader': 'src/upc_reader',
     'async': 'node_modules/async/lib/async',
+    'gl-matrix': 'node_modules/gl-matrix/dist/gl-matrix-min',
     'result_collector': 'src/result_collector',
     'i2of5_reader': 'src/i2of5_reader'
   },

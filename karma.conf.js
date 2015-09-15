@@ -4,9 +4,9 @@ module.exports = function(config) {
     frameworks: ['mocha', 'requirejs', 'chai', 'sinon', 'sinon-chai'],
     files: [
       'test-main.js',
-      'src/vendor/glMatrix.js',
       'src/typedefs.js',
       {pattern: 'node_modules/async/lib/async.js', included: false},
+      {pattern: 'node_modules/gl-matrix/dist/gl-matrix-min.js', included: false},
       {pattern: 'src/*.js', included: false},
       {pattern: 'spec/**/*.js', included: false},
       {pattern: 'test/**/*.*', included: false}

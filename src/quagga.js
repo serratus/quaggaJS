@@ -1,7 +1,5 @@
 /* jshint undef: true, unused: true, browser:true, devel: true, evil: true */
-/* global define, vec2 */
-
-
+/* global define */
 define([
         "input_stream",
         "image_wrapper",
@@ -13,6 +11,7 @@ define([
         "events",
         "camera_access",
         "image_debug",
+        "gl-matrix",
         "result_collector"],
 function(InputStream,
          ImageWrapper,
@@ -24,6 +23,7 @@ function(InputStream,
          Events,
          CameraAccess,
          ImageDebug,
+         glMatrix,
          ResultCollector) {
     "use strict";
     
@@ -45,6 +45,7 @@ function(InputStream,
         _decoder,
         _workerPool = [],
         _onUIThread = true,
+        vec2 = glMatrix.vec2,
         _resultCollector;
 
     function initializeData(imageWrapper) {
@@ -174,10 +175,10 @@ function(InputStream,
 
         console.log(_inputImageWrapper.size);
         _boxSize = [
-                vec2.create([0, 0]),
-                vec2.create([0, _inputImageWrapper.size.y]),
-                vec2.create([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
-                vec2.create([_inputImageWrapper.size.x, 0])
+                vec2.clone([0, 0]),
+                vec2.clone([0, _inputImageWrapper.size.y]),
+                vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
+                vec2.clone([_inputImageWrapper.size.x, 0])
             ];
         BarcodeLocator.init(_inputImageWrapper, _config.locator);
     }
@@ -187,10 +188,10 @@ function(InputStream,
             return BarcodeLocator.locate();
         } else {
             return [[
-                vec2.create(_boxSize[0]),
-                vec2.create(_boxSize[1]),
-                vec2.create(_boxSize[2]),
-                vec2.create(_boxSize[3])]];
+                vec2.clone(_boxSize[0]),
+                vec2.clone(_boxSize[1]),
+                vec2.clone(_boxSize[2]),
+                vec2.clone(_boxSize[3])]];
         }
     }
 
