@@ -62,7 +62,7 @@ var Quagga = require('quagga');
 
 Currently, the full functionality is only available through the browser. When
 using QuaggaJS within __node__, only file-based decoding is available. See the
-example for [node_examples](node-example).
+example for [node_examples](#node-example).
 
 ### Bower
 
@@ -433,6 +433,7 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 ### 2015-09-15
 Take a look at the release-notes ([0.7.0]
 (https://github.com/serratus/quaggaJS/releases/tag/v0.7.0))
+
 - Features
   - Added basic support for running QuaggaJS inside __node__ (see [example]
   (#node-example))
