@@ -431,6 +431,8 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 ## <a name="changelog">Changelog</a>
 
 ### 2015-09-15
+Take a look at the release-notes ([0.7.0]
+(https://github.com/serratus/quaggaJS/releases/tag/v0.7.0))
 - Features
   - Added basic support for running QuaggaJS inside __node__ (see [example]
   (#node-example))

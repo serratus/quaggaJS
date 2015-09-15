@@ -4,25 +4,16 @@ requirejs.config({
         "typedefs" : {
             "deps" : [],
             "exports" : "typedefs"
-        },
-        "glMatrix" : {
-            "deps" : ["typedefs"],
-            "exports" : "glMatrix"
-        },
-        "glMatrixAddon" : {
-            "deps" : ["glMatrix"],
-            "exports" : "glMatrixAddon"
         }
     },
 
     "paths" : {
         "typedefs" : "typedefs",
-        "glMatrix" : "vendor/glMatrix",
-        "glMatrixAddon" : "glMatrixAddon"
+        "gl-matrix": "../node_modules/gl-matrix/dist/gl-matrix-min"
     }
 });
 
-define(['quagga'], function(Quagga) {
+requirejs(['quagga'], function(Quagga) {
     var App = {
         init: function() {
             App.attachListeners();
@@ -116,13 +107,13 @@ define(['quagga'], function(Quagga) {
                 singleChannel: false
             },
             locator: {
-                patchSize: "large",
+                patchSize: "medium",
                 halfSample: true,
                 showCanvas: true
             },
             numOfWorkers: 0,
             decoder: {
-                readers: ["i2of5_reader"],
+                readers: ["code_128_reader"],
                 showFrequency: true,
                 showPattern: true
             },
