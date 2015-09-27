@@ -11,49 +11,8 @@ module.exports = function(grunt) {
                 configFile: 'karma-integration.conf.js'
             }
         },
-        uglify : {
-            options : {
-                banner : '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
-                preserveComments: 'some'
-            },
-            build : {
-                src : 'dist/<%= pkg.name %>.js',
-                dest : 'dist/<%= pkg.name %>.min.js'
-            }
-        },
         jshint : {
             all : ['Gruntfile.js', 'src/*.js']
-        },
-        requirejs : {
-            compile : {
-                options : {
-                    almond : true,
-                    wrap : {
-                        startFile : 'build/start.frag',
-                        endFile : 'build/end.frag'
-                    },
-                    "baseUrl" : "src",
-                    "name" : "quagga",
-                    "useStrict": true,
-                    "out" : "dist/quagga.js",
-                    "include" : ['quagga'],
-                    "optimize" : "none",
-                    "findNestedDependencies" : true,
-                    "skipSemiColonInsertion" : true,
-
-                    "shim" : {
-                        "typedefs" : {
-                            "deps" : [],
-                            "exports" : "typedefs"
-                        }
-                    },
-
-                    "paths" : {
-                        "typedefs" : "typedefs",
-                        "gl-matrix": "../node_modules/gl-matrix/dist/gl-matrix-min"
-                    }
-                }
-            }
         }
     });
 
@@ -73,4 +32,4 @@ module.exports = function(grunt) {
     grunt.registerTask('integrationtest', ['karma:integration']);
 
     grunt.registerTask('default', ['build']);
-}; 
+};
