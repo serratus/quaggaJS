@@ -32,7 +32,7 @@ BarcodeReader.prototype._matchPattern = function(counter, code) {
         }
         error += singleError;
     }
-    return error/modulo;
+    return error / modulo;
 };
 
 BarcodeReader.prototype._nextSet = function(line, offset) {
@@ -73,7 +73,7 @@ BarcodeReader.prototype._normalize = function(counter, modulo) {
             normalized.push(norm);
         }
     } else {
-        ratio = (sum + numOnes)/modulo;
+        ratio = (sum + numOnes) / modulo;
         for (i = 0; i < counter.length; i++) {
             norm = counter[i] / ratio;
             normalized.push(norm);
@@ -90,9 +90,9 @@ BarcodeReader.prototype._matchTrace = function(cmpCounter, epsilon) {
         isWhite = !self._row[offset],
         counterPos = 0,
         bestMatch = {
-            error : Number.MAX_VALUE,
-            code : -1,
-            start : 0
+            error: Number.MAX_VALUE,
+            code: -1,
+            start: 0
         },
         error;
 
@@ -207,14 +207,14 @@ Object.defineProperty(BarcodeReader.prototype, "FORMAT", {
 });
 
 BarcodeReader.DIRECTION = {
-    FORWARD : 1,
-    REVERSE : -1
+    FORWARD: 1,
+    REVERSE: -1
 };
 
 BarcodeReader.Exception = {
-    StartNotFoundException : "Start-Info was not found!",
-    CodeNotFoundException : "Code could not be found!",
-    PatternNotFoundException : "Pattern could not be found!"
+    StartNotFoundException: "Start-Info was not found!",
+    CodeNotFoundException: "Code could not be found!",
+    PatternNotFoundException: "Pattern could not be found!"
 };
 
 BarcodeReader.CONFIG_KEYS = {};

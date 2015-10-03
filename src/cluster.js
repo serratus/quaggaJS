@@ -3,11 +3,13 @@ import {vec2} from 'gl-matrix';
      * Creates a cluster for grouping similar orientations of datapoints
      */
 export default {
-    create : function(point, threshold) {
-        var points = [], center = {
-            rad : 0,
-            vec : vec2.clone([0, 0])
-        }, pointMap = {};
+    create: function(point, threshold) {
+        var points = [],
+            center = {
+                rad: 0,
+                vec: vec2.clone([0, 0])
+            },
+            pointMap = {};
 
         function init() {
             add(point);
@@ -31,13 +33,13 @@ export default {
         init();
 
         return {
-            add : function(point) {
+            add: function(point) {
                 if (!pointMap[point.id]) {
                     add(point);
                     updateCenter();
                 }
             },
-            fits : function(point) {
+            fits: function(point) {
                 // check cosine similarity to center-angle
                 var similarity = Math.abs(vec2.dot(point.point.vec, center.vec));
                 if (similarity > threshold) {
@@ -45,19 +47,19 @@ export default {
                 }
                 return false;
             },
-            getPoints : function() {
+            getPoints: function() {
                 return points;
             },
-            getCenter : function() {
+            getCenter: function() {
                 return center;
             }
         };
     },
-    createPoint : function(point, id, property) {
+    createPoint: function(point, id, property) {
         return {
-            rad : point[property],
-            point : point,
-            id : id
+            rad: point[property],
+            point: point,
+            id: id
         };
     }
 };

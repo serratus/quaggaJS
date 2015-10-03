@@ -4,9 +4,9 @@ import ImageWrapper from './image_wrapper';
 var Bresenham = {};
 
 var Slope = {
-    DIR : {
-        UP : 1,
-        DOWN : -1
+    DIR: {
+        UP: 1,
+        DOWN: -1
     }
 };
 /**
@@ -71,7 +71,7 @@ Bresenham.getBarcodeLine = function(imageWrapper, p1, p2) {
     y = y0;
     ystep = y0 < y1 ? 1 : -1;
     for ( x = x0; x < x1; x++) {
-        if(steep){
+        if (steep){
             read(y, x);
         } else {
             read(x, y);
@@ -84,9 +84,9 @@ Bresenham.getBarcodeLine = function(imageWrapper, p1, p2) {
     }
 
     return {
-        line : line,
-        min : min,
-        max : max
+        line: line,
+        min: min,
+        max: max
     };
 };
 
@@ -110,7 +110,6 @@ Bresenham.toOtsuBinaryLine = function(result) {
  * @param {Object} result {line, min, max}
  */
 Bresenham.toBinaryLine = function(result) {
-
     var min = result.min,
         max = result.max,
         line = result.line,
@@ -128,15 +127,15 @@ Bresenham.toBinaryLine = function(result) {
     // 1. find extrema
     currentDir = line[0] > center ? Slope.DIR.UP : Slope.DIR.DOWN;
     extrema.push({
-        pos : 0,
-        val : line[0]
+        pos: 0,
+        val: line[0]
     });
     for ( i = 0; i < line.length - 2; i++) {
         slope = (line[i + 1] - line[i]);
         slope2 = (line[i + 2] - line[i + 1]);
-        if ((slope + slope2) < rThreshold && line[i + 1] < (center*1.5)) {
+        if ((slope + slope2) < rThreshold && line[i + 1] < (center * 1.5)) {
             dir = Slope.DIR.DOWN;
-        } else if ((slope + slope2) > threshold && line[i + 1] > (center*0.5)) {
+        } else if ((slope + slope2) > threshold && line[i + 1] > (center * 0.5)) {
             dir = Slope.DIR.UP;
         } else {
             dir = currentDir;
@@ -144,15 +143,15 @@ Bresenham.toBinaryLine = function(result) {
 
         if (currentDir !== dir) {
             extrema.push({
-                pos : i,
-                val : line[i]
+                pos: i,
+                val: line[i]
             });
             currentDir = dir;
         }
     }
     extrema.push({
-        pos : line.length,
-        val : line[line.length - 1]
+        pos: line.length,
+        val: line[line.length - 1]
     });
 
     for ( j = extrema[0].pos; j < extrema[1].pos; j++) {
@@ -173,8 +172,8 @@ Bresenham.toBinaryLine = function(result) {
     }
 
     return {
-        line : line,
-        threshold : threshold
+        line: line,
+        threshold: threshold
     };
 };
 

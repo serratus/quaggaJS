@@ -7,8 +7,12 @@ function Code39Reader() {
 
 var properties = {
     ALPHABETH_STRING: {value: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%"},
-    ALPHABET: {value: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 45, 46, 32, 42, 36, 47, 43, 37]},
-    CHARACTER_ENCODINGS: {value: [0x034, 0x121, 0x061, 0x160, 0x031, 0x130, 0x070, 0x025, 0x124, 0x064, 0x109, 0x049, 0x148, 0x019, 0x118, 0x058, 0x00D, 0x10C, 0x04C, 0x01C, 0x103, 0x043, 0x142, 0x013, 0x112, 0x052, 0x007, 0x106, 0x046, 0x016, 0x181, 0x0C1, 0x1C0, 0x091, 0x190, 0x0D0, 0x085, 0x184, 0x0C4, 0x094, 0x0A8, 0x0A2, 0x08A, 0x02A]},
+    ALPHABET: {value: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78,
+        79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 45, 46, 32, 42, 36, 47, 43, 37]},
+    CHARACTER_ENCODINGS: {value: [0x034, 0x121, 0x061, 0x160, 0x031, 0x130, 0x070, 0x025, 0x124, 0x064, 0x109, 0x049,
+        0x148, 0x019, 0x118, 0x058, 0x00D, 0x10C, 0x04C, 0x01C, 0x103, 0x043, 0x142, 0x013, 0x112, 0x052, 0x007, 0x106,
+        0x046, 0x016, 0x181, 0x0C1, 0x1C0, 0x091, 0x190, 0x0D0, 0x085, 0x184, 0x0C4, 0x094, 0x0A8, 0x0A2, 0x08A, 0x02A
+    ]},
     ASTERISK: {value: 0x094},
     FORMAT: {value: "code_39", writeable: false}
 };
@@ -45,7 +49,7 @@ Code39Reader.prototype._toCounters = function(start, counter) {
 
 Code39Reader.prototype._decode = function() {
     var self = this,
-        counters = [0,0,0,0,0,0,0,0,0],
+        counters = [0, 0, 0, 0, 0, 0, 0, 0, 0],
         result = [],
         start = self._findStart(),
         decodedChar,
@@ -72,23 +76,23 @@ Code39Reader.prototype._decode = function() {
         lastStart = nextStart;
         nextStart += ArrayHelper.sum(counters);
         nextStart = self._nextSet(self._row, nextStart);
-    } while(decodedChar !== '*');
+    } while (decodedChar !== '*');
     result.pop();
 
     if (!result.length) {
         return null;
     }
 
-    if(!self._verifyTrailingWhitespace(lastStart, nextStart, counters)) {
+    if (!self._verifyTrailingWhitespace(lastStart, nextStart, counters)) {
         return null;
     }
 
     return {
-        code : result.join(""),
-        start : start.start,
-        end : nextStart,
-        startInfo : start,
-        decodedCodes : result
+        code: result.join(""),
+        start: start.start,
+        end: nextStart,
+        startInfo: start,
+        decodedCodes: result
     };
 };
 
@@ -136,7 +140,7 @@ Code39Reader.prototype._toPattern = function(counters) {
         pattern,
         i;
 
-    while(numWideBars > 3) {
+    while (numWideBars > 3) {
         maxNarrowWidth = self._findNextWidth(counters, maxNarrowWidth);
         numWideBars = 0;
         pattern = 0;
@@ -167,7 +171,7 @@ Code39Reader.prototype._findStart = function() {
     var self = this,
         offset = self._nextSet(self._row),
         patternStart = offset,
-        counter = [0,0,0,0,0,0,0,0,0],
+        counter = [0, 0, 0, 0, 0, 0, 0, 0, 0],
         counterPos = 0,
         isWhite = false,
         i,
@@ -179,7 +183,6 @@ Code39Reader.prototype._findStart = function() {
             counter[counterPos]++;
         } else {
             if (counterPos === counter.length - 1) {
-
                 // find start pattern
                 if (self._toPattern(counter) === self.ASTERISK) {
                     whiteSpaceMustStart = Math.floor(Math.max(0, patternStart - ((i - patternStart) / 4)));

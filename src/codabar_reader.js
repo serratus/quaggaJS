@@ -8,7 +8,8 @@ function CodabarReader() {
 var properties = {
     ALPHABETH_STRING: {value: "0123456789-$:/.+ABCD"},
     ALPHABET: {value: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 45, 36, 58, 47, 46, 43, 65, 66, 67, 68]},
-    CHARACTER_ENCODINGS: {value: [0x003, 0x006, 0x009, 0x060, 0x012, 0x042, 0x021, 0x024, 0x030, 0x048, 0x00c, 0x018, 0x045, 0x051, 0x054, 0x015, 0x01A, 0x029, 0x00B, 0x00E]},
+    CHARACTER_ENCODINGS: {value: [0x003, 0x006, 0x009, 0x060, 0x012, 0x042, 0x021, 0x024, 0x030, 0x048, 0x00c, 0x018,
+        0x045, 0x051, 0x054, 0x015, 0x01A, 0x029, 0x00B, 0x00E]},
     START_END: {value: [0x01A, 0x029, 0x00B, 0x00E]},
     MIN_ENCODED_CHARS: {value: 4},
     MAX_ACCEPTABLE: {value: 2.0},
@@ -49,7 +50,7 @@ CodabarReader.prototype._decode = function() {
         if (result.length > 1 && self._isStartEnd(pattern)) {
             break;
         }
-    } while(nextStart < self._counters.length);
+    } while (nextStart < self._counters.length);
 
     // verify end
     if ((result.length - 2) < self.MIN_ENCODED_CHARS || !self._isStartEnd(pattern)) {
@@ -69,17 +70,19 @@ CodabarReader.prototype._decode = function() {
     end = start.start + self._sumCounters(start.startCounter, nextStart - 8);
 
     return {
-        code : result.join(""),
-        start : start.start,
-        end : end,
-        startInfo : start,
-        decodedCodes : result
+        code: result.join(""),
+        start: start.start,
+        end: end,
+        startInfo: start,
+        decodedCodes: result
     };
 };
 
 CodabarReader.prototype._verifyWhitespace = function(startCounter, endCounter) {
-    if ((startCounter - 1 <= 0) || this._counters[startCounter-1] >= (this._calculatePatternLength(startCounter) / 2.0)) {
-        if ((endCounter + 8 >= this._counters.length) || this._counters[endCounter+7] >= (this._calculatePatternLength(endCounter) / 2.0)) {
+    if ((startCounter - 1 <= 0)
+            || this._counters[startCounter - 1] >= (this._calculatePatternLength(startCounter) / 2.0)) {
+        if ((endCounter + 8 >= this._counters.length)
+                || this._counters[endCounter + 7] >= (this._calculatePatternLength(endCounter) / 2.0)) {
             return true;
         }
     }
@@ -120,7 +123,7 @@ CodabarReader.prototype._thresholdResultPattern = function(result, startCounter)
         pattern = self._charToPattern(result[i]);
         for (j = 6; j >= 0; j--) {
             kind = (j & 1) === 2 ? categorization.bar : categorization.space;
-            cat = (pattern & 1)  === 1 ? kind.wide : kind.narrow;
+            cat = (pattern & 1) === 1 ? kind.wide : kind.narrow;
             cat.size += self._counters[pos + j];
             cat.counts++;
             pattern >>= 1;
@@ -130,7 +133,7 @@ CodabarReader.prototype._thresholdResultPattern = function(result, startCounter)
 
     ["space", "bar"].forEach(function(key) {
         var kind = categorization[key];
-        kind.wide.min = Math.floor((kind.narrow.size/kind.narrow.counts + kind.wide.size / kind.wide.counts) / 2);
+        kind.wide.min = Math.floor((kind.narrow.size / kind.narrow.counts + kind.wide.size / kind.wide.counts) / 2);
         kind.narrow.max = Math.ceil(kind.wide.min);
         kind.wide.max = Math.ceil((kind.wide.size * self.MAX_ACCEPTABLE + self.PADDING) / kind.wide.counts);
     });
@@ -166,7 +169,7 @@ CodabarReader.prototype._validateResult = function(result, startCounter) {
         pattern = self._charToPattern(result[i]);
         for (j = 6; j >= 0; j--) {
             kind = (j & 1) === 0 ? thresholds.bar : thresholds.space;
-            cat = (pattern & 1)  === 1 ? kind.wide : kind.narrow;
+            cat = (pattern & 1) === 1 ? kind.wide : kind.narrow;
             size = self._counters[pos + j];
             if (size < cat.min || size > cat.max) {
                 return false;

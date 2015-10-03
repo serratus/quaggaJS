@@ -1,5 +1,5 @@
 export default {
-    init : function(arr, val) {
+    init: function(arr, val) {
         var l = arr.length;
         while (l--) {
             arr[l] = val;
@@ -10,7 +10,7 @@ export default {
      * Shuffles the content of an array
      * @return {Array} the array itself shuffled
      */
-    shuffle : function(arr) {
+    shuffle: function(arr) {
         var i = arr.length - 1, j, x;
         for (i; i >= 0; i--) {
             j = Math.floor(Math.random() * i);
@@ -21,7 +21,7 @@ export default {
         return arr;
     },
 
-    toPointList : function(arr) {
+    toPointList: function(arr) {
         var i, j, row = [], rows = [];
         for ( i = 0; i < arr.length; i++) {
             row = [];
@@ -37,7 +37,7 @@ export default {
      * returns the elements which's score is bigger than the threshold
      * @return {Array} the reduced array
      */
-    threshold : function(arr, threshold, scoreFunc) {
+    threshold: function(arr, threshold, scoreFunc) {
         var i, queue = [];
         for ( i = 0; i < arr.length; i++) {
             if (scoreFunc.apply(arr, [arr[i]]) >= threshold) {
@@ -47,7 +47,7 @@ export default {
         return queue;
     },
 
-    maxIndex : function(arr) {
+    maxIndex: function(arr) {
         var i, max = 0;
         for ( i = 0; i < arr.length; i++) {
             if (arr[i] > arr[max]) {
@@ -57,7 +57,7 @@ export default {
         return max;
     },
 
-    max : function(arr) {
+    max: function(arr) {
         var i, max = 0;
         for ( i = 0; i < arr.length; i++) {
             if (arr[i] > max) {
@@ -71,7 +71,7 @@ export default {
         var length = arr.length,
             sum = 0;
 
-        while(length--) {
+        while (length--) {
             sum += arr[length];
         }
         return sum;

@@ -1,6 +1,3 @@
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define */
-
 import ImageWrapper from './image_wrapper';
 import CVUtils from './cv_utils';
 import Rasterizer from './rasterizer';
@@ -21,11 +18,11 @@ var _config,
     _binaryImageWrapper,
     _patchSize,
     _canvasContainer = {
-        ctx : {
-            binary : null
+        ctx: {
+            binary: null
         },
-        dom : {
-            binary : null
+        dom: {
+            binary: null
         }
     },
     _numPatches = {x: 0, y: 0},
@@ -40,8 +37,8 @@ function initBuffers() {
 
     if (_config.halfSample) {
         _currentImageWrapper = new ImageWrapper({
-            x : _inputImageWrapper.size.x / 2 | 0,
-            y : _inputImageWrapper.size.y / 2 | 0
+            x: _inputImageWrapper.size.x / 2 | 0,
+            y: _inputImageWrapper.size.y / 2 | 0
         });
     } else {
         _currentImageWrapper = _inputImageWrapper;
@@ -56,16 +53,19 @@ function initBuffers() {
 
     _labelImageWrapper = new ImageWrapper(_patchSize, undefined, Array, true);
 
-    skeletonImageData = new ArrayBuffer(64*1024);
-    _subImageWrapper = new ImageWrapper(_patchSize, new Uint8Array(skeletonImageData, 0, _patchSize.x * _patchSize.y));
-    _skelImageWrapper = new ImageWrapper(_patchSize, new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y), undefined, true);
+    skeletonImageData = new ArrayBuffer(64 * 1024);
+    _subImageWrapper = new ImageWrapper(_patchSize,
+        new Uint8Array(skeletonImageData, 0, _patchSize.x * _patchSize.y));
+    _skelImageWrapper = new ImageWrapper(_patchSize,
+        new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y),
+        undefined, true);
     _skeletonizer = skeletonizer(self, {
-        size : _patchSize.x
+        size: _patchSize.x
     }, skeletonImageData);
 
     _imageToPatchGrid = new ImageWrapper({
-        x : (_currentImageWrapper.size.x / _subImageWrapper.size.x) | 0,
-        y : (_currentImageWrapper.size.y / _subImageWrapper.size.y) | 0
+        x: (_currentImageWrapper.size.x / _subImageWrapper.size.x) | 0,
+        y: (_currentImageWrapper.size.y / _subImageWrapper.size.y) | 0
     }, undefined, Array, true);
     _patchGrid = new ImageWrapper(_imageToPatchGrid.size, undefined, undefined, true);
     _patchLabelGrid = new ImageWrapper(_imageToPatchGrid.size, undefined, Int32Array, true);
@@ -90,7 +90,18 @@ function initCanvas() {
  * @returns {Array} The minimal bounding box
  */
 function boxFromPatches(patches) {
-    var overAvg, i, j, patch, transMat, minx = _binaryImageWrapper.size.x, miny = _binaryImageWrapper.size.y, maxx = -_binaryImageWrapper.size.x, maxy = -_binaryImageWrapper.size.y, box, scale;
+    var overAvg,
+        i,
+        j,
+        patch,
+        transMat,
+        minx =
+        _binaryImageWrapper.size.x,
+        miny = _binaryImageWrapper.size.y,
+        maxx = -_binaryImageWrapper.size.x,
+        maxy = -_binaryImageWrapper.size.y,
+        box,
+        scale;
 
     // draw all patches which are to be taken into consideration
     overAvg = 0;
@@ -191,9 +202,8 @@ function findPatches() {
         rasterizer,
         rasterResult,
         patch;
-    for ( i = 0; i < _numPatches.x; i++) {
-        for ( j = 0; j < _numPatches.y; j++) {
-
+    for (i = 0; i < _numPatches.x; i++) {
+        for (j = 0; j < _numPatches.y; j++) {
             x = _subImageWrapper.size.x * i;
             y = _subImageWrapper.size.y * j;
 
@@ -207,7 +217,8 @@ function findPatches() {
             rasterResult = rasterizer.rasterize(0);
 
             if (_config.showLabels) {
-                _labelImageWrapper.overlay(_canvasContainer.dom.binary, Math.floor(360 / rasterResult.count), {x : x, y : y});
+                _labelImageWrapper.overlay(_canvasContainer.dom.binary, Math.floor(360 / rasterResult.count),
+                    {x: x, y: y});
             }
 
             // calculate moments from the skeletonized patch
@@ -221,7 +232,8 @@ function findPatches() {
     if (_config.showFoundPatches) {
         for ( i = 0; i < patchesFound.length; i++) {
             patch = patchesFound[i];
-            ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary, {color: "#99ff00", lineWidth: 2});
+            ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary,
+                {color: "#99ff00", lineWidth: 2});
         }
     }
 
@@ -251,8 +263,8 @@ function findBiggestConnectedAreas(maxLabel){
 
     labelHist = labelHist.map(function(val, idx) {
         return {
-            val : val,
-            label : idx + 1
+            val: val,
+            label: idx + 1
         };
     });
 
@@ -301,7 +313,8 @@ function findBoxes(topLabels, maxLabel) {
                     patch = patches[j];
                     hsv[0] = (topLabels[i].label / (maxLabel + 1)) * 360;
                     CVUtils.hsv2rgb(hsv, rgb);
-                    ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary, {color: "rgb(" + rgb.join(",") + ")", lineWidth: 2});
+                    ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary,
+                        {color: "rgb(" + rgb.join(",") + ")", lineWidth: 2});
                 }
             }
         }
@@ -349,12 +362,11 @@ function skeletonize(x, y) {
 function describePatch(moments, patchPos, x, y) {
     var k,
         avg,
-        sum = 0,
         eligibleMoments = [],
         matchingMoments,
         patch,
         patchesFound = [],
-        minComponentWeight = Math.ceil(_patchSize.x/3);
+        minComponentWeight = Math.ceil(_patchSize.x / 3);
 
     if (moments.length >= 2) {
         // only collect moments which's area covers at least minComponentWeight pixels.
@@ -366,7 +378,6 @@ function describePatch(moments, patchPos, x, y) {
 
         // if at least 2 moments are found which have at least minComponentWeights covered
         if (eligibleMoments.length >= 2) {
-            sum = eligibleMoments.length;
             matchingMoments = similarMoments(eligibleMoments);
             avg = 0;
             // determine the similarity of the moments
@@ -376,18 +387,25 @@ function describePatch(moments, patchPos, x, y) {
 
             // Only two of the moments are allowed not to fit into the equation
             // add the patch to the set
-            if (matchingMoments.length > 1 && matchingMoments.length >= (eligibleMoments.length / 4) * 3 && matchingMoments.length > moments.length / 4) {
+            if (matchingMoments.length > 1
+                    && matchingMoments.length >= (eligibleMoments.length / 4) * 3
+                    && matchingMoments.length > moments.length / 4) {
                 avg /= matchingMoments.length;
                 patch = {
-                    index : patchPos[1] * _numPatches.x + patchPos[0],
-                    pos : {
-                        x : x,
-                        y : y
+                    index: patchPos[1] * _numPatches.x + patchPos[0],
+                    pos: {
+                        x: x,
+                        y: y
                     },
-                    box : [vec2.clone([x, y]), vec2.clone([x + _subImageWrapper.size.x, y]), vec2.clone([x + _subImageWrapper.size.x, y + _subImageWrapper.size.y]), vec2.clone([x, y + _subImageWrapper.size.y])],
-                    moments : matchingMoments,
-                    rad : avg,
-                    vec : vec2.clone([Math.cos(avg), Math.sin(avg)])
+                    box: [
+                        vec2.clone([x, y]),
+                        vec2.clone([x + _subImageWrapper.size.x, y]),
+                        vec2.clone([x + _subImageWrapper.size.x, y + _subImageWrapper.size.y]),
+                        vec2.clone([x, y + _subImageWrapper.size.y])
+                    ],
+                    moments: matchingMoments,
+                    rad: avg,
+                    vec: vec2.clone([Math.cos(avg), Math.sin(avg)])
                 };
                 patchesFound.push(patch);
             }
@@ -420,10 +438,17 @@ function rasterizeAngularSimilarity(patchesFound) {
     }
 
     function trace(currentIdx) {
-        var x, y, currentPatch, patch, idx, dir, current = {
-            x : currentIdx % _patchLabelGrid.size.x,
-            y : (currentIdx / _patchLabelGrid.size.x) | 0
-        }, similarity;
+        var x,
+            y,
+            currentPatch,
+            patch,
+            idx,
+            dir,
+            current = {
+                x: currentIdx % _patchLabelGrid.size.x,
+                y: (currentIdx / _patchLabelGrid.size.x) | 0
+            },
+            similarity;
 
         if (currentIdx < _patchLabelGrid.data.length) {
             currentPatch = _imageToPatchGrid.data[currentIdx];
@@ -477,7 +502,8 @@ function rasterizeAngularSimilarity(patchesFound) {
                 patch = _imageToPatchGrid.data[j];
                 hsv[0] = (_patchLabelGrid.data[j] / (label + 1)) * 360;
                 CVUtils.hsv2rgb(hsv, rgb);
-                ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary, {color: "rgb(" + rgb.join(",") + ")", lineWidth: 2});
+                ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary,
+                    {color: "rgb(" + rgb.join(",") + ")", lineWidth: 2});
             }
         }
     }
@@ -486,7 +512,7 @@ function rasterizeAngularSimilarity(patchesFound) {
 }
 
 export default {
-    init : function(inputImageWrapper, config) {
+    init: function(inputImageWrapper, config) {
         _config = config;
         _inputImageWrapper = inputImageWrapper;
 
@@ -494,10 +520,10 @@ export default {
         initCanvas();
     },
 
-    locate : function() {
+    locate: function() {
         var patchesFound,
-        topLabels,
-        boxes;
+            topLabels,
+            boxes;
 
         if (_config.halfSample) {
             CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
@@ -551,8 +577,8 @@ export default {
         patchSize = CVUtils.calculatePatchSize(config.patchSize, size);
         console.log("Patch-Size: " + JSON.stringify(patchSize));
 
-        inputStream.setWidth(Math.floor(Math.floor(size.x/patchSize.x)*(1/halfSample)*patchSize.x));
-        inputStream.setHeight(Math.floor(Math.floor(size.y/patchSize.y)*(1/halfSample)*patchSize.y));
+        inputStream.setWidth(Math.floor(Math.floor(size.x / patchSize.x) * (1 / halfSample) * patchSize.x));
+        inputStream.setHeight(Math.floor(Math.floor(size.y / patchSize.y) * (1 / halfSample) * patchSize.y));
 
         if ((inputStream.getWidth() % patchSize.x) === 0 && (inputStream.getHeight() % patchSize.y) === 0) {
             return true;

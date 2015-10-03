@@ -22,17 +22,17 @@ var readers = {
     i2of5_reader: I2of5Reader
 };
 export default {
-    create : function(config, inputImageWrapper) {
+    create: function(config, inputImageWrapper) {
         var _canvas = {
-            ctx : {
-                    frequency : null,
-                    pattern : null,
-                    overlay : null
+                ctx: {
+                    frequency: null,
+                    pattern: null,
+                    overlay: null
                 },
-                dom : {
-                    frequency : null,
-                    pattern : null,
-                    overlay : null
+                dom: {
+                    frequency: null,
+                    pattern: null,
+                    overlay: null
                 }
             },
             _barcodeReaders = [];
@@ -48,7 +48,7 @@ export default {
                 if (!_canvas.dom.frequency) {
                     _canvas.dom.frequency = document.createElement("canvas");
                     _canvas.dom.frequency.className = "frequency";
-                    if($debug) {
+                    if ($debug) {
                         $debug.appendChild(_canvas.dom.frequency);
                     }
                 }
@@ -58,7 +58,7 @@ export default {
                 if (!_canvas.dom.pattern) {
                     _canvas.dom.pattern = document.createElement("canvas");
                     _canvas.dom.pattern.className = "patternBuffer";
-                    if($debug) {
+                    if ($debug) {
                         $debug.appendChild(_canvas.dom.pattern);
                     }
                 }
@@ -82,10 +82,11 @@ export default {
                 } else if (typeof readerConfig === 'string') {
                     reader = readerConfig;
                 }
+                console.log("Before registering reader: ", reader);
                 _barcodeReaders.push(new readers[reader](config));
             });
             console.log("Registered Readers: " + _barcodeReaders
-                .map(function(reader) {return JSON.stringify({format: reader.FORMAT, config: reader.config});})
+                .map((reader) => JSON.stringify({format: reader.FORMAT, config: reader.config}))
                 .join(', '));
         }
 
@@ -93,11 +94,11 @@ export default {
             if (typeof document !== 'undefined') {
                 var i,
                     vis = [{
-                        node : _canvas.dom.frequency,
-                        prop : config.showFrequency
+                        node: _canvas.dom.frequency,
+                        prop: config.showFrequency
                     }, {
-                        node : _canvas.dom.pattern,
-                        prop : config.showPattern
+                        node: _canvas.dom.pattern,
+                        prop: config.showPattern
                     }];
 
                 for (i = 0; i < vis.length; i++) {
@@ -118,8 +119,8 @@ export default {
         function getExtendedLine(line, angle, ext) {
             function extendLine(amount) {
                 var extension = {
-                    y : amount * Math.sin(angle),
-                    x : amount * Math.cos(angle)
+                    y: amount * Math.sin(angle),
+                    x: amount * Math.cos(angle)
                 };
 
                 line[0].y -= extension.y;
@@ -130,8 +131,9 @@ export default {
 
             // check if inside image
             extendLine(ext);
-            while (ext > 1 && (!inputImageWrapper.inImageWithBorder(line[0], 0) || !inputImageWrapper.inImageWithBorder(line[1], 0))) {
-                ext -= Math.ceil(ext/2);
+            while (ext > 1 && (!inputImageWrapper.inImageWithBorder(line[0], 0)
+                    || !inputImageWrapper.inImageWithBorder(line[1], 0))) {
+                ext -= Math.ceil(ext / 2);
                 extendLine(-ext);
             }
             return line;
@@ -139,11 +141,11 @@ export default {
 
         function getLine(box) {
             return [{
-                x : (box[1][0] - box[0][0]) / 2 + box[0][0],
-                y : (box[1][1] - box[0][1]) / 2 + box[0][1]
+                x: (box[1][0] - box[0][0]) / 2 + box[0][0],
+                y: (box[1][1] - box[0][1]) / 2 + box[0][1]
             }, {
-                x : (box[3][0] - box[2][0]) / 2 + box[2][0],
-                y : (box[3][1] - box[2][1]) / 2 + box[2][1]
+                x: (box[3][0] - box[2][0]) / 2 + box[2][0],
+                y: (box[3][1] - box[2][1]) / 2 + box[2][1]
             }];
         }
 
@@ -195,8 +197,8 @@ export default {
                 // move line perpendicular to angle
                 dir = sideLength / slices * i * (i % 2 === 0 ? -1 : 1);
                 extension = {
-                    y : dir * xdir,
-                    x : dir * ydir
+                    y: dir * xdir,
+                    x: dir * ydir
                 };
                 line[0].y += extension.x;
                 line[0].x -= extension.y;
@@ -234,17 +236,17 @@ export default {
             line = getLine(box);
             lineLength = getLineLength(line);
             lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-            line = getExtendedLine(line, lineAngle, Math.floor(lineLength*0.1));
-            if(line === null){
+            line = getExtendedLine(line, lineAngle, Math.floor(lineLength * 0.1));
+            if (line === null){
                 return null;
             }
 
             result = tryDecode(line);
-            if(result === null) {
+            if (result === null) {
                 result = tryDecodeBruteForce(box, line, lineAngle);
             }
 
-            if(result === null) {
+            if (result === null) {
                 return null;
             }
 
@@ -262,10 +264,10 @@ export default {
         }
 
         return {
-            decodeFromBoundingBox : function(box) {
+            decodeFromBoundingBox: function(box) {
                 return decodeFromBoundingBox(box);
             },
-            decodeFromBoundingBoxes : function(boxes) {
+            decodeFromBoundingBoxes: function(boxes) {
                 var i, result;
                 for ( i = 0; i < boxes.length; i++) {
                     result = decodeFromBoundingBox(boxes[i]);

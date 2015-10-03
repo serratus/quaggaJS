@@ -5,16 +5,16 @@ function Code128Reader() {
 }
 
 var properties = {
-    CODE_SHIFT : {value: 98},
-    CODE_C : {value: 99},
-    CODE_B : {value: 100},
-    CODE_A : {value: 101},
-    START_CODE_A : {value: 103},
-    START_CODE_B : {value: 104},
-    START_CODE_C : {value: 105},
-    STOP_CODE : {value: 106},
-    MODULO : {value: 11},
-    CODE_PATTERN : {value: [
+    CODE_SHIFT: {value: 98},
+    CODE_C: {value: 99},
+    CODE_B: {value: 100},
+    CODE_A: {value: 101},
+    START_CODE_A: {value: 103},
+    START_CODE_B: {value: 104},
+    START_CODE_C: {value: 105},
+    STOP_CODE: {value: 106},
+    MODULO: {value: 11},
+    CODE_PATTERN: {value: [
         [2, 1, 2, 2, 2, 2],
         [2, 2, 2, 1, 2, 2],
         [2, 2, 2, 2, 2, 1],
@@ -139,10 +139,10 @@ Code128Reader.prototype._decodeCode = function(start) {
         isWhite = !self._row[offset],
         counterPos = 0,
         bestMatch = {
-            error : Number.MAX_VALUE,
-            code : -1,
-            start : start,
-            end : start
+            error: Number.MAX_VALUE,
+            code: -1,
+            start: start,
+            end: start
         },
         code,
         error,
@@ -183,10 +183,10 @@ Code128Reader.prototype._findStart = function() {
         isWhite = false,
         counterPos = 0,
         bestMatch = {
-            error : Number.MAX_VALUE,
-            code : -1,
-            start : 0,
-            end : 0
+            error: Number.MAX_VALUE,
+            code: -1,
+            start: 0,
+            end: 0
         },
         code,
         error,
@@ -247,20 +247,19 @@ Code128Reader.prototype._decode = function() {
         rawResult = [],
         decodedCodes = [],
         shiftNext = false,
-        unshift,
-        lastCharacterWasPrintable;
+        unshift;
 
     if (startInfo === null) {
         return null;
     }
     code = {
-        code : startInfo.code,
-        start : startInfo.start,
-        end : startInfo.end
+        code: startInfo.code,
+        start: startInfo.start,
+        end: startInfo.end
     };
     decodedCodes.push(code);
     checksum = code.code;
-    switch(code.code) {
+    switch (code.code) {
     case self.START_CODE_A:
         codeset = self.CODE_A;
         break;
@@ -286,7 +285,7 @@ Code128Reader.prototype._decode = function() {
             }
             decodedCodes.push(code);
 
-            switch(codeset) {
+            switch (codeset) {
             case self.CODE_A:
                 if (code.code < 64) {
                     result.push(String.fromCharCode(32 + code.code));
@@ -314,9 +313,6 @@ Code128Reader.prototype._decode = function() {
                 if (code.code < 96) {
                     result.push(String.fromCharCode(32 + code.code));
                 } else {
-                    if (code.code != self.STOP_CODE) {
-                        lastCharacterWasPrintable = false;
-                    }
                     switch (code.code) {
                     case self.CODE_SHIFT:
                         shiftNext = true;
@@ -355,7 +351,7 @@ Code128Reader.prototype._decode = function() {
             done = true;
         }
         if (unshift) {
-            codeset = codeset == self.CODE_A ? self.CODE_B : self.CODE_A;
+            codeset = codeset === self.CODE_A ? self.CODE_B : self.CODE_A;
         }
     }
 
@@ -365,14 +361,14 @@ Code128Reader.prototype._decode = function() {
 
     // find end bar
     code.end = self._nextUnset(self._row, code.end);
-    if(!self._verifyTrailingWhitespace(code)){
+    if (!self._verifyTrailingWhitespace(code)){
         return null;
     }
 
     // checksum
     // Does not work correctly yet!!! startcode - endcode?
     checksum -= multiplier * rawResult[rawResult.length - 1];
-    if (checksum % 103 != rawResult[rawResult.length - 1]) {
+    if (checksum % 103 !== rawResult[rawResult.length - 1]) {
         return null;
     }
 
@@ -383,16 +379,14 @@ Code128Reader.prototype._decode = function() {
     // remove last code from result (checksum)
     result.splice(result.length - 1, 1);
 
-
-
     return {
-        code : result.join(""),
-        start : startInfo.start,
-        end : code.end,
-        codeset : codeset,
-        startInfo : startInfo,
-        decodedCodes : decodedCodes,
-        endInfo : code
+        code: result.join(""),
+        start: startInfo.start,
+        end: code.end,
+        codeset: codeset,
+        startInfo: startInfo,
+        decodedCodes: decodedCodes,
+        endInfo: code
     };
 };
 

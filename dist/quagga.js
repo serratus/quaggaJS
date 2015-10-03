@@ -589,12 +589,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	'use strict';
 	
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
-	});
 	if (typeof window !== 'undefined') {
 	    window.requestAnimFrame = (function () {
-	        return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function ( /* function FrameRequestCallback */callback, /* DOMElement Element */element) {
+	        return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function ( /* function FrameRequestCallback */callback) {
 	            window.setTimeout(callback, 1000 / 60);
 	        };
 	    })();
@@ -611,9 +608,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // the final |0 converts the unsigned value into a signed value
 	    return al * bl + (ah * bl + al * bh << 16 >>> 0) | 0;
 	};
-	
-	exports['default'] = {};
-	module.exports = exports['default'];
 
 /***/ },
 /* 3 */
@@ -7456,9 +7450,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* jshint undef: true, unused: true, browser:true, devel: true */
-	/* global define */
-	
 	'use strict';
 	
 	Object.defineProperty(exports, '__esModule', {
@@ -7692,7 +7683,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        patch;
 	    for (i = 0; i < _numPatches.x; i++) {
 	        for (j = 0; j < _numPatches.y; j++) {
-	
 	            x = _subImageWrapper.size.x * i;
 	            y = _subImageWrapper.size.y * j;
 	
@@ -7849,7 +7839,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function describePatch(moments, patchPos, x, y) {
 	    var k,
 	        avg,
-	        sum = 0,
 	        eligibleMoments = [],
 	        matchingMoments,
 	        patch,
@@ -7866,7 +7855,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	        // if at least 2 moments are found which have at least minComponentWeights covered
 	        if (eligibleMoments.length >= 2) {
-	            sum = eligibleMoments.length;
 	            matchingMoments = similarMoments(eligibleMoments);
 	            avg = 0;
 	            // determine the similarity of the moments
@@ -8775,6 +8763,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                } else if (typeof readerConfig === 'string') {
 	                    reader = readerConfig;
 	                }
+	                console.log("Before registering reader: ", reader);
 	                _barcodeReaders.push(new readers[reader](config));
 	            });
 	            console.log("Registered Readers: " + _barcodeReaders.map(function (reader) {
@@ -9104,7 +9093,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} result {line, min, max}
 	 */
 	Bresenham.toBinaryLine = function (result) {
-	
 	    var min = result.min,
 	        max = result.max,
 	        line = result.line,
@@ -9364,8 +9352,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        rawResult = [],
 	        decodedCodes = [],
 	        shiftNext = false,
-	        unshift,
-	        lastCharacterWasPrintable;
+	        unshift;
 	
 	    if (startInfo === null) {
 	        return null;
@@ -9431,9 +9418,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    if (code.code < 96) {
 	                        result.push(String.fromCharCode(32 + code.code));
 	                    } else {
-	                        if (code.code != self.STOP_CODE) {
-	                            lastCharacterWasPrintable = false;
-	                        }
 	                        switch (code.code) {
 	                            case self.CODE_SHIFT:
 	                                shiftNext = true;
@@ -9472,7 +9456,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            done = true;
 	        }
 	        if (unshift) {
-	            codeset = codeset == self.CODE_A ? self.CODE_B : self.CODE_A;
+	            codeset = codeset === self.CODE_A ? self.CODE_B : self.CODE_A;
 	        }
 	    }
 	
@@ -9489,7 +9473,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // checksum
 	    // Does not work correctly yet!!! startcode - endcode?
 	    checksum -= multiplier * rawResult[rawResult.length - 1];
-	    if (checksum % 103 != rawResult[rawResult.length - 1]) {
+	    if (checksum % 103 !== rawResult[rawResult.length - 1]) {
 	        return null;
 	    }
 	
@@ -10281,7 +10265,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            counter[counterPos]++;
 	        } else {
 	            if (counterPos === counter.length - 1) {
-	
 	                // find start pattern
 	                if (self._toPattern(counter) === self.ASTERISK) {
 	                    whiteSpaceMustStart = Math.floor(Math.max(0, patternStart - (i - patternStart) / 4));
@@ -10708,15 +10691,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	UPCReader.prototype._decode = function () {
 	    var result = _ean_reader2["default"].prototype._decode.call(this);
 	
+	    console.log("result", result);
 	    if (result && result.code && result.code.length === 13 && result.code.charAt(0) === "0") {
-	
 	        result.code = result.code.substring(1);
 	        return result;
 	    }
 	    return null;
 	};
 	
-	exports["default"] = _ean_reader2["default"];
+	exports["default"] = UPCReader;
 	module.exports = exports["default"];
 
 /***/ },
@@ -12901,9 +12884,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (typeof MediaStreamTrack !== 'undefined' && typeof MediaStreamTrack.getSources !== 'undefined') {
 	        MediaStreamTrack.getSources(function (sourceInfos) {
 	            var videoSourceId;
-	            for (var i = 0; i != sourceInfos.length; ++i) {
+	            for (var i = 0; i < sourceInfos.length; ++i) {
 	                var sourceInfo = sourceInfos[i];
-	                if (sourceInfo.kind == "video" && sourceInfo.facing == videoConstraints.facing) {
+	                if (sourceInfo.kind === "video" && sourceInfo.facing === videoConstraints.facing) {
 	                    videoSourceId = sourceInfo.id;
 	                }
 	            }

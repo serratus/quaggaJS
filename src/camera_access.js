@@ -83,9 +83,9 @@ function normalizeConstraints(config, cb) {
     if ( typeof MediaStreamTrack !== 'undefined' && typeof MediaStreamTrack.getSources !== 'undefined') {
         MediaStreamTrack.getSources(function(sourceInfos) {
             var videoSourceId;
-            for (var i = 0; i != sourceInfos.length; ++i) {
+            for (var i = 0; i < sourceInfos.length; ++i) {
                 var sourceInfo = sourceInfos[i];
-                if (sourceInfo.kind == "video" && sourceInfo.facing == videoConstraints.facing) {
+                if (sourceInfo.kind === "video" && sourceInfo.facing === videoConstraints.facing) {
                     videoSourceId = sourceInfo.id;
                 }
             }
@@ -126,10 +126,10 @@ function request(video, videoConstraints, callback) {
 }
 
 export default {
-    request : function(video, constraints, callback) {
+    request: function(video, constraints, callback) {
         request(video, constraints, callback);
     },
-    release : function() {
+    release: function() {
         var tracks = streamRef && streamRef.getVideoTracks();
         if (tracks.length) {
             tracks[0].stop();
