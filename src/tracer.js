@@ -2,8 +2,8 @@
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 var Tracer = {
-    searchDirections : [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
-    create : function(imageWrapper, labelWrapper) {
+    searchDirections: [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]],
+    create: function(imageWrapper, labelWrapper) {
         var imageData = imageWrapper.data,
             labelData = labelWrapper.data,
             searchDirections = this.searchDirections,
@@ -36,11 +36,11 @@ var Tracer = {
 
         function vertex2D(x, y, dir) {
             return {
-                dir : dir,
-                x : x,
-                y : y,
-                next : null,
-                prev : null
+                dir: dir,
+                x: x,
+                y: y,
+                next: null,
+                prev: null
             };
         }
 
@@ -50,9 +50,9 @@ var Tracer = {
                 P,
                 ldir,
                 current = {
-                    cx : sx,
-                    cy : sy,
-                    dir : 0
+                    cx: sx,
+                    cy: sy,
+                    dir: 0
                 };
 
             if (trace(current, color, label, edgelabel)) {
@@ -67,7 +67,7 @@ var Tracer = {
                 do {
                     current.dir = (current.dir + 6) % 8;
                     trace(current, color, label, edgelabel);
-                    if (ldir != current.dir) {
+                    if (ldir !== current.dir) {
                         Cv.dir = current.dir;
                         P = vertex2D(current.cx, current.cy, 0);
                         P.prev = Cv;
@@ -80,7 +80,7 @@ var Tracer = {
                         Cv.y = current.cy;
                     }
                     ldir = current.dir;
-                } while(current.cx != sx || current.cy != sy);
+                } while (current.cx !== sx || current.cy !== sy);
                 Fv.prev = Cv.prev;
                 Cv.prev.next = Fv;
             }
@@ -88,10 +88,10 @@ var Tracer = {
         }
 
         return {
-            trace : function(current, color, label, edgelabel) {
+            trace: function(current, color, label, edgelabel) {
                 return trace(current, color, label, edgelabel);
             },
-            contourTracing : function(sy, sx, label, color, edgelabel) {
+            contourTracing: function(sy, sx, label, color, edgelabel) {
                 return contourTracing(sy, sx, label, color, edgelabel);
             }
         };

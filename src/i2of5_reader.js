@@ -15,7 +15,7 @@ function getDefaulConfig() {
     var config = {};
 
     Object.keys(I2of5Reader.CONFIG_KEYS).forEach(function(key) {
-        config[key] = I2of5Reader.CONFIG_KEYS[key]['default'];
+        config[key] = I2of5Reader.CONFIG_KEYS[key].default;
     });
     return config;
 }
@@ -23,26 +23,26 @@ function getDefaulConfig() {
 var N = 1,
     W = 3,
     properties = {
-    MODULO : {value: 10},
-    START_PATTERN : {value: [N*2.5, N*2.5, N*2.5, N*2.5]},
-    STOP_PATTERN : {value: [N*2, N*2, W*2]},
-    CODE_PATTERN : {value: [
-        [N, N, W, W, N],
-        [W, N, N, N, W],
-        [N, W, N, N, W],
-        [W, W, N, N, N],
-        [N, N, W, N, W],
-        [W, N, W, N, N],
-        [N, W, W, N, N],
-        [N, N, N, W, W],
-        [W, N, N, W, N],
-        [N, W, N, W, N]
-    ]},
-    SINGLE_CODE_ERROR: {value: 0.78, writable: true},
-    AVG_CODE_ERROR: {value: 0.38, writable: true},
-    MAX_CORRECTION_FACTOR: {value: 5},
-    FORMAT: {value: "i2of5"}
-};
+        MODULO: {value: 10},
+        START_PATTERN: {value: [N * 2.5, N * 2.5, N * 2.5, N * 2.5]},
+        STOP_PATTERN: {value: [N * 2, N * 2, W * 2]},
+        CODE_PATTERN: {value: [
+            [N, N, W, W, N],
+            [W, N, N, N, W],
+            [N, W, N, N, W],
+            [W, W, N, N, N],
+            [N, N, W, N, W],
+            [W, N, W, N, N],
+            [N, W, W, N, N],
+            [N, N, N, W, W],
+            [W, N, N, W, N],
+            [N, W, N, W, N]
+        ]},
+        SINGLE_CODE_ERROR: {value: 0.78, writable: true},
+        AVG_CODE_ERROR: {value: 0.38, writable: true},
+        MAX_CORRECTION_FACTOR: {value: 5},
+        FORMAT: {value: "i2of5"}
+    };
 
 I2of5Reader.prototype = Object.create(BarcodeReader.prototype, properties);
 I2of5Reader.prototype.constructor = I2of5Reader;
@@ -79,10 +79,10 @@ I2of5Reader.prototype._findPattern = function(pattern, offset, isWhite, tryHarde
         i,
         counterPos = 0,
         bestMatch = {
-            error : Number.MAX_VALUE,
-            code : -1,
-            start : 0,
-            end : 0
+            error: Number.MAX_VALUE,
+            code: -1,
+            start: 0,
+            end: 0
         },
         error,
         j,
@@ -148,13 +148,13 @@ I2of5Reader.prototype._findStart = function() {
         startInfo,
         narrowBarWidth = 1;
 
-    while(!startInfo) {
+    while (!startInfo) {
         startInfo = self._findPattern(self.START_PATTERN, offset, false, true);
         if (!startInfo) {
             return null;
         }
         narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / 4);
-        leadingWhitespaceStart = startInfo.start - narrowBarWidth*10;
+        leadingWhitespaceStart = startInfo.start - narrowBarWidth * 10;
         if (leadingWhitespaceStart >= 0) {
             if (self._matchRange(leadingWhitespaceStart, startInfo.start, 0)) {
                 return startInfo;
@@ -224,10 +224,10 @@ I2of5Reader.prototype._decodeCode = function(counter) {
         epsilon = self.AVG_CODE_ERROR,
         code,
         bestMatch = {
-            error : Number.MAX_VALUE,
-            code : -1,
-            start : 0,
-            end : 0
+            error: Number.MAX_VALUE,
+            code: -1,
+            start: 0,
+            end: 0
         };
 
     for ( j = 0; j < counter.length; j++) {
@@ -259,8 +259,8 @@ I2of5Reader.prototype._decodePayload = function(counters, result, decodedCodes) 
 
     while (pos < counterLength) {
         for (i = 0; i < 5; i++) {
-            counterPair[0][i] = counters[pos]*this.barSpaceRatio[0];
-            counterPair[1][i] = counters[pos + 1]*this.barSpaceRatio[1];
+            counterPair[0][i] = counters[pos] * this.barSpaceRatio[0];
+            counterPair[1][i] = counters[pos + 1] * this.barSpaceRatio[1];
             pos += 2;
         }
         codes = self._decodePair(counterPair);
@@ -314,11 +314,11 @@ I2of5Reader.prototype._decode = function() {
 
     decodedCodes.push(endInfo);
     return {
-        code : result.join(""),
-        start : startInfo.start,
-        end : endInfo.end,
-        startInfo : startInfo,
-        decodedCodes : decodedCodes
+        code: result.join(""),
+        start: startInfo.start,
+        end: endInfo.end,
+        startInfo: startInfo,
+        decodedCodes: decodedCodes
     };
 };
 

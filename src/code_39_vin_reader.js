@@ -23,7 +23,7 @@ Code39VINReader.prototype._decode = function() {
     var code = result.code;
 
     if (!code) {
-        return;
+        return null;
     }
 
     code = code.replace(patterns.IOQ, '');

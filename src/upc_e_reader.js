@@ -5,7 +5,7 @@ function UPCEReader() {
 }
 
 var properties = {
-    CODE_FREQUENCY : {value: [
+    CODE_FREQUENCY: {value: [
         [ 56, 52, 50, 49, 44, 38, 35, 42, 41, 37 ],
         [7, 11, 13, 14, 19, 25, 28, 21, 22, 26]]},
     STOP_PATTERN: { value: [1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7, 1 / 6 * 7]},
@@ -40,13 +40,12 @@ UPCEReader.prototype._decodePayload = function(code, result, decodedCodes) {
 };
 
 UPCEReader.prototype._determineParity = function(codeFrequency, result) {
-    var self =this,
-        i,
+    var i,
         nrSystem;
 
-    for (nrSystem = 0; nrSystem < self.CODE_FREQUENCY.length; nrSystem++){
-        for ( i = 0; i < self.CODE_FREQUENCY[nrSystem].length; i++) {
-            if (codeFrequency === self.CODE_FREQUENCY[nrSystem][i]) {
+    for (nrSystem = 0; nrSystem < this.CODE_FREQUENCY.length; nrSystem++){
+        for ( i = 0; i < this.CODE_FREQUENCY[nrSystem].length; i++) {
+            if (codeFrequency === this.CODE_FREQUENCY[nrSystem][i]) {
                 result.unshift(nrSystem);
                 result.push(i);
                 return true;
@@ -66,8 +65,8 @@ UPCEReader.prototype._convertToUPCA = function(result) {
             .concat(result.slice(3, 6));
     } else if (lastDigit === 3) {
         upca = upca.concat(result.slice(1, 4))
-            .concat([0 ,0, 0, 0, 0])
-            .concat(result.slice(4,6));
+            .concat([0, 0, 0, 0, 0])
+            .concat(result.slice(4, 6));
     } else if (lastDigit === 4) {
         upca = upca.concat(result.slice(1, 5))
             .concat([0, 0, 0, 0, 0, result[5]]);
@@ -93,7 +92,7 @@ UPCEReader.prototype._verifyTrailingWhitespace = function(endInfo) {
     var self = this,
         trailingWhitespaceEnd;
 
-    trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start)/2);
+    trailingWhitespaceEnd = endInfo.end + ((endInfo.end - endInfo.start) / 2);
     if (trailingWhitespaceEnd < self._row.length) {
         if (self._matchRange(endInfo.end, trailingWhitespaceEnd, 0)) {
             return endInfo;

@@ -4,26 +4,26 @@ import Tracer from './tracer';
  * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
  */
 var Rasterizer = {
-    createContour2D : function() {
+    createContour2D: function() {
         return {
-            dir : null,
-            index : null,
-            firstVertex : null,
-            insideContours : null,
-            nextpeer : null,
-            prevpeer : null
+            dir: null,
+            index: null,
+            firstVertex: null,
+            insideContours: null,
+            nextpeer: null,
+            prevpeer: null
         };
     },
-    CONTOUR_DIR : {
-        CW_DIR : 0,
-        CCW_DIR : 1,
-        UNKNOWN_DIR : 2
+    CONTOUR_DIR: {
+        CW_DIR: 0,
+        CCW_DIR: 1,
+        UNKNOWN_DIR: 2
     },
-    DIR : {
-        OUTSIDE_EDGE : -32767,
-        INSIDE_EDGE : -32766
+    DIR: {
+        OUTSIDE_EDGE: -32767,
+        INSIDE_EDGE: -32766
     },
-    create : function(imageWrapper, labelWrapper) {
+    create: function(imageWrapper, labelWrapper) {
         var imageData = imageWrapper.data,
             labelData = labelWrapper.data,
             width = imageWrapper.size.x,
@@ -31,7 +31,7 @@ var Rasterizer = {
             tracer = Tracer.create(imageWrapper, labelWrapper);
 
         return {
-            rasterize : function(depthlabel) {
+            rasterize: function(depthlabel) {
                 var color,
                     bc,
                     lc,
@@ -81,7 +81,8 @@ var Rasterizer = {
                                         cc = p;
                                     }
                                 } else {
-                                    vertex = tracer.contourTracing(cy, cx, Rasterizer.DIR.INSIDE_EDGE, color, labelindex);
+                                    vertex = tracer
+                                        .contourTracing(cy, cx, Rasterizer.DIR.INSIDE_EDGE, color, labelindex);
                                     if (vertex !== null) {
                                         p = Rasterizer.createContour2D();
                                         p.firstVertex = vertex;
@@ -108,7 +109,8 @@ var Rasterizer = {
                             } else {
                                 labelData[pos] = labelindex;
                             }
-                        } else if (labelData[pos] === Rasterizer.DIR.OUTSIDE_EDGE || labelData[pos] === Rasterizer.DIR.INSIDE_EDGE) {
+                        } else if (labelData[pos] === Rasterizer.DIR.OUTSIDE_EDGE
+                                || labelData[pos] === Rasterizer.DIR.INSIDE_EDGE) {
                             labelindex = 0;
                             if (labelData[pos] === Rasterizer.DIR.INSIDE_EDGE) {
                                 bc = imageData[pos];
@@ -127,12 +129,12 @@ var Rasterizer = {
                     sc = sc.nextpeer;
                 }
                 return {
-                    cc : cc,
-                    count : connectedCount
+                    cc: cc,
+                    count: connectedCount
                 };
             },
             debug: {
-                drawContour : function(canvas, firstContour) {
+                drawContour: function(canvas, firstContour) {
                     var ctx = canvas.getContext("2d"),
                         pq = firstContour,
                         iq,
@@ -163,7 +165,7 @@ var Rasterizer = {
                             }
                         }
 
-                        switch(q.dir) {
+                        switch (q.dir) {
                         case Rasterizer.CONTOUR_DIR.CW_DIR:
                             ctx.strokeStyle = "red";
                             break;
@@ -181,7 +183,7 @@ var Rasterizer = {
                         do {
                             p = p.next;
                             ctx.lineTo(p.x, p.y);
-                        } while(p !== q.firstVertex);
+                        } while (p !== q.firstVertex);
                         ctx.stroke();
                     }
                 }

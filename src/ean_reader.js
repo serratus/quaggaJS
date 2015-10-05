@@ -5,13 +5,13 @@ function EANReader(opts) {
 }
 
 var properties = {
-    CODE_L_START : {value: 0},
-    MODULO : {value: 7},
-    CODE_G_START : {value: 10},
-    START_PATTERN : {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
-    STOP_PATTERN : {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
-    MIDDLE_PATTERN : {value: [1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7]},
-    CODE_PATTERN : {value: [
+    CODE_L_START: {value: 0},
+    MODULO: {value: 7},
+    CODE_G_START: {value: 10},
+    START_PATTERN: {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
+    STOP_PATTERN: {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
+    MIDDLE_PATTERN: {value: [1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7]},
+    CODE_PATTERN: {value: [
         [3, 2, 1, 1],
         [2, 2, 2, 1],
         [2, 1, 2, 2],
@@ -33,7 +33,7 @@ var properties = {
         [3, 1, 2, 1],
         [2, 1, 1, 3]
     ]},
-    CODE_FREQUENCY : {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
+    CODE_FREQUENCY: {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
     SINGLE_CODE_ERROR: {value: 0.67},
     AVG_CODE_ERROR: {value: 0.27},
     FORMAT: {value: "ean_13", writeable: false}
@@ -50,10 +50,10 @@ EANReader.prototype._decodeCode = function(start, coderange) {
         isWhite = !self._row[offset],
         counterPos = 0,
         bestMatch = {
-            error : Number.MAX_VALUE,
-            code : -1,
-            start : start,
-            end : start
+            error: Number.MAX_VALUE,
+            code: -1,
+            start: start,
+            end: start
         },
         code,
         error,
@@ -99,10 +99,10 @@ EANReader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder,
         i,
         counterPos = 0,
         bestMatch = {
-            error : Number.MAX_VALUE,
-            code : -1,
-            start : 0,
-            end : 0
+            error: Number.MAX_VALUE,
+            code: -1,
+            start: 0,
+            end: 0
         },
         error,
         j,
@@ -175,7 +175,7 @@ EANReader.prototype._findStart = function() {
         offset = self._nextSet(self._row),
         startInfo;
 
-    while(!startInfo) {
+    while (!startInfo) {
         startInfo = self._findPattern(self.START_PATTERN, offset);
         if (!startInfo) {
             return null;
@@ -280,9 +280,9 @@ EANReader.prototype._decode = function() {
         return null;
     }
     code = {
-        code : startInfo.code,
-        start : startInfo.start,
-        end : startInfo.end
+        code: startInfo.code,
+        start: startInfo.start,
+        end: startInfo.end
     };
     decodedCodes.push(code);
     code = self._decodePayload(code, result, decodedCodes);
@@ -302,12 +302,12 @@ EANReader.prototype._decode = function() {
     }
 
     return {
-        code : result.join(""),
-        start : startInfo.start,
-        end : code.end,
-        codeset : "",
-        startInfo : startInfo,
-        decodedCodes : decodedCodes
+        code: result.join(""),
+        start: startInfo.start,
+        end: code.end,
+        codeset: "",
+        startInfo: startInfo,
+        decodedCodes: decodedCodes
     };
 };
 

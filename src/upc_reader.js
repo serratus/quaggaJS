@@ -14,7 +14,6 @@ UPCReader.prototype.constructor = UPCReader;
 UPCReader.prototype._decode = function() {
     var result = EANReader.prototype._decode.call(this);
 
-    console.log("result", result);
     if (result && result.code && result.code.length === 13 && result.code.charAt(0) === "0") {
         result.code = result.code.substring(1);
         return result;

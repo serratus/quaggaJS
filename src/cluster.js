@@ -16,9 +16,9 @@ export default {
             updateCenter();
         }
 
-        function add(point) {
-            pointMap[point.id] = point;
-            points.push(point);
+        function add(pointToAdd) {
+            pointMap[pointToAdd.id] = pointToAdd;
+            points.push(pointToAdd);
         }
 
         function updateCenter() {
@@ -33,15 +33,15 @@ export default {
         init();
 
         return {
-            add: function(point) {
-                if (!pointMap[point.id]) {
-                    add(point);
+            add: function(pointToAdd) {
+                if (!pointMap[pointToAdd.id]) {
+                    add(pointToAdd);
                     updateCenter();
                 }
             },
-            fits: function(point) {
+            fits: function(otherPoint) {
                 // check cosine similarity to center-angle
-                var similarity = Math.abs(vec2.dot(point.point.vec, center.vec));
+                var similarity = Math.abs(vec2.dot(otherPoint.point.vec, center.vec));
                 if (similarity > threshold) {
                     return true;
                 }
@@ -55,10 +55,10 @@ export default {
             }
         };
     },
-    createPoint: function(point, id, property) {
+    createPoint: function(newPoint, id, property) {
         return {
-            rad: point[property],
-            point: point,
+            rad: newPoint[property],
+            point: newPoint,
             id: id
         };
     }

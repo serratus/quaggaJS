@@ -1,10 +1,10 @@
-export default function() {
+export default (function() {
     var events = {};
 
     function getEvent(eventName) {
         if (!events[eventName]) {
             events[eventName] = {
-                subscribers : []
+                subscribers: []
             };
         }
         return events[eventName];
@@ -29,8 +29,8 @@ export default function() {
 
         if ( typeof callback === "function") {
             subscription = {
-                callback : callback,
-                async : async
+                callback: callback,
+                async: async
             };
         } else {
             subscription = callback;
@@ -43,10 +43,10 @@ export default function() {
     }
 
     return {
-        subscribe : function(event, callback, async) {
+        subscribe: function(event, callback, async) {
             return subscribe(event, callback, async);
         },
-        publish : function(eventName, data) {
+        publish: function(eventName, data) {
             var event = getEvent(eventName),
                 subscribers = event.subscribers;
 
@@ -79,4 +79,4 @@ export default function() {
             }
         }
     };
-}();
+})();

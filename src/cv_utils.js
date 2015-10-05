@@ -1,5 +1,5 @@
 import Cluster2 from './cluster';
-import ArrayHelper from  './array_helper';
+import ArrayHelper from './array_helper';
 import {vec2, vec3} from 'gl-matrix';
 
 var CVUtils = {};
@@ -11,15 +11,15 @@ var CVUtils = {};
  */
 CVUtils.imageRef = function(x, y) {
     var that = {
-        x : x,
-        y : y,
-        toVec2 : function() {
+        x: x,
+        y: y,
+        toVec2: function() {
             return vec2.clone([this.x, this.y]);
         },
-        toVec3 : function() {
+        toVec3: function() {
             return vec3.clone([this.x, this.y, 1]);
         },
-        round : function() {
+        round: function() {
             this.x = this.x > 0.0 ? Math.floor(this.x + 0.5) : Math.floor(this.x - 0.5);
             this.y = this.y > 0.0 ? Math.floor(this.y + 0.5) : Math.floor(this.y - 0.5);
             return this;
@@ -65,7 +65,8 @@ CVUtils.computeIntegralImage2 = function(imageWrapper, integralWrapper) {
         posC = y * width;
         posD = (y - 1) * width;
         for ( x = 1; x < width; x++) {
-            integralImageData[posA] += imageData[posA] + integralImageData[posB] + integralImageData[posC] - integralImageData[posD];
+            integralImageData[posA] +=
+                imageData[posA] + integralImageData[posB] + integralImageData[posC] - integralImageData[posD];
             posA++;
             posB++;
             posC++;
@@ -133,7 +134,7 @@ CVUtils.sharpenLine = function(line) {
     for (i = 1; i < length - 1; i++) {
         right = line[i + 1];
         //  -1 4 -1 kernel
-        line[i-1] = (((center * 2) - left - right)) & 255;
+        line[i - 1] = (((center * 2) - left - right)) & 255;
         left = center;
         center = right;
     }
@@ -247,12 +248,12 @@ CVUtils.cluster = function(points, threshold, property) {
         property = "rad";
     }
 
-    function addToCluster(point) {
+    function addToCluster(newPoint) {
         var found = false;
         for ( k = 0; k < clusters.length; k++) {
             cluster = clusters[k];
-            if (cluster.fits(point)) {
-                cluster.add(point);
+            if (cluster.fits(newPoint)) {
+                cluster.add(newPoint);
                 found = true;
             }
         }
@@ -266,20 +267,21 @@ CVUtils.cluster = function(points, threshold, property) {
             clusters.push(Cluster2.create(point, threshold));
         }
     }
-
     return clusters;
-
 };
 
 CVUtils.Tracer = {
-    trace : function(points, vec) {
+    trace: function(points, vec) {
         var iteration, maxIterations = 10, top = [], result = [], centerPos = 0, currentPos = 0;
 
         function trace(idx, forward) {
             var from, to, toIdx, predictedPos, thresholdX = 1, thresholdY = Math.abs(vec[1] / 10), found = false;
 
             function match(pos, predicted) {
-                if (pos.x > (predicted.x - thresholdX) && pos.x < (predicted.x + thresholdX) && pos.y > (predicted.y - thresholdY) && pos.y < (predicted.y + thresholdY)) {
+                if (pos.x > (predicted.x - thresholdX)
+                        && pos.x < (predicted.x + thresholdX)
+                        && pos.y > (predicted.y - thresholdY)
+                        && pos.y < (predicted.y + thresholdY)) {
                     return true;
                 } else {
                     return false;
@@ -292,13 +294,13 @@ CVUtils.Tracer = {
             from = points[idx];
             if (forward) {
                 predictedPos = {
-                    x : from.x + vec[0],
-                    y : from.y + vec[1]
+                    x: from.x + vec[0],
+                    y: from.y + vec[1]
                 };
             } else {
                 predictedPos = {
-                    x : from.x - vec[0],
-                    y : from.y - vec[1]
+                    x: from.x - vec[0],
+                    y: from.y - vec[1]
                 };
             }
 
@@ -334,9 +336,7 @@ CVUtils.Tracer = {
                 result = top;
             }
         }
-
         return result;
-
     }
 };
 
@@ -344,7 +344,17 @@ CVUtils.DILATE = 1;
 CVUtils.ERODE = 2;
 
 CVUtils.dilate = function(inImageWrapper, outImageWrapper) {
-    var v, u, inImageData = inImageWrapper.data, outImageData = outImageWrapper.data, height = inImageWrapper.size.y, width = inImageWrapper.size.x, sum, yStart1, yStart2, xStart1, xStart2;
+    var v,
+        u,
+        inImageData = inImageWrapper.data,
+        outImageData = outImageWrapper.data,
+        height = inImageWrapper.size.y,
+        width = inImageWrapper.size.x,
+        sum,
+        yStart1,
+        yStart2,
+        xStart1,
+        xStart2;
 
     for ( v = 1; v < height - 1; v++) {
         for ( u = 1; u < width - 1; u++) {
@@ -352,17 +362,26 @@ CVUtils.dilate = function(inImageWrapper, outImageWrapper) {
             yStart2 = v + 1;
             xStart1 = u - 1;
             xStart2 = u + 1;
-            sum = inImageData[yStart1 * width + xStart1]/* +   inImageData[yStart1*width+u] */ + inImageData[yStart1 * width + xStart2] +
-            /* inImageData[v*width+xStart1]  + */
-            inImageData[v * width + u] + /* inImageData[v*width+xStart2] +*/
-            inImageData[yStart2 * width + xStart1]/* +   inImageData[yStart2*width+u]*/ + inImageData[yStart2 * width + xStart2];
+            sum = inImageData[yStart1 * width + xStart1] + inImageData[yStart1 * width + xStart2] +
+            inImageData[v * width + u] +
+            inImageData[yStart2 * width + xStart1] + inImageData[yStart2 * width + xStart2];
             outImageData[v * width + u] = sum > 0 ? 1 : 0;
         }
     }
 };
 
 CVUtils.erode = function(inImageWrapper, outImageWrapper) {
-    var v, u, inImageData = inImageWrapper.data, outImageData = outImageWrapper.data, height = inImageWrapper.size.y, width = inImageWrapper.size.x, sum, yStart1, yStart2, xStart1, xStart2;
+    var v,
+        u,
+        inImageData = inImageWrapper.data,
+        outImageData = outImageWrapper.data,
+        height = inImageWrapper.size.y,
+        width = inImageWrapper.size.x,
+        sum,
+        yStart1,
+        yStart2,
+        xStart1,
+        xStart2;
 
     for ( v = 1; v < height - 1; v++) {
         for ( u = 1; u < width - 1; u++) {
@@ -370,10 +389,9 @@ CVUtils.erode = function(inImageWrapper, outImageWrapper) {
             yStart2 = v + 1;
             xStart1 = u - 1;
             xStart2 = u + 1;
-            sum = inImageData[yStart1 * width + xStart1]/* +   inImageData[yStart1*width+u] */ + inImageData[yStart1 * width + xStart2] +
-            /* inImageData[v*width+xStart1]  + */
-            inImageData[v * width + u] + /* inImageData[v*width+xStart2] +*/
-            inImageData[yStart2 * width + xStart1]/* +   inImageData[yStart2*width+u]*/ + inImageData[yStart2 * width + xStart2];
+            sum = inImageData[yStart1 * width + xStart1] + inImageData[yStart1 * width + xStart2] +
+            inImageData[v * width + u] +
+            inImageData[yStart2 * width + xStart1] + inImageData[yStart2 * width + xStart2];
             outImageData[v * width + u] = sum === 5 ? 1 : 0;
         }
     }
@@ -383,7 +401,10 @@ CVUtils.subtract = function(aImageWrapper, bImageWrapper, resultImageWrapper) {
     if (!resultImageWrapper) {
         resultImageWrapper = aImageWrapper;
     }
-    var length = aImageWrapper.data.length, aImageData = aImageWrapper.data, bImageData = bImageWrapper.data, cImageData = resultImageWrapper.data;
+    var length = aImageWrapper.data.length,
+        aImageData = aImageWrapper.data,
+        bImageData = bImageWrapper.data,
+        cImageData = resultImageWrapper.data;
 
     while (length--) {
         cImageData[length] = aImageData[length] - bImageData[length];
@@ -394,7 +415,10 @@ CVUtils.bitwiseOr = function(aImageWrapper, bImageWrapper, resultImageWrapper) {
     if (!resultImageWrapper) {
         resultImageWrapper = aImageWrapper;
     }
-    var length = aImageWrapper.data.length, aImageData = aImageWrapper.data, bImageData = bImageWrapper.data, cImageData = resultImageWrapper.data;
+    var length = aImageWrapper.data.length,
+        aImageData = aImageWrapper.data,
+        bImageData = bImageWrapper.data,
+        cImageData = resultImageWrapper.data;
 
     while (length--) {
         cImageData[length] = aImageData[length] || bImageData[length];
@@ -415,8 +439,8 @@ CVUtils.topGeneric = function(list, top, scoreFunc) {
 
     for ( i = 0; i < top; i++) {
         queue[i] = {
-            score : 0,
-            item : null
+            score: 0,
+            item: null
         };
     }
 
@@ -461,7 +485,19 @@ CVUtils.grayAndHalfSampleFromCanvasData = function(canvasData, size, outArray) {
 
     while (bottomRowIdx < endIdx) {
         for ( i = 0; i < outWidth; i++) {
-            outArray[outImgIdx] = Math.floor(((0.299 * canvasData[topRowIdx * 4 + 0] + 0.587 * canvasData[topRowIdx * 4 + 1] + 0.114 * canvasData[topRowIdx * 4 + 2]) + (0.299 * canvasData[(topRowIdx + 1) * 4 + 0] + 0.587 * canvasData[(topRowIdx + 1) * 4 + 1] + 0.114 * canvasData[(topRowIdx + 1) * 4 + 2]) + (0.299 * canvasData[(bottomRowIdx) * 4 + 0] + 0.587 * canvasData[(bottomRowIdx) * 4 + 1] + 0.114 * canvasData[(bottomRowIdx) * 4 + 2]) + (0.299 * canvasData[(bottomRowIdx + 1) * 4 + 0] + 0.587 * canvasData[(bottomRowIdx + 1) * 4 + 1] + 0.114 * canvasData[(bottomRowIdx + 1) * 4 + 2])) / 4);
+            outArray[outImgIdx] = Math.floor((
+                (0.299 * canvasData[topRowIdx * 4 + 0] +
+                 0.587 * canvasData[topRowIdx * 4 + 1] +
+                 0.114 * canvasData[topRowIdx * 4 + 2]) +
+                (0.299 * canvasData[(topRowIdx + 1) * 4 + 0] +
+                 0.587 * canvasData[(topRowIdx + 1) * 4 + 1] +
+                 0.114 * canvasData[(topRowIdx + 1) * 4 + 2]) +
+                (0.299 * canvasData[(bottomRowIdx) * 4 + 0] +
+                 0.587 * canvasData[(bottomRowIdx) * 4 + 1] +
+                 0.114 * canvasData[(bottomRowIdx) * 4 + 2]) +
+                (0.299 * canvasData[(bottomRowIdx + 1) * 4 + 0] +
+                 0.587 * canvasData[(bottomRowIdx + 1) * 4 + 1] +
+                 0.114 * canvasData[(bottomRowIdx + 1) * 4 + 2])) / 4);
             outImgIdx++;
             topRowIdx = topRowIdx + 2;
             bottomRowIdx = bottomRowIdx + 2;
@@ -469,7 +505,6 @@ CVUtils.grayAndHalfSampleFromCanvasData = function(canvasData, size, outArray) {
         topRowIdx = topRowIdx + inWidth;
         bottomRowIdx = bottomRowIdx + inWidth;
     }
-
 };
 
 CVUtils.computeGray = function(imageData, outArray, config) {
@@ -483,14 +518,16 @@ CVUtils.computeGray = function(imageData, outArray, config) {
         }
     } else {
         for (i = 0; i < l; i++) {
-            outArray[i] = Math.floor(0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+            outArray[i] = Math.floor(
+                0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
         }
     }
 };
 
 CVUtils.loadImageArray = function(src, callback, canvas) {
-    if (!canvas)
+    if (!canvas) {
         canvas = document.createElement('canvas');
+    }
     var img = new Image();
     img.callback = callback;
     img.onload = function() {
@@ -503,8 +540,8 @@ CVUtils.loadImageArray = function(src, callback, canvas) {
         var data = ctx.getImageData(0, 0, this.width, this.height).data;
         CVUtils.computeGray(data, array);
         this.callback(array, {
-            x : this.width,
-            y : this.height
+            x: this.width,
+            y: this.height
         }, this);
     };
     img.src = src;
@@ -525,7 +562,8 @@ CVUtils.halfSample = function(inImgWrapper, outImgWrapper) {
     var outImgIdx = 0;
     while (bottomRowIdx < endIdx) {
         for (var i = 0; i < outWidth; i++) {
-            outImg[outImgIdx] = Math.floor((inImg[topRowIdx] + inImg[topRowIdx + 1] + inImg[bottomRowIdx] + inImg[bottomRowIdx + 1]) / 4);
+            outImg[outImgIdx] = Math.floor(
+                (inImg[topRowIdx] + inImg[topRowIdx + 1] + inImg[bottomRowIdx] + inImg[bottomRowIdx + 1]) / 4);
             outImgIdx++;
             topRowIdx = topRowIdx + 2;
             bottomRowIdx = bottomRowIdx + 2;
@@ -536,7 +574,16 @@ CVUtils.halfSample = function(inImgWrapper, outImgWrapper) {
 };
 
 CVUtils.hsv2rgb = function(hsv, rgb) {
-    var h = hsv[0], s = hsv[1], v = hsv[2], c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c, r = 0, g = 0, b = 0;
+    var h = hsv[0],
+        s = hsv[1],
+        v = hsv[2],
+        c = v * s,
+        x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+        m = v - c,
+        r = 0,
+        g = 0,
+        b = 0;
+
     rgb = rgb || [0, 0, 0];
 
     if (h < 60) {
@@ -572,8 +619,8 @@ CVUtils._computeDivisors = function(n) {
     for (i = 1; i < Math.sqrt(n) + 1; i++) {
         if (n % i === 0) {
             divisors.push(i);
-            if (i !== n/i) {
-                largeDivisors.unshift(Math.floor(n/i));
+            if (i !== n / i) {
+                largeDivisors.unshift(Math.floor(n / i));
             }
         }
     }
@@ -614,25 +661,25 @@ CVUtils.calculatePatchSize = function(patchSize, imgSize) {
         },
         nrOfPatchesIdx = nrOfPatchesMap[patchSize] || nrOfPatchesMap.medium,
         nrOfPatches = nrOfPatchesList[nrOfPatchesIdx],
-        desiredPatchSize = Math.floor(wideSide/nrOfPatches),
+        desiredPatchSize = Math.floor(wideSide / nrOfPatches),
         optimalPatchSize;
 
     function findPatchSizeForDivisors(divisors) {
         var i = 0,
-            found = divisors[Math.floor(divisors.length/2)];
+            found = divisors[Math.floor(divisors.length / 2)];
 
-        while(i < (divisors.length - 1) && divisors[i] < desiredPatchSize) {
+        while (i < (divisors.length - 1) && divisors[i] < desiredPatchSize) {
             i++;
         }
         if (i > 0) {
-            if (Math.abs(divisors[i] - desiredPatchSize) > Math.abs(divisors[i-1] - desiredPatchSize)) {
-                found = divisors[i-1];
+            if (Math.abs(divisors[i] - desiredPatchSize) > Math.abs(divisors[i - 1] - desiredPatchSize)) {
+                found = divisors[i - 1];
             } else {
                 found = divisors[i];
             }
         }
-        if (desiredPatchSize / found < nrOfPatchesList[nrOfPatchesIdx+1] / nrOfPatchesList[nrOfPatchesIdx] &&
-            desiredPatchSize / found > nrOfPatchesList[nrOfPatchesIdx-1]/nrOfPatchesList[nrOfPatchesIdx] ) {
+        if (desiredPatchSize / found < nrOfPatchesList[nrOfPatchesIdx + 1] / nrOfPatchesList[nrOfPatchesIdx] &&
+            desiredPatchSize / found > nrOfPatchesList[nrOfPatchesIdx - 1] / nrOfPatchesList[nrOfPatchesIdx] ) {
             return {x: found, y: found};
         }
         return null;
@@ -650,9 +697,9 @@ CVUtils.calculatePatchSize = function(patchSize, imgSize) {
 
 CVUtils._parseCSSDimensionValues = function(value) {
     var dimension = {
-            value: parseFloat(value),
-            unit: value.indexOf("%") === value.length-1 ? "%" : "%"
-        };
+        value: parseFloat(value),
+        unit: value.indexOf("%") === value.length - 1 ? "%" : "%"
+    };
 
     return dimension;
 };

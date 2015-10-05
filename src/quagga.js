@@ -1,15 +1,15 @@
-import TypeDefs from './typedefs';
+import TypeDefs from './typedefs'; // eslint-disable-line no-unused-vars
 import InputStream from './input_stream';
-import  ImageWrapper from './image_wrapper';
-import  BarcodeLocator from './barcode_locator';
-import  BarcodeDecoder from './barcode_decoder';
-import  FrameGrabber from './frame_grabber';
-import  Config from './config';
-import  Events from './events';
-import  CameraAccess from './camera_access';
-import  ImageDebug from './image_debug';
-import  {vec2} from 'gl-matrix';
-import  ResultCollector from './result_collector';
+import ImageWrapper from './image_wrapper';
+import BarcodeLocator from './barcode_locator';
+import BarcodeDecoder from './barcode_decoder';
+import FrameGrabber from './frame_grabber';
+import Config from './config';
+import Events from './events';
+import CameraAccess from './camera_access';
+import ImageDebug from './image_debug';
+import {vec2} from 'gl-matrix';
+import ResultCollector from './result_collector';
 
 const merge = require('lodash/object/merge');
 
@@ -17,13 +17,13 @@ var _inputStream,
     _framegrabber,
     _stopped,
     _canvasContainer = {
-        ctx : {
-            image : null,
-            overlay : null
+        ctx: {
+            image: null,
+            overlay: null
         },
-        dom : {
-            image : null,
-            overlay : null
+        dom: {
+            image: null,
+            overlay: null
         }
     },
     _inputImageWrapper,
@@ -63,12 +63,12 @@ function initConfig() {
 
 function initInputStream(cb) {
     var video;
-    if (_config.inputStream.type == "VideoStream") {
+    if (_config.inputStream.type === "VideoStream") {
         video = document.createElement("video");
         _inputStream = InputStream.createVideoStream(video);
-    } else if (_config.inputStream.type == "ImageStream") {
+    } else if (_config.inputStream.type === "ImageStream") {
         _inputStream = InputStream.createImageStream();
-    } else if (_config.inputStream.type == "LiveStream") {
+    } else if (_config.inputStream.type === "LiveStream") {
         var $viewport = document.querySelector("#interactive.viewport");
         if ($viewport) {
             video = $viewport.querySelector("video");
@@ -122,7 +122,7 @@ function initCanvas() {
         if (!_canvasContainer.dom.image) {
             _canvasContainer.dom.image = document.createElement("canvas");
             _canvasContainer.dom.image.className = "imgBuffer";
-            if ($viewport && _config.inputStream.type == "ImageStream") {
+            if ($viewport && _config.inputStream.type === "ImageStream") {
                 $viewport.appendChild(_canvasContainer.dom.image);
             }
         }
@@ -154,18 +154,18 @@ function initBuffers(imageWrapper) {
         _inputImageWrapper = imageWrapper;
     } else {
         _inputImageWrapper = new ImageWrapper({
-            x : _inputStream.getWidth(),
-            y : _inputStream.getHeight()
+            x: _inputStream.getWidth(),
+            y: _inputStream.getHeight()
         });
     }
 
     console.log(_inputImageWrapper.size);
     _boxSize = [
-            vec2.clone([0, 0]),
-            vec2.clone([0, _inputImageWrapper.size.y]),
-            vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
-            vec2.clone([_inputImageWrapper.size.x, 0])
-        ];
+        vec2.clone([0, 0]),
+        vec2.clone([0, _inputImageWrapper.size.y]),
+        vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
+        vec2.clone([_inputImageWrapper.size.x, 0])
+    ];
     BarcodeLocator.init(_inputImageWrapper, _config.locator);
 }
 
@@ -204,7 +204,7 @@ function transformResult(result) {
     function moveBox(box) {
         var corner = box.length;
 
-        while(corner--) {
+        while (corner--) {
             box[corner][0] += xOffset;
             box[corner][1] += yOffset;
         }
@@ -286,7 +286,7 @@ function start() {
     ( function frame() {
         if (!_stopped) {
             update();
-            if (_onUIThread && _config.inputStream.type == "LiveStream") {
+            if (_onUIThread && _config.inputStream.type === "LiveStream") {
                 window.requestAnimFrame(frame);
             }
         }
@@ -346,17 +346,15 @@ function initWorker(cb) {
 
 
 function workerInterface(factory) {
+    /* eslint-disable no-undef*/
     window = self;
     if (factory) {
-        /* jshint ignore:start */
         var Quagga = factory();
         if (!Quagga) {
             self.postMessage({'event': 'error', message: 'Quagga could not be created'});
             return;
         }
-        /* jshint ignore:end */
     }
-    /* jshint ignore:start */
     var imageWrapper;
 
     self.onmessage = function(e) {
@@ -364,8 +362,8 @@ function workerInterface(factory) {
             var config = e.data.config;
             config.numOfWorkers = 0;
             imageWrapper = new Quagga.ImageWrapper({
-                x : e.data.size.x,
-                y : e.data.size.y
+                x: e.data.size.x,
+                y: e.data.size.y
             }, new Uint8Array(e.data.imageData));
             Quagga.init(config, ready, imageWrapper);
             Quagga.onProcessed(onProcessed);
@@ -378,13 +376,18 @@ function workerInterface(factory) {
     };
 
     function onProcessed(result) {
-        self.postMessage({'event': 'processed', imageData: imageWrapper.data, result: result}, [imageWrapper.data.buffer]);
+        self.postMessage({
+            'event': 'processed',
+            imageData: imageWrapper.data,
+            result: result
+        }, [imageWrapper.data.buffer]);
     }
 
-    function ready() {
+    function ready() { // eslint-disable-line
         self.postMessage({'event': 'initialized', imageData: imageWrapper.data}, [imageWrapper.data.buffer]);
     }
-    /* jshint ignore:end */
+
+    /* eslint-enable */
 }
 
 function generateWorkerBlob() {
@@ -393,12 +396,12 @@ function generateWorkerBlob() {
 
     /* jshint ignore:start */
     if (typeof __factorySource__ !== 'undefined') {
-        factorySource = __factorySource__;
+        factorySource = __factorySource__; // eslint-disable-line no-undef
     }
     /* jshint ignore:end */
 
     blob = new Blob(['(' + workerInterface.toString() + ')(' + factorySource + ');'],
-        {type : 'text/javascript'});
+        {type: 'text/javascript'});
 
     return window.URL.createObjectURL(blob);
 }
@@ -414,7 +417,7 @@ function setReaders(readers) {
 }
 
 export default {
-    init : function(config, cb, imageWrapper) {
+    init: function(config, cb, imageWrapper) {
         _config = merge({}, Config, config);
         if (imageWrapper) {
             _onUIThread = false;
@@ -424,10 +427,10 @@ export default {
             initInputStream(cb);
         }
     },
-    start : function() {
+    start: function() {
         start();
     },
-    stop : function() {
+    stop: function() {
         _stopped = true;
         _workerPool.forEach(function(workerThread) {
             workerThread.worker.terminate();
@@ -442,7 +445,7 @@ export default {
     pause: function() {
         _stopped = true;
     },
-    onDetected : function(callback) {
+    onDetected: function(callback) {
         Events.subscribe("detected", callback);
     },
     offDetected: function(callback) {
@@ -462,12 +465,12 @@ export default {
             _resultCollector = resultCollector;
         }
     },
-    canvas : _canvasContainer,
-    decodeSingle : function(config, resultCallback) {
+    canvas: _canvasContainer,
+    decodeSingle: function(config, resultCallback) {
         config = merge({
             inputStream: {
-                type : "ImageStream",
-                sequence : false,
+                type: "ImageStream",
+                sequence: false,
                 size: 800,
                 src: config.src
             },

@@ -25,10 +25,10 @@ export default {
             canvasDataPos = data.length,
             value;
 
-        if (canvasDataPos/imageDataPos !== 4) {
+        if (canvasDataPos / imageDataPos !== 4) {
             return false;
         }
-        while(imageDataPos--){
+        while (imageDataPos--){
             value = imageData[imageDataPos];
             data[--canvasDataPos] = 255;
             data[--canvasDataPos] = value;

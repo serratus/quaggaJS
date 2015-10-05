@@ -9,8 +9,8 @@
 function SubImage(from, size, I) {
     if (!I) {
         I = {
-            data : null,
-            size : size
+            data: null,
+            size: size
         };
     }
     this.data = I.data;

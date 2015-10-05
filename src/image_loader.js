@@ -15,17 +15,17 @@ ImageLoader.load = function(directory, callback, offset, size, sequence) {
         }
     }
     htmlImagesArray.notLoaded = [];
-    htmlImagesArray.addImage = function(img) {
-        htmlImagesArray.notLoaded.push(img);
+    htmlImagesArray.addImage = function(image) {
+        htmlImagesArray.notLoaded.push(image);
     };
     htmlImagesArray.loaded = function(loadedImg) {
         var notloadedImgs = htmlImagesArray.notLoaded;
         for (var x = 0; x < notloadedImgs.length; x++) {
-            if (notloadedImgs[x] == loadedImg) {
+            if (notloadedImgs[x] === loadedImg) {
                 notloadedImgs.splice(x, 1);
                 for (var y = 0; y < htmlImagesSrcArray.length; y++) {
                     var imgName = htmlImagesSrcArray[y].substr(htmlImagesSrcArray[y].lastIndexOf("/"));
-                    if (loadedImg.src.lastIndexOf(imgName) != -1) {
+                    if (loadedImg.src.lastIndexOf(imgName) !== -1) {
                         htmlImagesArray[y] = loadedImg;
                         break;
                     }

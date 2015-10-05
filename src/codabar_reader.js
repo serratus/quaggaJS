@@ -132,10 +132,11 @@ CodabarReader.prototype._thresholdResultPattern = function(result, startCounter)
     }
 
     ["space", "bar"].forEach(function(key) {
-        var kind = categorization[key];
-        kind.wide.min = Math.floor((kind.narrow.size / kind.narrow.counts + kind.wide.size / kind.wide.counts) / 2);
-        kind.narrow.max = Math.ceil(kind.wide.min);
-        kind.wide.max = Math.ceil((kind.wide.size * self.MAX_ACCEPTABLE + self.PADDING) / kind.wide.counts);
+        var newkind = categorization[key];
+        newkind.wide.min =
+            Math.floor((newkind.narrow.size / newkind.narrow.counts + newkind.wide.size / newkind.wide.counts) / 2);
+        newkind.narrow.max = Math.ceil(newkind.wide.min);
+        newkind.wide.max = Math.ceil((newkind.wide.size * self.MAX_ACCEPTABLE + self.PADDING) / newkind.wide.counts);
     });
 
     return categorization;

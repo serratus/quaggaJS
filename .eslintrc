@@ -65,11 +65,16 @@
         "no-mixed-spaces-and-tabs": 2,
         "no-multiple-empty-lines": 2,
         "semi-spacing": 2,
+        "dot-notation": 2,
         "no-spaced-func": 1,
+        "no-shadow": 2,
+        "no-undef": 2,
         "padded-blocks": [2, "never"],
         "semi": [2, "always"],
         "space-after-keywords": [2, "always"],
         "space-infix-ops": 2,
-        "max-len" : [1, 120]
+        "max-len" : [1, 120],
+        "consistent-return": 2,
+        "yoda": 2
     }
 }

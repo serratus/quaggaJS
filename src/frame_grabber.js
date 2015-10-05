@@ -52,7 +52,7 @@ FrameGrabber.create = function(inputStream, canvas) {
         if (frame) {
             _ctx.drawImage(frame, 0, 0, _canvasSize.x, _canvasSize.y);
             ctxData = _ctx.getImageData(_sx, _sy, _size.x, _size.y).data;
-            if(doHalfSample){
+            if (doHalfSample){
                 CVUtils.grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
             } else {
                 CVUtils.computeGray(ctxData, _data, _streamConfig);

@@ -27,7 +27,10 @@ export default {
             capture = config.capture === true;
 
         function matchesConstraints(codeResult) {
-            return capacity && codeResult && !contains(codeResult, config.blacklist) && passesFilter(codeResult, config.filter);
+            return capacity
+                && codeResult
+                && !contains(codeResult, config.blacklist)
+                && passesFilter(codeResult, config.filter);
         }
 
         return {

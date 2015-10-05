@@ -15,8 +15,10 @@ InputStream.createVideoStream = function(video) {
         var width = video.videoWidth,
             height = video.videoHeight;
 
-        _calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
-        _calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+        _calculatedWidth =
+            _config.size ? width / height > 1 ? _config.size : Math.floor((width / height) * _config.size) : width;
+        _calculatedHeight =
+            _config.size ? width / height > 1 ? Math.floor((height / width) * _config.size) : _config.size : height;
 
         _canvasSize.x = _calculatedWidth;
         _canvasSize.y = _calculatedHeight;
@@ -72,8 +74,9 @@ InputStream.createVideoStream = function(video) {
     };
 
     that.setCurrentTime = function(time) {
-        if (_config.type !== "LiveStream")
+        if (_config.type !== "LiveStream") {
             video.currentTime = time;
+        }
     };
 
     that.addEventListener = function(event, f, bool) {
@@ -175,8 +178,10 @@ InputStream.createImageStream = function() {
             imgArray = imgs;
             width = imgs[0].width;
             height = imgs[0].height;
-            calculatedWidth = _config.size ? width/height > 1 ? _config.size : Math.floor((width/height) * _config.size) : width;
-            calculatedHeight = _config.size ? width/height > 1 ? Math.floor((height/width) * _config.size) : _config.size : height;
+            calculatedWidth =
+                _config.size ? width / height > 1 ? _config.size : Math.floor((width / height) * _config.size) : width;
+            calculatedHeight =
+                _config.size ? width / height > 1 ? Math.floor((height / width) * _config.size) : _config.size : height;
             _canvasSize.x = calculatedWidth;
             _canvasSize.y = calculatedHeight;
             loaded = true;
@@ -209,12 +214,12 @@ InputStream.createImageStream = function() {
         return calculatedHeight;
     };
 
-    that.setWidth = function(width) {
-        calculatedWidth = width;
+    that.setWidth = function(newWidth) {
+        calculatedWidth = newWidth;
     };
 
-    that.setHeight = function(height) {
-        calculatedHeight = height;
+    that.setHeight = function(newHeight) {
+        calculatedHeight = newHeight;
     };
 
     that.getRealWidth = function() {
@@ -277,9 +282,9 @@ InputStream.createImageStream = function() {
         return _topRight;
     };
 
-    that.setCanvasSize = function(size) {
-        _canvasSize.x = size.x;
-        _canvasSize.y = size.y;
+    that.setCanvasSize = function(canvasSize) {
+        _canvasSize.x = canvasSize.x;
+        _canvasSize.y = canvasSize.y;
     };
 
     that.getCanvasSize = function() {

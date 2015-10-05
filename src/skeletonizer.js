@@ -26,8 +26,12 @@ function Skeletonizer(stdlib, foreign, buffer) {
                 yStart2 = (offset + size) | 0;
                 xStart1 = (u - 1) | 0;
                 xStart2 = (u + 1) | 0;
-                sum = ((images[(inImagePtr + yStart1 + xStart1) | 0] | 0) + (images[(inImagePtr + yStart1 + xStart2) | 0] | 0) + (images[(inImagePtr + offset + u) | 0] | 0) + (images[(inImagePtr + yStart2 + xStart1) | 0] | 0) + (images[(inImagePtr + yStart2 + xStart2) | 0] | 0)) | 0;
-                if ((sum | 0) == (5 | 0)) {
+                sum = ((images[(inImagePtr + yStart1 + xStart1) | 0] | 0)
+                    + (images[(inImagePtr + yStart1 + xStart2) | 0] | 0)
+                    + (images[(inImagePtr + offset + u) | 0] | 0)
+                    + (images[(inImagePtr + yStart2 + xStart1) | 0] | 0)
+                    + (images[(inImagePtr + yStart2 + xStart2) | 0] | 0)) | 0;
+                if ((sum | 0) === (5 | 0)) {
                     images[(outImagePtr + offset + u) | 0] = 1;
                 } else {
                     images[(outImagePtr + offset + u) | 0] = 0;
@@ -48,7 +52,8 @@ function Skeletonizer(stdlib, foreign, buffer) {
 
         while ((length | 0) > 0) {
             length = (length - 1) | 0;
-            images[(outImagePtr + length) | 0] = ((images[(aImagePtr + length) | 0] | 0) - (images[(bImagePtr + length) | 0] | 0)) | 0;
+            images[(outImagePtr + length) | 0] =
+                ((images[(aImagePtr + length) | 0] | 0) - (images[(bImagePtr + length) | 0] | 0)) | 0;
         }
     }
 
@@ -63,7 +68,8 @@ function Skeletonizer(stdlib, foreign, buffer) {
 
         while ((length | 0) > 0) {
             length = (length - 1) | 0;
-            images[(outImagePtr + length) | 0] = ((images[(aImagePtr + length) | 0] | 0) | (images[(bImagePtr + length) | 0] | 0)) | 0;
+            images[(outImagePtr + length) | 0] =
+                ((images[(aImagePtr + length) | 0] | 0) | (images[(bImagePtr + length) | 0] | 0)) | 0;
         }
     }
 
@@ -117,7 +123,11 @@ function Skeletonizer(stdlib, foreign, buffer) {
                 yStart2 = (offset + size) | 0;
                 xStart1 = (u - 1) | 0;
                 xStart2 = (u + 1) | 0;
-                sum = ((images[(inImagePtr + yStart1 + xStart1) | 0] | 0) + (images[(inImagePtr + yStart1 + xStart2) | 0] | 0) + (images[(inImagePtr + offset + u) | 0] | 0) + (images[(inImagePtr + yStart2 + xStart1) | 0] | 0) + (images[(inImagePtr + yStart2 + xStart2) | 0] | 0)) | 0;
+                sum = ((images[(inImagePtr + yStart1 + xStart1) | 0] | 0)
+                    + (images[(inImagePtr + yStart1 + xStart2) | 0] | 0)
+                    + (images[(inImagePtr + offset + u) | 0] | 0)
+                    + (images[(inImagePtr + yStart2 + xStart1) | 0] | 0)
+                    + (images[(inImagePtr + yStart2 + xStart2) | 0] | 0)) | 0;
                 if ((sum | 0) > (0 | 0)) {
                     images[(outImagePtr + offset + u) | 0] = 1;
                 } else {
@@ -184,12 +194,12 @@ function Skeletonizer(stdlib, foreign, buffer) {
             bitwiseOr(skelImagePtr, tempImagePtr, skelImagePtr);
             memcpy(erodedImagePtr, subImagePtr);
             sum = countNonZero(subImagePtr) | 0;
-            done = ((sum | 0) == 0 | 0);
-        } while(!done);
+            done = ((sum | 0) === 0 | 0);
+        } while (!done);
     }
 
     return {
-        skeletonize : skeletonize
+        skeletonize: skeletonize
     };
 }
 /* @preserve ASM END */

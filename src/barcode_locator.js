@@ -30,7 +30,7 @@ var _config,
     _skeletonizer,
     vec2 = glMatrix.vec2,
     mat2 = glMatrix.mat2,
-    self = (typeof window !== 'undefined') ? window : self;
+    self = (typeof window !== 'undefined') ? window : self; //  eslint-disable-line consistent-this
 
 function initBuffers() {
     var skeletonImageData;
@@ -441,7 +441,6 @@ function rasterizeAngularSimilarity(patchesFound) {
         var x,
             y,
             currentPatch,
-            patch,
             idx,
             dir,
             current = {
@@ -465,9 +464,8 @@ function rasterizeAngularSimilarity(patchesFound) {
                     continue;
                 }
 
-                patch = _imageToPatchGrid.data[idx];
                 if (_patchLabelGrid.data[idx] === 0) {
-                    similarity = Math.abs(vec2.dot(patch.vec, currentPatch.vec));
+                    similarity = Math.abs(vec2.dot(_imageToPatchGrid.data[idx].vec, currentPatch.vec));
                     if (similarity > threshold) {
                         trace(idx);
                     }

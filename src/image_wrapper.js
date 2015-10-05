@@ -1,7 +1,7 @@
 import SubImage from './subImage';
 import CVUtils from './cv_utils';
 import ArrayHelper from './array_helper';
-import {vec2, mat2} from 'gl-matrix';
+import {vec2} from 'gl-matrix';
 
 /**
  * Represents a basic image combining the data and size.
@@ -25,7 +25,6 @@ function ImageWrapper(size, data, ArrayType, initialize) {
                 ArrayHelper.init(this.data, 0);
             }
         }
-
     } else {
         this.data = data;
     }
@@ -40,77 +39,10 @@ function ImageWrapper(size, data, ArrayType, initialize) {
  * @see cvd/image.h
  */
 ImageWrapper.prototype.inImageWithBorder = function(imgRef, border) {
-    return (imgRef.x >= border) && (imgRef.y >= border) && (imgRef.x < (this.size.x - border)) && (imgRef.y < (this.size.y - border));
-};
-
-/**
- * Transforms an image according to the given affine-transformation matrix.
- * @param inImg ImageWrapper a image containing the information to be extracted.
- * @param outImg ImageWrapper the image to be filled.  The whole image out image is filled by the in image.
- * @param M mat2 the matrix used to map point in the out matrix to those in the in matrix
- * @param inOrig vec2 origin in the in image
- * @param outOrig vec2 origin in the out image
- * @returns Number the number of pixels not in the in image
- * @see cvd/vision.h
- */
-ImageWrapper.transform = function(inImg, outImg, M, inOrig, outOrig) {
-    var w = outImg.size.x, h = outImg.size.y, iw = inImg.size.x, ih = inImg.size.y;
-    var across = vec2.clone([M[0], M[2]]);
-    var down = vec2.clone([M[1], M[3]]);
-    var defaultValue = 0;
-
-    var p0 = vec2.subtract(inOrig, mat2.xVec2(M, outOrig, vec2.clone()), vec2.clone());
-
-    var min_x = p0[0], min_y = p0[1];
-    var max_x = min_x, max_y = min_y;
-    var p, i, j;
-
-    var sampleFunc = ImageWrapper.sample;
-
-    if (across[0] < 0)
-        min_x += w * across[0];
-    else
-        max_x += w * across[0];
-
-    if (down[0] < 0)
-        min_x += h * down[0];
-    else
-        max_x += h * down[0];
-
-    if (across[1] < 0)
-        min_y += w * across[1];
-    else
-        max_y += w * across[1];
-
-    if (down[1] < 0)
-        min_y += h * down[1];
-    else
-        max_y += h * down[1];
-
-    var carrigeReturn = vec2.subtract(down, vec2.scale(across, w, vec2.clone()), vec2.clone());
-
-    if (min_x >= 0 && min_y >= 0 && max_x < iw - 1 && max_y < ih - 1) {
-        p = p0;
-        for ( i = 0; i < h; ++i, vec2.add(p, carrigeReturn))
-            for ( j = 0; j < w; ++j, vec2.add(p, across))
-                outImg.set(j, i, sampleFunc(inImg, p[0], p[1]));
-        return 0;
-    } else {
-        var x_bound = iw - 1;
-        var y_bound = ih - 1;
-        var count = 0;
-        p = p0;
-        for ( i = 0; i < h; ++i, vec2.add(p, carrigeReturn)) {
-            for ( j = 0; j < w; ++j, vec2.add(p, across)) {
-                if (0 <= p[0] && 0 <= p[1] && p[0] < x_bound && p[1] < y_bound) {
-                    outImg.set(j, i, sampleFunc(inImg, p[0], p[1]));
-                } else {
-                    outImg.set(j, i, defaultValue); ++count;
-                }
-            }
-        }
-        return count;
-    }
+    return (imgRef.x >= border)
+        && (imgRef.y >= border)
+        && (imgRef.x < (this.size.x - border))
+        && (imgRef.y < (this.size.y - border));
 };
 
 /**
@@ -203,8 +135,8 @@ ImageWrapper.prototype.getSafe = function(x, y) {
 
     if (!this.indexMapping) {
         this.indexMapping = {
-            x : [],
-            y : []
+            x: [],
+            y: []
         };
         for (i = 0; i < this.size.x; i++) {
             this.indexMapping.x[i] = i;
@@ -252,7 +184,6 @@ ImageWrapper.prototype.invert = function() {
     while (length--) {
         data[length] = data[length] ? 0 : 1;
     }
-
 };
 
 ImageWrapper.prototype.convolve = function(kernel) {
@@ -262,7 +193,7 @@ ImageWrapper.prototype.convolve = function(kernel) {
             accu = 0;
             for ( ky = -kSize; ky <= kSize; ky++) {
                 for ( kx = -kSize; kx <= kSize; kx++) {
-                    accu += kernel[ky+kSize][kx + kSize] * this.getSafe(x + kx, y + ky);
+                    accu += kernel[ky + kSize][kx + kSize] * this.getSafe(x + kx, y + ky);
                 }
             }
             this.data[y * this.size.x + x] = accu;
@@ -297,14 +228,14 @@ ImageWrapper.prototype.moments = function(labelcount) {
 
     for ( i = 0; i < labelcount; i++) {
         labelsum[i] = {
-            m00 : 0,
-            m01 : 0,
-            m10 : 0,
-            m11 : 0,
-            m02 : 0,
-            m20 : 0,
-            theta : 0,
-            rad : 0
+            m00: 0,
+            m01: 0,
+            m10: 0,
+            m11: 0,
+            m02: 0,
+            m20: 0,
+            theta: 0,
+            rad: 0
         };
     }
 

@@ -10,7 +10,7 @@ import EAN8Reader from './ean_8_reader';
 import UPCEReader from './upc_e_reader';
 import I2of5Reader from './i2of5_reader';
 
-var readers = {
+const READERS = {
     code_128_reader: Code128Reader,
     ean_reader: EANReader,
     ean_8_reader: EAN8Reader,
@@ -74,16 +74,16 @@ export default {
         function initReaders() {
             config.readers.forEach(function(readerConfig) {
                 var reader,
-                    config = {};
+                    configuration = {};
 
                 if (typeof readerConfig === 'object') {
                     reader = readerConfig.format;
-                    config = readerConfig.config;
+                    configuration = readerConfig.config;
                 } else if (typeof readerConfig === 'string') {
                     reader = readerConfig;
                 }
                 console.log("Before registering reader: ", reader);
-                _barcodeReaders.push(new readers[reader](config));
+                _barcodeReaders.push(new READERS[reader](configuration));
             });
             console.log("Registered Readers: " + _barcodeReaders
                 .map((reader) => JSON.stringify({format: reader.FORMAT, config: reader.config}))
@@ -166,14 +166,13 @@ export default {
             for ( i = 0; i < _barcodeReaders.length && result === null; i++) {
                 result = _barcodeReaders[i].decodePattern(barcodeLine.line);
             }
-            if(result === null){
+            if (result === null){
                 return null;
             }
             return {
                 codeResult: result,
                 barcodeLine: barcodeLine
             };
-
         }
 
         /**
@@ -255,11 +254,11 @@ export default {
             }
 
             return {
-                codeResult : result.codeResult,
-                line : line,
-                angle : lineAngle,
-                pattern : result.barcodeLine.line,
-                threshold : result.barcodeLine.threshold
+                codeResult: result.codeResult,
+                line: line,
+                angle: lineAngle,
+                pattern: result.barcodeLine.line,
+                threshold: result.barcodeLine.threshold
             };
         }
 
