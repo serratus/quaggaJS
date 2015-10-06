@@ -347,7 +347,6 @@ function initWorker(cb) {
 
 function workerInterface(factory) {
     /* eslint-disable no-undef*/
-    window = self;
     if (factory) {
         var Quagga = factory();
         if (!Quagga) {

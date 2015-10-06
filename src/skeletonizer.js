@@ -1,4 +1,5 @@
 /* @preserve ASM BEGIN */
+/* eslint-disable eqeqeq*/
 function Skeletonizer(stdlib, foreign, buffer) {
     "use asm";
 
@@ -31,7 +32,7 @@ function Skeletonizer(stdlib, foreign, buffer) {
                     + (images[(inImagePtr + offset + u) | 0] | 0)
                     + (images[(inImagePtr + yStart2 + xStart1) | 0] | 0)
                     + (images[(inImagePtr + yStart2 + xStart2) | 0] | 0)) | 0;
-                if ((sum | 0) === (5 | 0)) {
+                if ((sum | 0) == (5 | 0)) {
                     images[(outImagePtr + offset + u) | 0] = 1;
                 } else {
                     images[(outImagePtr + offset + u) | 0] = 0;
@@ -194,7 +195,7 @@ function Skeletonizer(stdlib, foreign, buffer) {
             bitwiseOr(skelImagePtr, tempImagePtr, skelImagePtr);
             memcpy(erodedImagePtr, subImagePtr);
             sum = countNonZero(subImagePtr) | 0;
-            done = ((sum | 0) === 0 | 0);
+            done = ((sum | 0) == 0 | 0);
         } while (!done);
     }
 
@@ -202,6 +203,7 @@ function Skeletonizer(stdlib, foreign, buffer) {
         skeletonize: skeletonize
     };
 }
-/* @preserve ASM END */
 
 export default Skeletonizer;
+/* eslint-enable eqeqeq*/
+/* @preserve ASM END */

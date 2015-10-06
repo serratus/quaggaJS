@@ -71,6 +71,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _typedefs2 = _interopRequireDefault(_typedefs);
 	
+	// eslint-disable-line no-unused-vars
+	
 	var _input_stream = __webpack_require__(3);
 	
 	var _input_stream2 = _interopRequireDefault(_input_stream);
@@ -165,12 +167,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function initInputStream(cb) {
 	    var video;
-	    if (_config.inputStream.type == "VideoStream") {
+	    if (_config.inputStream.type === "VideoStream") {
 	        video = document.createElement("video");
 	        _inputStream = _input_stream2['default'].createVideoStream(video);
-	    } else if (_config.inputStream.type == "ImageStream") {
+	    } else if (_config.inputStream.type === "ImageStream") {
 	        _inputStream = _input_stream2['default'].createImageStream();
-	    } else if (_config.inputStream.type == "LiveStream") {
+	    } else if (_config.inputStream.type === "LiveStream") {
 	        var $viewport = document.querySelector("#interactive.viewport");
 	        if ($viewport) {
 	            video = $viewport.querySelector("video");
@@ -224,7 +226,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!_canvasContainer.dom.image) {
 	            _canvasContainer.dom.image = document.createElement("canvas");
 	            _canvasContainer.dom.image.className = "imgBuffer";
-	            if ($viewport && _config.inputStream.type == "ImageStream") {
+	            if ($viewport && _config.inputStream.type === "ImageStream") {
 	                $viewport.appendChild(_canvasContainer.dom.image);
 	            }
 	        }
@@ -377,7 +379,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (function frame() {
 	        if (!_stopped) {
 	            update();
-	            if (_onUIThread && _config.inputStream.type == "LiveStream") {
+	            if (_onUIThread && _config.inputStream.type === "LiveStream") {
 	                window.requestAnimFrame(frame);
 	            }
 	        }
@@ -436,17 +438,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	
 	function workerInterface(factory) {
-	    window = self;
+	    /* eslint-disable no-undef*/
 	    if (factory) {
-	        /* jshint ignore:start */
 	        var Quagga = factory();
 	        if (!Quagga) {
 	            self.postMessage({ 'event': 'error', message: 'Quagga could not be created' });
 	            return;
 	        }
-	        /* jshint ignore:end */
 	    }
-	    /* jshint ignore:start */
 	    var imageWrapper;
 	
 	    self.onmessage = function (e) {
@@ -468,13 +467,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 	
 	    function onProcessed(result) {
-	        self.postMessage({ 'event': 'processed', imageData: imageWrapper.data, result: result }, [imageWrapper.data.buffer]);
+	        self.postMessage({
+	            'event': 'processed',
+	            imageData: imageWrapper.data,
+	            result: result
+	        }, [imageWrapper.data.buffer]);
 	    }
 	
 	    function ready() {
+	        // eslint-disable-line
 	        self.postMessage({ 'event': 'initialized', imageData: imageWrapper.data }, [imageWrapper.data.buffer]);
 	    }
-	    /* jshint ignore:end */
+	
+	    /* eslint-enable */
 	}
 	
 	function generateWorkerBlob() {
@@ -482,7 +487,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	    /* jshint ignore:start */
 	    if (typeof __factorySource__ !== 'undefined') {
-	        factorySource = __factorySource__;
+	        factorySource = __factorySource__; // eslint-disable-line no-undef
 	    }
 	    /* jshint ignore:end */
 	
@@ -697,7 +702,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 	
 	    that.setCurrentTime = function (time) {
-	        if (_config.type !== "LiveStream") video.currentTime = time;
+	        if (_config.type !== "LiveStream") {
+	            video.currentTime = time;
+	        }
 	    };
 	
 	    that.addEventListener = function (event, f, bool) {
@@ -832,12 +839,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return calculatedHeight;
 	    };
 	
-	    that.setWidth = function (width) {
-	        calculatedWidth = width;
+	    that.setWidth = function (newWidth) {
+	        calculatedWidth = newWidth;
 	    };
 	
-	    that.setHeight = function (height) {
-	        calculatedHeight = height;
+	    that.setHeight = function (newHeight) {
+	        calculatedHeight = newHeight;
 	    };
 	
 	    that.getRealWidth = function () {
@@ -900,9 +907,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return _topRight;
 	    };
 	
-	    that.setCanvasSize = function (size) {
-	        _canvasSize.x = size.x;
-	        _canvasSize.y = size.y;
+	    that.setCanvasSize = function (canvasSize) {
+	        _canvasSize.x = canvasSize.x;
+	        _canvasSize.y = canvasSize.y;
 	    };
 	
 	    that.getCanvasSize = function () {
@@ -961,17 +968,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 	    htmlImagesArray.notLoaded = [];
-	    htmlImagesArray.addImage = function (img) {
-	        htmlImagesArray.notLoaded.push(img);
+	    htmlImagesArray.addImage = function (image) {
+	        htmlImagesArray.notLoaded.push(image);
 	    };
 	    htmlImagesArray.loaded = function (loadedImg) {
 	        var notloadedImgs = htmlImagesArray.notLoaded;
 	        for (var x = 0; x < notloadedImgs.length; x++) {
-	            if (notloadedImgs[x] == loadedImg) {
+	            if (notloadedImgs[x] === loadedImg) {
 	                notloadedImgs.splice(x, 1);
 	                for (var y = 0; y < htmlImagesSrcArray.length; y++) {
 	                    var imgName = htmlImagesSrcArray[y].substr(htmlImagesSrcArray[y].lastIndexOf("/"));
-	                    if (loadedImg.src.lastIndexOf(imgName) != -1) {
+	                    if (loadedImg.src.lastIndexOf(imgName) !== -1) {
 	                        htmlImagesArray[y] = loadedImg;
 	                        break;
 	                    }
@@ -1065,67 +1072,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	ImageWrapper.prototype.inImageWithBorder = function (imgRef, border) {
 	    return imgRef.x >= border && imgRef.y >= border && imgRef.x < this.size.x - border && imgRef.y < this.size.y - border;
-	};
-	
-	/**
-	 * Transforms an image according to the given affine-transformation matrix.
-	 * @param inImg ImageWrapper a image containing the information to be extracted.
-	 * @param outImg ImageWrapper the image to be filled.  The whole image out image is filled by the in image.
-	 * @param M mat2 the matrix used to map point in the out matrix to those in the in matrix
-	 * @param inOrig vec2 origin in the in image
-	 * @param outOrig vec2 origin in the out image
-	 * @returns Number the number of pixels not in the in image
-	 * @see cvd/vision.h
-	 */
-	ImageWrapper.transform = function (inImg, outImg, M, inOrig, outOrig) {
-	    var w = outImg.size.x,
-	        h = outImg.size.y,
-	        iw = inImg.size.x,
-	        ih = inImg.size.y;
-	    var across = _glMatrix.vec2.clone([M[0], M[2]]);
-	    var down = _glMatrix.vec2.clone([M[1], M[3]]);
-	    var defaultValue = 0;
-	
-	    var p0 = _glMatrix.vec2.subtract(inOrig, _glMatrix.mat2.xVec2(M, outOrig, _glMatrix.vec2.clone()), _glMatrix.vec2.clone());
-	
-	    var min_x = p0[0],
-	        min_y = p0[1];
-	    var max_x = min_x,
-	        max_y = min_y;
-	    var p, i, j;
-	
-	    var sampleFunc = ImageWrapper.sample;
-	
-	    if (across[0] < 0) min_x += w * across[0];else max_x += w * across[0];
-	
-	    if (down[0] < 0) min_x += h * down[0];else max_x += h * down[0];
-	
-	    if (across[1] < 0) min_y += w * across[1];else max_y += w * across[1];
-	
-	    if (down[1] < 0) min_y += h * down[1];else max_y += h * down[1];
-	
-	    var carrigeReturn = _glMatrix.vec2.subtract(down, _glMatrix.vec2.scale(across, w, _glMatrix.vec2.clone()), _glMatrix.vec2.clone());
-	
-	    if (min_x >= 0 && min_y >= 0 && max_x < iw - 1 && max_y < ih - 1) {
-	        p = p0;
-	        for (i = 0; i < h; ++i, _glMatrix.vec2.add(p, carrigeReturn)) for (j = 0; j < w; ++j, _glMatrix.vec2.add(p, across)) outImg.set(j, i, sampleFunc(inImg, p[0], p[1]));
-	        return 0;
-	    } else {
-	        var x_bound = iw - 1;
-	        var y_bound = ih - 1;
-	        var count = 0;
-	        p = p0;
-	        for (i = 0; i < h; ++i, _glMatrix.vec2.add(p, carrigeReturn)) {
-	            for (j = 0; j < w; ++j, _glMatrix.vec2.add(p, across)) {
-	                if (0 <= p[0] && 0 <= p[1] && p[0] < x_bound && p[1] < y_bound) {
-	                    outImg.set(j, i, sampleFunc(inImg, p[0], p[1]));
-	                } else {
-	                    outImg.set(j, i, defaultValue);++count;
-	                }
-	            }
-	        }
-	        return count;
-	    }
 	};
 	
 	/**
@@ -1828,12 +1774,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        property = "rad";
 	    }
 	
-	    function addToCluster(point) {
+	    function addToCluster(newPoint) {
 	        var found = false;
 	        for (k = 0; k < clusters.length; k++) {
 	            cluster = clusters[k];
-	            if (cluster.fits(point)) {
-	                cluster.add(point);
+	            if (cluster.fits(newPoint)) {
+	                cluster.add(newPoint);
 	                found = true;
 	            }
 	        }
@@ -1847,7 +1793,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            clusters.push(_cluster2['default'].create(point, threshold));
 	        }
 	    }
-	
 	    return clusters;
 	};
 	
@@ -1925,7 +1870,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                result = top;
 	            }
 	        }
-	
 	        return result;
 	    }
 	};
@@ -1952,10 +1896,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            yStart2 = v + 1;
 	            xStart1 = u - 1;
 	            xStart2 = u + 1;
-	            sum = inImageData[yStart1 * width + xStart1] /* +   inImageData[yStart1*width+u] */ + inImageData[yStart1 * width + xStart2] +
-	            /* inImageData[v*width+xStart1]  + */
-	            inImageData[v * width + u] + /* inImageData[v*width+xStart2] +*/
-	            inImageData[yStart2 * width + xStart1] /* +   inImageData[yStart2*width+u]*/ + inImageData[yStart2 * width + xStart2];
+	            sum = inImageData[yStart1 * width + xStart1] + inImageData[yStart1 * width + xStart2] + inImageData[v * width + u] + inImageData[yStart2 * width + xStart1] + inImageData[yStart2 * width + xStart2];
 	            outImageData[v * width + u] = sum > 0 ? 1 : 0;
 	        }
 	    }
@@ -1980,10 +1921,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            yStart2 = v + 1;
 	            xStart1 = u - 1;
 	            xStart2 = u + 1;
-	            sum = inImageData[yStart1 * width + xStart1] /* +   inImageData[yStart1*width+u] */ + inImageData[yStart1 * width + xStart2] +
-	            /* inImageData[v*width+xStart1]  + */
-	            inImageData[v * width + u] + /* inImageData[v*width+xStart2] +*/
-	            inImageData[yStart2 * width + xStart1] /* +   inImageData[yStart2*width+u]*/ + inImageData[yStart2 * width + xStart2];
+	            sum = inImageData[yStart1 * width + xStart1] + inImageData[yStart1 * width + xStart2] + inImageData[v * width + u] + inImageData[yStart2 * width + xStart1] + inImageData[yStart2 * width + xStart2];
 	            outImageData[v * width + u] = sum === 5 ? 1 : 0;
 	        }
 	    }
@@ -2112,7 +2050,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	CVUtils.loadImageArray = function (src, callback, canvas) {
-	    if (!canvas) canvas = document.createElement('canvas');
+	    if (!canvas) {
+	        canvas = document.createElement('canvas');
+	    }
 	    var img = new Image();
 	    img.callback = callback;
 	    img.onload = function () {
@@ -2167,6 +2107,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        r = 0,
 	        g = 0,
 	        b = 0;
+	
 	    rgb = rgb || [0, 0, 0];
 	
 	    if (h < 60) {
@@ -2361,9 +2302,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            updateCenter();
 	        }
 	
-	        function _add(point) {
-	            pointMap[point.id] = point;
-	            points.push(point);
+	        function _add(pointToAdd) {
+	            pointMap[pointToAdd.id] = pointToAdd;
+	            points.push(pointToAdd);
 	        }
 	
 	        function updateCenter() {
@@ -2379,15 +2320,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        init();
 	
 	        return {
-	            add: function add(point) {
-	                if (!pointMap[point.id]) {
-	                    _add(point);
+	            add: function add(pointToAdd) {
+	                if (!pointMap[pointToAdd.id]) {
+	                    _add(pointToAdd);
 	                    updateCenter();
 	                }
 	            },
-	            fits: function fits(point) {
+	            fits: function fits(otherPoint) {
 	                // check cosine similarity to center-angle
-	                var similarity = Math.abs(_glMatrix.vec2.dot(point.point.vec, center.vec));
+	                var similarity = Math.abs(_glMatrix.vec2.dot(otherPoint.point.vec, center.vec));
 	                if (similarity > threshold) {
 	                    return true;
 	                }
@@ -2401,10 +2342,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        };
 	    },
-	    createPoint: function createPoint(point, id, property) {
+	    createPoint: function createPoint(newPoint, id, property) {
 	        return {
-	            rad: point[property],
-	            point: point,
+	            rad: newPoint[property],
+	            point: newPoint,
 	            id: id
 	        };
 	    }
@@ -7512,8 +7453,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _inputImageWrapper,
 	    _skeletonizer,
 	    vec2 = _glMatrix2['default'].vec2,
-	    mat2 = _glMatrix2['default'].mat2,
-	    self = typeof window !== 'undefined' ? window : self;
+	    mat2 = _glMatrix2['default'].mat2;
 	
 	function initBuffers() {
 	    var skeletonImageData;
@@ -7539,7 +7479,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    skeletonImageData = new ArrayBuffer(64 * 1024);
 	    _subImageWrapper = new _image_wrapper2['default'](_patchSize, new Uint8Array(skeletonImageData, 0, _patchSize.x * _patchSize.y));
 	    _skelImageWrapper = new _image_wrapper2['default'](_patchSize, new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y), undefined, true);
-	    _skeletonizer = (0, _skeletonizer3['default'])(self, {
+	    _skeletonizer = (0, _skeletonizer3['default'])(typeof window !== 'undefined' ? window : self, {
 	        size: _patchSize.x
 	    }, skeletonImageData);
 	
@@ -7911,7 +7851,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var x,
 	            y,
 	            currentPatch,
-	            patch,
 	            idx,
 	            dir,
 	            current = {
@@ -7935,9 +7874,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    continue;
 	                }
 	
-	                patch = _imageToPatchGrid.data[idx];
 	                if (_patchLabelGrid.data[idx] === 0) {
-	                    similarity = Math.abs(vec2.dot(patch.vec, currentPatch.vec));
+	                    similarity = Math.abs(vec2.dot(_imageToPatchGrid.data[idx].vec, currentPatch.vec));
 	                    if (similarity > threshold) {
 	                        trace(idx);
 	                    }
@@ -8341,7 +8279,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                do {
 	                    current.dir = (current.dir + 6) % 8;
 	                    _trace(current, color, label, edgelabel);
-	                    if (ldir != current.dir) {
+	                    if (ldir !== current.dir) {
 	                        Cv.dir = current.dir;
 	                        P = vertex2D(current.cx, current.cy, 0);
 	                        P.prev = Cv;
@@ -8354,7 +8292,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        Cv.y = current.cy;
 	                    }
 	                    ldir = current.dir;
-	                } while (current.cx != sx || current.cy != sy);
+	                } while (current.cx !== sx || current.cy !== sy);
 	                Fv.prev = Cv.prev;
 	                Cv.prev.next = Fv;
 	            }
@@ -8380,6 +8318,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports) {
 
 	/* @preserve ASM BEGIN */
+	/* eslint-disable eqeqeq*/
 	"use strict";
 	
 	Object.defineProperty(exports, "__esModule", {
@@ -8578,9 +8517,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        skeletonize: skeletonize
 	    };
 	}
-	/* @preserve ASM END */
 	
 	exports["default"] = Skeletonizer;
+	
+	/* eslint-enable eqeqeq*/
+	/* @preserve ASM END */
 	module.exports = exports["default"];
 
 /***/ },
@@ -8691,7 +8632,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _i2of5_reader2 = _interopRequireDefault(_i2of5_reader);
 	
-	var readers = {
+	var READERS = {
 	    code_128_reader: _code_128_reader2['default'],
 	    ean_reader: _ean_reader2['default'],
 	    ean_8_reader: _ean_8_reader2['default'],
@@ -8755,16 +8696,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        function initReaders() {
 	            config.readers.forEach(function (readerConfig) {
 	                var reader,
-	                    config = {};
+	                    configuration = {};
 	
 	                if (typeof readerConfig === 'object') {
 	                    reader = readerConfig.format;
-	                    config = readerConfig.config;
+	                    configuration = readerConfig.config;
 	                } else if (typeof readerConfig === 'string') {
 	                    reader = readerConfig;
 	                }
 	                console.log("Before registering reader: ", reader);
-	                _barcodeReaders.push(new readers[reader](config));
+	                _barcodeReaders.push(new READERS[reader](configuration));
 	            });
 	            console.log("Registered Readers: " + _barcodeReaders.map(function (reader) {
 	                return JSON.stringify({ format: reader.FORMAT, config: reader.config });
@@ -10335,7 +10276,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var code = result.code;
 	
 	    if (!code) {
-	        return;
+	        return null;
 	    }
 	
 	    code = code.replace(patterns.IOQ, '');
@@ -10506,10 +10447,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	
 	    ["space", "bar"].forEach(function (key) {
-	        var kind = categorization[key];
-	        kind.wide.min = Math.floor((kind.narrow.size / kind.narrow.counts + kind.wide.size / kind.wide.counts) / 2);
-	        kind.narrow.max = Math.ceil(kind.wide.min);
-	        kind.wide.max = Math.ceil((kind.wide.size * self.MAX_ACCEPTABLE + self.PADDING) / kind.wide.counts);
+	        var newkind = categorization[key];
+	        newkind.wide.min = Math.floor((newkind.narrow.size / newkind.narrow.counts + newkind.wide.size / newkind.wide.counts) / 2);
+	        newkind.narrow.max = Math.ceil(newkind.wide.min);
+	        newkind.wide.max = Math.ceil((newkind.wide.size * self.MAX_ACCEPTABLE + self.PADDING) / newkind.wide.counts);
 	    });
 	
 	    return categorization;
@@ -10691,7 +10632,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	UPCReader.prototype._decode = function () {
 	    var result = _ean_reader2["default"].prototype._decode.call(this);
 	
-	    console.log("result", result);
 	    if (result && result.code && result.code.length === 13 && result.code.charAt(0) === "0") {
 	        result.code = result.code.substring(1);
 	        return result;
@@ -10817,13 +10757,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	UPCEReader.prototype._determineParity = function (codeFrequency, result) {
-	    var self = this,
-	        i,
-	        nrSystem;
+	    var i, nrSystem;
 	
-	    for (nrSystem = 0; nrSystem < self.CODE_FREQUENCY.length; nrSystem++) {
-	        for (i = 0; i < self.CODE_FREQUENCY[nrSystem].length; i++) {
-	            if (codeFrequency === self.CODE_FREQUENCY[nrSystem][i]) {
+	    for (nrSystem = 0; nrSystem < this.CODE_FREQUENCY.length; nrSystem++) {
+	        for (i = 0; i < this.CODE_FREQUENCY[nrSystem].length; i++) {
+	            if (codeFrequency === this.CODE_FREQUENCY[nrSystem][i]) {
 	                result.unshift(nrSystem);
 	                result.push(i);
 	                return true;
@@ -12788,7 +12726,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 	})();
 	
-	;
 	module.exports = exports["default"];
 
 /***/ },

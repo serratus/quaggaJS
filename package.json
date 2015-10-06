@@ -38,7 +38,8 @@
     "doc": "doc"
   },
   "scripts": {
-    "test": "karma start"
+    "test": "karma start",
+    "build": "webpack && webpack --config webpack.config.min.js && grunt uglyasm"
   },
   "repository": {
     "type": "git",

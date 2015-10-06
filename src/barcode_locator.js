@@ -29,8 +29,7 @@ var _config,
     _inputImageWrapper,
     _skeletonizer,
     vec2 = glMatrix.vec2,
-    mat2 = glMatrix.mat2,
-    self = (typeof window !== 'undefined') ? window : self; //  eslint-disable-line consistent-this
+    mat2 = glMatrix.mat2;
 
 function initBuffers() {
     var skeletonImageData;
@@ -59,7 +58,7 @@ function initBuffers() {
     _skelImageWrapper = new ImageWrapper(_patchSize,
         new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y),
         undefined, true);
-    _skeletonizer = skeletonizer(self, {
+    _skeletonizer = skeletonizer((typeof window !== 'undefined') ? window : self, {
         size: _patchSize.x
     }, skeletonImageData);
 
