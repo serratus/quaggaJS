@@ -73,49 +73,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	// eslint-disable-line no-unused-vars
 	
-	var _input_stream = __webpack_require__(3);
-	
-	var _input_stream2 = _interopRequireDefault(_input_stream);
-	
-	var _image_wrapper = __webpack_require__(5);
+	var _image_wrapper = __webpack_require__(3);
 	
 	var _image_wrapper2 = _interopRequireDefault(_image_wrapper);
 	
-	var _barcode_locator = __webpack_require__(20);
+	var _barcode_locator = __webpack_require__(18);
 	
 	var _barcode_locator2 = _interopRequireDefault(_barcode_locator);
 	
-	var _barcode_decoder = __webpack_require__(25);
+	var _barcode_decoder = __webpack_require__(23);
 	
 	var _barcode_decoder2 = _interopRequireDefault(_barcode_decoder);
 	
-	var _frame_grabber = __webpack_require__(70);
-	
-	var _frame_grabber2 = _interopRequireDefault(_frame_grabber);
-	
-	var _config2 = __webpack_require__(71);
+	var _config2 = __webpack_require__(68);
 	
 	var _config3 = _interopRequireDefault(_config2);
 	
-	var _events = __webpack_require__(72);
+	var _events = __webpack_require__(69);
 	
 	var _events2 = _interopRequireDefault(_events);
 	
-	var _camera_access = __webpack_require__(73);
+	var _camera_access = __webpack_require__(70);
 	
 	var _camera_access2 = _interopRequireDefault(_camera_access);
 	
-	var _image_debug = __webpack_require__(24);
+	var _image_debug = __webpack_require__(22);
 	
 	var _image_debug2 = _interopRequireDefault(_image_debug);
 	
-	var _glMatrix = __webpack_require__(9);
+	var _glMatrix = __webpack_require__(7);
 	
-	var _result_collector = __webpack_require__(74);
+	var _result_collector = __webpack_require__(71);
 	
 	var _result_collector2 = _interopRequireDefault(_result_collector);
 	
-	var merge = __webpack_require__(37);
+	var merge = __webpack_require__(35);
+	var InputStream = __webpack_require__(72);
+	var FrameGrabber = __webpack_require__(74);
 	
 	var _inputStream,
 	    _framegrabber,
@@ -169,9 +163,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var video;
 	    if (_config.inputStream.type === "VideoStream") {
 	        video = document.createElement("video");
-	        _inputStream = _input_stream2['default'].createVideoStream(video);
+	        _inputStream = InputStream.createVideoStream(video);
 	    } else if (_config.inputStream.type === "ImageStream") {
-	        _inputStream = _input_stream2['default'].createImageStream();
+	        _inputStream = InputStream.createImageStream();
 	    } else if (_config.inputStream.type === "LiveStream") {
 	        var $viewport = document.querySelector("#interactive.viewport");
 	        if ($viewport) {
@@ -181,7 +175,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                $viewport.appendChild(video);
 	            }
 	        }
-	        _inputStream = _input_stream2['default'].createLiveStream(video);
+	        _inputStream = InputStream.createLiveStream(video);
 	        _camera_access2['default'].request(video, _config.inputStream.constraints, function (err) {
 	            if (!err) {
 	                _inputStream.trigger("canrecord");
@@ -200,7 +194,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function canRecord(cb) {
 	    _barcode_locator2['default'].checkImageConstraints(_inputStream, _config.locator);
 	    initCanvas();
-	    _framegrabber = _frame_grabber2['default'].create(_inputStream, _canvasContainer.dom.image);
+	    _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
 	    initConfig();
 	
 	    if (_config.numOfWorkers > 0) {
@@ -626,414 +620,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _image_loader = __webpack_require__(4);
-	
-	var _image_loader2 = _interopRequireDefault(_image_loader);
-	
-	var InputStream = {};
-	InputStream.createVideoStream = function (video) {
-	    var that = {},
-	        _config = null,
-	        _eventNames = ['canrecord', 'ended'],
-	        _eventHandlers = {},
-	        _calculatedWidth,
-	        _calculatedHeight,
-	        _topRight = { x: 0, y: 0 },
-	        _canvasSize = { x: 0, y: 0 };
-	
-	    function initSize() {
-	        var width = video.videoWidth,
-	            height = video.videoHeight;
-	
-	        _calculatedWidth = _config.size ? width / height > 1 ? _config.size : Math.floor(width / height * _config.size) : width;
-	        _calculatedHeight = _config.size ? width / height > 1 ? Math.floor(height / width * _config.size) : _config.size : height;
-	
-	        _canvasSize.x = _calculatedWidth;
-	        _canvasSize.y = _calculatedHeight;
-	    }
-	
-	    that.getRealWidth = function () {
-	        return video.videoWidth;
-	    };
-	
-	    that.getRealHeight = function () {
-	        return video.videoHeight;
-	    };
-	
-	    that.getWidth = function () {
-	        return _calculatedWidth;
-	    };
-	
-	    that.getHeight = function () {
-	        return _calculatedHeight;
-	    };
-	
-	    that.setWidth = function (width) {
-	        _calculatedWidth = width;
-	    };
-	
-	    that.setHeight = function (height) {
-	        _calculatedHeight = height;
-	    };
-	
-	    that.setInputStream = function (config) {
-	        _config = config;
-	        video.src = typeof config.src !== 'undefined' ? config.src : '';
-	    };
-	
-	    that.ended = function () {
-	        return video.ended;
-	    };
-	
-	    that.getConfig = function () {
-	        return _config;
-	    };
-	
-	    that.setAttribute = function (name, value) {
-	        video.setAttribute(name, value);
-	    };
-	
-	    that.pause = function () {
-	        video.pause();
-	    };
-	
-	    that.play = function () {
-	        video.play();
-	    };
-	
-	    that.setCurrentTime = function (time) {
-	        if (_config.type !== "LiveStream") {
-	            video.currentTime = time;
-	        }
-	    };
-	
-	    that.addEventListener = function (event, f, bool) {
-	        if (_eventNames.indexOf(event) !== -1) {
-	            if (!_eventHandlers[event]) {
-	                _eventHandlers[event] = [];
-	            }
-	            _eventHandlers[event].push(f);
-	        } else {
-	            video.addEventListener(event, f, bool);
-	        }
-	    };
-	
-	    that.clearEventHandlers = function () {
-	        _eventNames.forEach(function (eventName) {
-	            var handlers = _eventHandlers[eventName];
-	            if (handlers && handlers.length > 0) {
-	                handlers.forEach(function (handler) {
-	                    video.removeEventListener(eventName, handler);
-	                });
-	            }
-	        });
-	    };
-	
-	    that.trigger = function (eventName, args) {
-	        var j,
-	            handlers = _eventHandlers[eventName];
-	
-	        if (eventName === 'canrecord') {
-	            initSize();
-	        }
-	        if (handlers && handlers.length > 0) {
-	            for (j = 0; j < handlers.length; j++) {
-	                handlers[j].apply(that, args);
-	            }
-	        }
-	    };
-	
-	    that.setTopRight = function (topRight) {
-	        _topRight.x = topRight.x;
-	        _topRight.y = topRight.y;
-	    };
-	
-	    that.getTopRight = function () {
-	        return _topRight;
-	    };
-	
-	    that.setCanvasSize = function (size) {
-	        _canvasSize.x = size.x;
-	        _canvasSize.y = size.y;
-	    };
-	
-	    that.getCanvasSize = function () {
-	        return _canvasSize;
-	    };
-	
-	    that.getFrame = function () {
-	        return video;
-	    };
-	
-	    return that;
-	};
-	
-	InputStream.createLiveStream = function (video) {
-	    video.setAttribute("autoplay", true);
-	    var that = InputStream.createVideoStream(video);
-	
-	    that.ended = function () {
-	        return false;
-	    };
-	
-	    return that;
-	};
-	
-	InputStream.createImageStream = function () {
-	    var that = {};
-	    var _config = null;
-	
-	    var width = 0,
-	        height = 0,
-	        frameIdx = 0,
-	        paused = true,
-	        loaded = false,
-	        imgArray = null,
-	        size = 0,
-	        offset = 1,
-	        baseUrl = null,
-	        ended = false,
-	        calculatedWidth,
-	        calculatedHeight,
-	        _eventNames = ['canrecord', 'ended'],
-	        _eventHandlers = {},
-	        _topRight = { x: 0, y: 0 },
-	        _canvasSize = { x: 0, y: 0 };
-	
-	    function loadImages() {
-	        loaded = false;
-	        _image_loader2['default'].load(baseUrl, function (imgs) {
-	            imgArray = imgs;
-	            width = imgs[0].width;
-	            height = imgs[0].height;
-	            calculatedWidth = _config.size ? width / height > 1 ? _config.size : Math.floor(width / height * _config.size) : width;
-	            calculatedHeight = _config.size ? width / height > 1 ? Math.floor(height / width * _config.size) : _config.size : height;
-	            _canvasSize.x = calculatedWidth;
-	            _canvasSize.y = calculatedHeight;
-	            loaded = true;
-	            frameIdx = 0;
-	            setTimeout(function () {
-	                publishEvent("canrecord", []);
-	            }, 0);
-	        }, offset, size, _config.sequence);
-	    }
-	
-	    function publishEvent(eventName, args) {
-	        var j,
-	            handlers = _eventHandlers[eventName];
-	
-	        if (handlers && handlers.length > 0) {
-	            for (j = 0; j < handlers.length; j++) {
-	                handlers[j].apply(that, args);
-	            }
-	        }
-	    }
-	
-	    that.trigger = publishEvent;
-	
-	    that.getWidth = function () {
-	        return calculatedWidth;
-	    };
-	
-	    that.getHeight = function () {
-	        return calculatedHeight;
-	    };
-	
-	    that.setWidth = function (newWidth) {
-	        calculatedWidth = newWidth;
-	    };
-	
-	    that.setHeight = function (newHeight) {
-	        calculatedHeight = newHeight;
-	    };
-	
-	    that.getRealWidth = function () {
-	        return width;
-	    };
-	
-	    that.getRealHeight = function () {
-	        return height;
-	    };
-	
-	    that.setInputStream = function (stream) {
-	        _config = stream;
-	        if (stream.sequence === false) {
-	            baseUrl = stream.src;
-	            size = 1;
-	        } else {
-	            baseUrl = stream.src;
-	            size = stream.length;
-	        }
-	        loadImages();
-	    };
-	
-	    that.ended = function () {
-	        return ended;
-	    };
-	
-	    that.setAttribute = function () {};
-	
-	    that.getConfig = function () {
-	        return _config;
-	    };
-	
-	    that.pause = function () {
-	        paused = true;
-	    };
-	
-	    that.play = function () {
-	        paused = false;
-	    };
-	
-	    that.setCurrentTime = function (time) {
-	        frameIdx = time;
-	    };
-	
-	    that.addEventListener = function (event, f) {
-	        if (_eventNames.indexOf(event) !== -1) {
-	            if (!_eventHandlers[event]) {
-	                _eventHandlers[event] = [];
-	            }
-	            _eventHandlers[event].push(f);
-	        }
-	    };
-	
-	    that.setTopRight = function (topRight) {
-	        _topRight.x = topRight.x;
-	        _topRight.y = topRight.y;
-	    };
-	
-	    that.getTopRight = function () {
-	        return _topRight;
-	    };
-	
-	    that.setCanvasSize = function (canvasSize) {
-	        _canvasSize.x = canvasSize.x;
-	        _canvasSize.y = canvasSize.y;
-	    };
-	
-	    that.getCanvasSize = function () {
-	        return _canvasSize;
-	    };
-	
-	    that.getFrame = function () {
-	        var frame;
-	
-	        if (!loaded) {
-	            return null;
-	        }
-	        if (!paused) {
-	            frame = imgArray[frameIdx];
-	            if (frameIdx < size - 1) {
-	                frameIdx++;
-	            } else {
-	                setTimeout(function () {
-	                    ended = true;
-	                    publishEvent("ended", []);
-	                }, 0);
-	            }
-	        }
-	        return frame;
-	    };
-	
-	    return that;
-	};
-	
-	exports['default'] = InputStream;
-	module.exports = exports['default'];
-
-/***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	"use strict";
-	
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	var ImageLoader = {};
-	ImageLoader.load = function (directory, callback, offset, size, sequence) {
-	    var htmlImagesSrcArray = new Array(size),
-	        htmlImagesArray = new Array(htmlImagesSrcArray.length),
-	        i,
-	        img,
-	        num;
-	
-	    if (sequence === false) {
-	        htmlImagesSrcArray[0] = directory;
-	    } else {
-	        for (i = 0; i < htmlImagesSrcArray.length; i++) {
-	            num = offset + i;
-	            htmlImagesSrcArray[i] = directory + "image-" + ("00" + num).slice(-3) + ".jpg";
-	        }
-	    }
-	    htmlImagesArray.notLoaded = [];
-	    htmlImagesArray.addImage = function (image) {
-	        htmlImagesArray.notLoaded.push(image);
-	    };
-	    htmlImagesArray.loaded = function (loadedImg) {
-	        var notloadedImgs = htmlImagesArray.notLoaded;
-	        for (var x = 0; x < notloadedImgs.length; x++) {
-	            if (notloadedImgs[x] === loadedImg) {
-	                notloadedImgs.splice(x, 1);
-	                for (var y = 0; y < htmlImagesSrcArray.length; y++) {
-	                    var imgName = htmlImagesSrcArray[y].substr(htmlImagesSrcArray[y].lastIndexOf("/"));
-	                    if (loadedImg.src.lastIndexOf(imgName) !== -1) {
-	                        htmlImagesArray[y] = loadedImg;
-	                        break;
-	                    }
-	                }
-	                break;
-	            }
-	        }
-	        if (notloadedImgs.length === 0) {
-	            console.log("Images loaded");
-	            callback.apply(null, [htmlImagesArray]);
-	        }
-	    };
-	
-	    for (i = 0; i < htmlImagesSrcArray.length; i++) {
-	        img = new Image();
-	        htmlImagesArray.addImage(img);
-	        addOnloadHandler(img, htmlImagesArray);
-	        img.src = htmlImagesSrcArray[i];
-	    }
-	};
-	
-	function addOnloadHandler(img, htmlImagesArray) {
-	    img.onload = function () {
-	        htmlImagesArray.loaded(this);
-	    };
-	}
-	
-	exports["default"] = ImageLoader;
-	module.exports = exports["default"];
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
-	});
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-	
-	var _subImage = __webpack_require__(6);
+	var _subImage = __webpack_require__(4);
 	
 	var _subImage2 = _interopRequireDefault(_subImage);
 	
-	var _cv_utils = __webpack_require__(7);
+	var _cv_utils = __webpack_require__(5);
 	
 	var _cv_utils2 = _interopRequireDefault(_cv_utils);
 	
-	var _array_helper = __webpack_require__(19);
+	var _array_helper = __webpack_require__(17);
 	
 	var _array_helper2 = _interopRequireDefault(_array_helper);
 	
-	var _glMatrix = __webpack_require__(9);
+	var _glMatrix = __webpack_require__(7);
 	
 	/**
 	 * Represents a basic image combining the data and size.
@@ -1383,7 +982,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 6 */
+/* 4 */
 /***/ function(module, exports) {
 
 	/**
@@ -1478,7 +1077,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 7 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1489,15 +1088,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _cluster = __webpack_require__(8);
+	var _cluster = __webpack_require__(6);
 	
 	var _cluster2 = _interopRequireDefault(_cluster);
 	
-	var _array_helper = __webpack_require__(19);
+	var _array_helper = __webpack_require__(17);
 	
 	var _array_helper2 = _interopRequireDefault(_array_helper);
 	
-	var _glMatrix = __webpack_require__(9);
+	var _glMatrix = __webpack_require__(7);
 	
 	var CVUtils = {};
 	
@@ -2274,7 +1873,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 8 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2283,7 +1882,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: true
 	});
 	
-	var _glMatrix = __webpack_require__(9);
+	var _glMatrix = __webpack_require__(7);
 	
 	/**
 	 * Creates a cluster for grouping similar orientations of datapoints
@@ -2353,7 +1952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 9 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2384,18 +1983,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	THE SOFTWARE. */
 	// END HEADER
 	
-	exports.glMatrix = __webpack_require__(10);
-	exports.mat2 = __webpack_require__(11);
-	exports.mat2d = __webpack_require__(12);
-	exports.mat3 = __webpack_require__(13);
-	exports.mat4 = __webpack_require__(14);
-	exports.quat = __webpack_require__(15);
-	exports.vec2 = __webpack_require__(18);
-	exports.vec3 = __webpack_require__(16);
-	exports.vec4 = __webpack_require__(17);
+	exports.glMatrix = __webpack_require__(8);
+	exports.mat2 = __webpack_require__(9);
+	exports.mat2d = __webpack_require__(10);
+	exports.mat3 = __webpack_require__(11);
+	exports.mat4 = __webpack_require__(12);
+	exports.quat = __webpack_require__(13);
+	exports.vec2 = __webpack_require__(16);
+	exports.vec3 = __webpack_require__(14);
+	exports.vec4 = __webpack_require__(15);
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -2453,7 +2052,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -2476,7 +2075,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
+	var glMatrix = __webpack_require__(8);
 	
 	/**
 	 * @class 2x2 Matrix
@@ -2761,7 +2360,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -2784,7 +2383,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
+	var glMatrix = __webpack_require__(8);
 	
 	/**
 	 * @class 2x3 Matrix
@@ -3084,7 +2683,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -3107,7 +2706,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
+	var glMatrix = __webpack_require__(8);
 	
 	/**
 	 * @class 3x3 Matrix
@@ -3655,7 +3254,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -3678,7 +3277,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
+	var glMatrix = __webpack_require__(8);
 	
 	/**
 	 * @class 4x4 Matrix
@@ -4944,7 +4543,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -4967,10 +4566,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
-	var mat3 = __webpack_require__(13);
-	var vec3 = __webpack_require__(16);
-	var vec4 = __webpack_require__(17);
+	var glMatrix = __webpack_require__(8);
+	var mat3 = __webpack_require__(11);
+	var vec3 = __webpack_require__(14);
+	var vec4 = __webpack_require__(15);
 	
 	/**
 	 * @class Quaternion
@@ -5503,7 +5102,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -5526,7 +5125,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
+	var glMatrix = __webpack_require__(8);
 	
 	/**
 	 * @class 3 Dimensional Vector
@@ -6218,7 +5817,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -6241,7 +5840,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
+	var glMatrix = __webpack_require__(8);
 	
 	/**
 	 * @class 4 Dimensional Vector
@@ -6761,7 +6360,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -6784,7 +6383,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE. */
 	
-	var glMatrix = __webpack_require__(10);
+	var glMatrix = __webpack_require__(8);
 	
 	/**
 	 * @class 2 Dimensional Vector
@@ -7290,7 +6889,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 17 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -7388,10 +6987,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 20 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
 	
 	Object.defineProperty(exports, '__esModule', {
 	    value: true
@@ -7399,35 +6998,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _image_wrapper = __webpack_require__(5);
+	var _image_wrapper = __webpack_require__(3);
 	
 	var _image_wrapper2 = _interopRequireDefault(_image_wrapper);
 	
-	var _cv_utils = __webpack_require__(7);
+	var _cv_utils = __webpack_require__(5);
 	
 	var _cv_utils2 = _interopRequireDefault(_cv_utils);
 	
-	var _rasterizer = __webpack_require__(21);
+	var _rasterizer = __webpack_require__(19);
 	
 	var _rasterizer2 = _interopRequireDefault(_rasterizer);
 	
-	var _tracer = __webpack_require__(22);
+	var _tracer = __webpack_require__(20);
 	
 	var _tracer2 = _interopRequireDefault(_tracer);
 	
-	var _skeletonizer2 = __webpack_require__(23);
+	var _skeletonizer2 = __webpack_require__(21);
 	
 	var _skeletonizer3 = _interopRequireDefault(_skeletonizer2);
 	
-	var _array_helper = __webpack_require__(19);
+	var _array_helper = __webpack_require__(17);
 	
 	var _array_helper2 = _interopRequireDefault(_array_helper);
 	
-	var _image_debug = __webpack_require__(24);
+	var _image_debug = __webpack_require__(22);
 	
 	var _image_debug2 = _interopRequireDefault(_image_debug);
 	
-	var _glMatrix = __webpack_require__(9);
+	var _glMatrix = __webpack_require__(7);
 	
 	var _glMatrix2 = _interopRequireDefault(_glMatrix);
 	
@@ -7479,7 +7078,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    skeletonImageData = new ArrayBuffer(64 * 1024);
 	    _subImageWrapper = new _image_wrapper2['default'](_patchSize, new Uint8Array(skeletonImageData, 0, _patchSize.x * _patchSize.y));
 	    _skelImageWrapper = new _image_wrapper2['default'](_patchSize, new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y), undefined, true);
-	    _skeletonizer = (0, _skeletonizer3['default'])(typeof window !== 'undefined' ? window : self, {
+	    _skeletonizer = (0, _skeletonizer3['default'])(typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : global, {
 	        size: _patchSize.x
 	    }, skeletonImageData);
 	
@@ -7993,9 +7592,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	};
 	module.exports = exports['default'];
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 21 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -8006,7 +7606,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 	
-	var _tracer = __webpack_require__(22);
+	var _tracer = __webpack_require__(20);
 	
 	var _tracer2 = _interopRequireDefault(_tracer);
 	
@@ -8204,7 +7804,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 22 */
+/* 20 */
 /***/ function(module, exports) {
 
 	/**
@@ -8314,7 +7914,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 23 */
+/* 21 */
 /***/ function(module, exports) {
 
 	/* @preserve ASM BEGIN */
@@ -8525,7 +8125,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 24 */
+/* 22 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -8577,7 +8177,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 25 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -8588,47 +8188,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _bresenham = __webpack_require__(26);
+	var _bresenham = __webpack_require__(24);
 	
 	var _bresenham2 = _interopRequireDefault(_bresenham);
 	
-	var _image_debug = __webpack_require__(24);
+	var _image_debug = __webpack_require__(22);
 	
 	var _image_debug2 = _interopRequireDefault(_image_debug);
 	
-	var _code_128_reader = __webpack_require__(27);
+	var _code_128_reader = __webpack_require__(25);
 	
 	var _code_128_reader2 = _interopRequireDefault(_code_128_reader);
 	
-	var _ean_reader = __webpack_require__(29);
+	var _ean_reader = __webpack_require__(27);
 	
 	var _ean_reader2 = _interopRequireDefault(_ean_reader);
 	
-	var _code_39_reader = __webpack_require__(30);
+	var _code_39_reader = __webpack_require__(28);
 	
 	var _code_39_reader2 = _interopRequireDefault(_code_39_reader);
 	
-	var _code_39_vin_reader = __webpack_require__(31);
+	var _code_39_vin_reader = __webpack_require__(29);
 	
 	var _code_39_vin_reader2 = _interopRequireDefault(_code_39_vin_reader);
 	
-	var _codabar_reader = __webpack_require__(32);
+	var _codabar_reader = __webpack_require__(30);
 	
 	var _codabar_reader2 = _interopRequireDefault(_codabar_reader);
 	
-	var _upc_reader = __webpack_require__(33);
+	var _upc_reader = __webpack_require__(31);
 	
 	var _upc_reader2 = _interopRequireDefault(_upc_reader);
 	
-	var _ean_8_reader = __webpack_require__(34);
+	var _ean_8_reader = __webpack_require__(32);
 	
 	var _ean_8_reader2 = _interopRequireDefault(_ean_8_reader);
 	
-	var _upc_e_reader = __webpack_require__(35);
+	var _upc_e_reader = __webpack_require__(33);
 	
 	var _upc_e_reader2 = _interopRequireDefault(_upc_e_reader);
 	
-	var _i2of5_reader = __webpack_require__(36);
+	var _i2of5_reader = __webpack_require__(34);
 	
 	var _i2of5_reader2 = _interopRequireDefault(_i2of5_reader);
 	
@@ -8906,7 +8506,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 26 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -8917,11 +8517,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _cv_utils = __webpack_require__(7);
+	var _cv_utils = __webpack_require__(5);
 	
 	var _cv_utils2 = _interopRequireDefault(_cv_utils);
 	
-	var _image_wrapper = __webpack_require__(5);
+	var _image_wrapper = __webpack_require__(3);
 	
 	var _image_wrapper2 = _interopRequireDefault(_image_wrapper);
 	
@@ -9139,7 +8739,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 27 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -9150,7 +8750,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 	
-	var _barcode_reader = __webpack_require__(28);
+	var _barcode_reader = __webpack_require__(26);
 	
 	var _barcode_reader2 = _interopRequireDefault(_barcode_reader);
 	
@@ -9453,7 +9053,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 28 */
+/* 26 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -9686,7 +9286,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 29 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -9697,7 +9297,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 	
-	var _barcode_reader = __webpack_require__(28);
+	var _barcode_reader = __webpack_require__(26);
 	
 	var _barcode_reader2 = _interopRequireDefault(_barcode_reader);
 	
@@ -10009,7 +9609,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 30 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -10020,11 +9620,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _barcode_reader = __webpack_require__(28);
+	var _barcode_reader = __webpack_require__(26);
 	
 	var _barcode_reader2 = _interopRequireDefault(_barcode_reader);
 	
-	var _array_helper = __webpack_require__(19);
+	var _array_helper = __webpack_require__(17);
 	
 	var _array_helper2 = _interopRequireDefault(_array_helper);
 	
@@ -10238,7 +9838,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 31 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -10249,7 +9849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _code_39_reader = __webpack_require__(30);
+	var _code_39_reader = __webpack_require__(28);
 	
 	var _code_39_reader2 = _interopRequireDefault(_code_39_reader);
 	
@@ -10303,7 +9903,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 32 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -10314,7 +9914,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 	
-	var _barcode_reader = __webpack_require__(28);
+	var _barcode_reader = __webpack_require__(26);
 	
 	var _barcode_reader2 = _interopRequireDefault(_barcode_reader);
 	
@@ -10603,7 +10203,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 33 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -10614,7 +10214,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 	
-	var _ean_reader = __webpack_require__(29);
+	var _ean_reader = __webpack_require__(27);
 	
 	var _ean_reader2 = _interopRequireDefault(_ean_reader);
 	
@@ -10643,7 +10243,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 34 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -10654,7 +10254,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 	
-	var _ean_reader = __webpack_require__(29);
+	var _ean_reader = __webpack_require__(27);
 	
 	var _ean_reader2 = _interopRequireDefault(_ean_reader);
 	
@@ -10704,7 +10304,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 35 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -10715,7 +10315,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 	
-	var _ean_reader = __webpack_require__(29);
+	var _ean_reader = __webpack_require__(27);
 	
 	var _ean_reader2 = _interopRequireDefault(_ean_reader);
 	
@@ -10814,7 +10414,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 36 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -10825,11 +10425,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _barcode_reader = __webpack_require__(28);
+	var _barcode_reader = __webpack_require__(26);
 	
 	var _barcode_reader2 = _interopRequireDefault(_barcode_reader);
 	
-	var merge = __webpack_require__(37);
+	var merge = __webpack_require__(35);
 	
 	function I2of5Reader(opts) {
 	    opts = merge(getDefaulConfig(), opts);
@@ -11152,11 +10752,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 37 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseMerge = __webpack_require__(38),
-	    createAssigner = __webpack_require__(65);
+	var baseMerge = __webpack_require__(36),
+	    createAssigner = __webpack_require__(63);
 	
 	/**
 	 * Recursively merges own enumerable properties of the source object(s), that
@@ -11212,17 +10812,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 38 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayEach = __webpack_require__(39),
-	    baseMergeDeep = __webpack_require__(40),
-	    isArray = __webpack_require__(48),
-	    isArrayLike = __webpack_require__(43),
-	    isObject = __webpack_require__(52),
-	    isObjectLike = __webpack_require__(47),
-	    isTypedArray = __webpack_require__(60),
-	    keys = __webpack_require__(63);
+	var arrayEach = __webpack_require__(37),
+	    baseMergeDeep = __webpack_require__(38),
+	    isArray = __webpack_require__(46),
+	    isArrayLike = __webpack_require__(41),
+	    isObject = __webpack_require__(50),
+	    isObjectLike = __webpack_require__(45),
+	    isTypedArray = __webpack_require__(58),
+	    keys = __webpack_require__(61);
 	
 	/**
 	 * The base implementation of `_.merge` without support for argument juggling,
@@ -11274,7 +10874,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 39 */
+/* 37 */
 /***/ function(module, exports) {
 
 	/**
@@ -11302,16 +10902,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 40 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayCopy = __webpack_require__(41),
-	    isArguments = __webpack_require__(42),
-	    isArray = __webpack_require__(48),
-	    isArrayLike = __webpack_require__(43),
-	    isPlainObject = __webpack_require__(53),
-	    isTypedArray = __webpack_require__(60),
-	    toPlainObject = __webpack_require__(61);
+	var arrayCopy = __webpack_require__(39),
+	    isArguments = __webpack_require__(40),
+	    isArray = __webpack_require__(46),
+	    isArrayLike = __webpack_require__(41),
+	    isPlainObject = __webpack_require__(51),
+	    isTypedArray = __webpack_require__(58),
+	    toPlainObject = __webpack_require__(59);
 	
 	/**
 	 * A specialized version of `baseMerge` for arrays and objects which performs
@@ -11375,7 +10975,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 41 */
+/* 39 */
 /***/ function(module, exports) {
 
 	/**
@@ -11401,11 +11001,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 42 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(43),
-	    isObjectLike = __webpack_require__(47);
+	var isArrayLike = __webpack_require__(41),
+	    isObjectLike = __webpack_require__(45);
 	
 	/** Used for native method references. */
 	var objectProto = Object.prototype;
@@ -11441,11 +11041,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 43 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getLength = __webpack_require__(44),
-	    isLength = __webpack_require__(46);
+	var getLength = __webpack_require__(42),
+	    isLength = __webpack_require__(44);
 	
 	/**
 	 * Checks if `value` is array-like.
@@ -11462,10 +11062,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 44 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(45);
+	var baseProperty = __webpack_require__(43);
 	
 	/**
 	 * Gets the "length" property value of `object`.
@@ -11483,7 +11083,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 45 */
+/* 43 */
 /***/ function(module, exports) {
 
 	/**
@@ -11503,7 +11103,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 46 */
+/* 44 */
 /***/ function(module, exports) {
 
 	/**
@@ -11529,7 +11129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 47 */
+/* 45 */
 /***/ function(module, exports) {
 
 	/**
@@ -11547,12 +11147,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 48 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getNative = __webpack_require__(49),
-	    isLength = __webpack_require__(46),
-	    isObjectLike = __webpack_require__(47);
+	var getNative = __webpack_require__(47),
+	    isLength = __webpack_require__(44),
+	    isObjectLike = __webpack_require__(45);
 	
 	/** `Object#toString` result references. */
 	var arrayTag = '[object Array]';
@@ -11593,10 +11193,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 49 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isNative = __webpack_require__(50);
+	var isNative = __webpack_require__(48);
 	
 	/**
 	 * Gets the native function at `key` of `object`.
@@ -11615,11 +11215,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 50 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isFunction = __webpack_require__(51),
-	    isObjectLike = __webpack_require__(47);
+	var isFunction = __webpack_require__(49),
+	    isObjectLike = __webpack_require__(45);
 	
 	/** Used to detect host constructors (Safari > 5). */
 	var reIsHostCtor = /^\[object .+?Constructor\]$/;
@@ -11669,10 +11269,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 51 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(52);
+	var isObject = __webpack_require__(50);
 	
 	/** `Object#toString` result references. */
 	var funcTag = '[object Function]';
@@ -11713,7 +11313,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 52 */
+/* 50 */
 /***/ function(module, exports) {
 
 	/**
@@ -11747,12 +11347,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 53 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseForIn = __webpack_require__(54),
-	    isArguments = __webpack_require__(42),
-	    isObjectLike = __webpack_require__(47);
+	var baseForIn = __webpack_require__(52),
+	    isArguments = __webpack_require__(40),
+	    isObjectLike = __webpack_require__(45);
 	
 	/** `Object#toString` result references. */
 	var objectTag = '[object Object]';
@@ -11824,11 +11424,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 54 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFor = __webpack_require__(55),
-	    keysIn = __webpack_require__(58);
+	var baseFor = __webpack_require__(53),
+	    keysIn = __webpack_require__(56);
 	
 	/**
 	 * The base implementation of `_.forIn` without support for callback
@@ -11847,10 +11447,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 55 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var createBaseFor = __webpack_require__(56);
+	var createBaseFor = __webpack_require__(54);
 	
 	/**
 	 * The base implementation of `baseForIn` and `baseForOwn` which iterates
@@ -11870,10 +11470,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 56 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toObject = __webpack_require__(57);
+	var toObject = __webpack_require__(55);
 	
 	/**
 	 * Creates a base function for `_.forIn` or `_.forInRight`.
@@ -11903,10 +11503,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 57 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(52);
+	var isObject = __webpack_require__(50);
 	
 	/**
 	 * Converts `value` to an object if it's not one.
@@ -11923,14 +11523,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 58 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArguments = __webpack_require__(42),
-	    isArray = __webpack_require__(48),
-	    isIndex = __webpack_require__(59),
-	    isLength = __webpack_require__(46),
-	    isObject = __webpack_require__(52);
+	var isArguments = __webpack_require__(40),
+	    isArray = __webpack_require__(46),
+	    isIndex = __webpack_require__(57),
+	    isLength = __webpack_require__(44),
+	    isObject = __webpack_require__(50);
 	
 	/** Used for native method references. */
 	var objectProto = Object.prototype;
@@ -11993,7 +11593,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 59 */
+/* 57 */
 /***/ function(module, exports) {
 
 	/** Used to detect unsigned integer values. */
@@ -12023,11 +11623,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 60 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isLength = __webpack_require__(46),
-	    isObjectLike = __webpack_require__(47);
+	var isLength = __webpack_require__(44),
+	    isObjectLike = __webpack_require__(45);
 	
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]',
@@ -12103,11 +11703,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 61 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseCopy = __webpack_require__(62),
-	    keysIn = __webpack_require__(58);
+	var baseCopy = __webpack_require__(60),
+	    keysIn = __webpack_require__(56);
 	
 	/**
 	 * Converts `value` to a plain object flattening inherited enumerable
@@ -12140,7 +11740,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 62 */
+/* 60 */
 /***/ function(module, exports) {
 
 	/**
@@ -12169,13 +11769,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 63 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getNative = __webpack_require__(49),
-	    isArrayLike = __webpack_require__(43),
-	    isObject = __webpack_require__(52),
-	    shimKeys = __webpack_require__(64);
+	var getNative = __webpack_require__(47),
+	    isArrayLike = __webpack_require__(41),
+	    isObject = __webpack_require__(50),
+	    shimKeys = __webpack_require__(62);
 	
 	/* Native method references for those with the same name as other `lodash` methods. */
 	var nativeKeys = getNative(Object, 'keys');
@@ -12220,14 +11820,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 64 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArguments = __webpack_require__(42),
-	    isArray = __webpack_require__(48),
-	    isIndex = __webpack_require__(59),
-	    isLength = __webpack_require__(46),
-	    keysIn = __webpack_require__(58);
+	var isArguments = __webpack_require__(40),
+	    isArray = __webpack_require__(46),
+	    isIndex = __webpack_require__(57),
+	    isLength = __webpack_require__(44),
+	    keysIn = __webpack_require__(56);
 	
 	/** Used for native method references. */
 	var objectProto = Object.prototype;
@@ -12267,12 +11867,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 65 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var bindCallback = __webpack_require__(66),
-	    isIterateeCall = __webpack_require__(68),
-	    restParam = __webpack_require__(69);
+	var bindCallback = __webpack_require__(64),
+	    isIterateeCall = __webpack_require__(66),
+	    restParam = __webpack_require__(67);
 	
 	/**
 	 * Creates a `_.assign`, `_.defaults`, or `_.merge` function.
@@ -12314,10 +11914,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 66 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var identity = __webpack_require__(67);
+	var identity = __webpack_require__(65);
 	
 	/**
 	 * A specialized version of `baseCallback` which only supports `this` binding
@@ -12359,7 +11959,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 67 */
+/* 65 */
 /***/ function(module, exports) {
 
 	/**
@@ -12385,12 +11985,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 68 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(43),
-	    isIndex = __webpack_require__(59),
-	    isObject = __webpack_require__(52);
+	var isArrayLike = __webpack_require__(41),
+	    isIndex = __webpack_require__(57),
+	    isObject = __webpack_require__(50);
 	
 	/**
 	 * Checks if the provided arguments are from an iteratee call.
@@ -12419,7 +12019,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 69 */
+/* 67 */
 /***/ function(module, exports) {
 
 	/** Used as the `TypeError` message for "Functions" methods. */
@@ -12483,96 +12083,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 70 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-	
-	var _cv_utils = __webpack_require__(7);
-	
-	var _cv_utils2 = _interopRequireDefault(_cv_utils);
-	
-	var FrameGrabber = {};
-	
-	FrameGrabber.create = function (inputStream, canvas) {
-	    var _that = {},
-	        _streamConfig = inputStream.getConfig(),
-	        _video_size = _cv_utils2["default"].imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
-	        _canvasSize = inputStream.getCanvasSize(),
-	        _size = _cv_utils2["default"].imageRef(inputStream.getWidth(), inputStream.getHeight()),
-	        topRight = inputStream.getTopRight(),
-	        _sx = topRight.x,
-	        _sy = topRight.y,
-	        _canvas,
-	        _ctx = null,
-	        _data = null;
-	
-	    _canvas = canvas ? canvas : document.createElement("canvas");
-	    _canvas.width = _canvasSize.x;
-	    _canvas.height = _canvasSize.y;
-	    _ctx = _canvas.getContext("2d");
-	    _data = new Uint8Array(_size.x * _size.y);
-	    console.log("FrameGrabber", JSON.stringify({
-	        size: _size,
-	        topRight: topRight,
-	        videoSize: _video_size,
-	        canvasSize: _canvasSize
-	    }));
-	
-	    /**
-	     * Uses the given array as frame-buffer
-	     */
-	    _that.attachData = function (data) {
-	        _data = data;
-	    };
-	
-	    /**
-	     * Returns the used frame-buffer
-	     */
-	    _that.getData = function () {
-	        return _data;
-	    };
-	
-	    /**
-	     * Fetches a frame from the input-stream and puts into the frame-buffer.
-	     * The image-data is converted to gray-scale and then half-sampled if configured.
-	     */
-	    _that.grab = function () {
-	        var doHalfSample = _streamConfig.halfSample,
-	            frame = inputStream.getFrame(),
-	            ctxData;
-	        if (frame) {
-	            _ctx.drawImage(frame, 0, 0, _canvasSize.x, _canvasSize.y);
-	            ctxData = _ctx.getImageData(_sx, _sy, _size.x, _size.y).data;
-	            if (doHalfSample) {
-	                _cv_utils2["default"].grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
-	            } else {
-	                _cv_utils2["default"].computeGray(ctxData, _data, _streamConfig);
-	            }
-	            return true;
-	        } else {
-	            return false;
-	        }
-	    };
-	
-	    _that.getSize = function () {
-	        return _size;
-	    };
-	
-	    return _that;
-	};
-	
-	exports["default"] = FrameGrabber;
-	module.exports = exports["default"];
-
-/***/ },
-/* 71 */
+/* 68 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -12634,7 +12145,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 72 */
+/* 69 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -12729,7 +12240,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 73 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -12737,7 +12248,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, '__esModule', {
 	    value: true
 	});
-	var merge = __webpack_require__(37);
+	var merge = __webpack_require__(35);
 	
 	var streamRef, loadedDataHandler;
 	
@@ -12878,7 +12389,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 74 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -12889,7 +12400,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _image_debug = __webpack_require__(24);
+	var _image_debug = __webpack_require__(22);
 	
 	var _image_debug2 = _interopRequireDefault(_image_debug);
 	
@@ -12946,6 +12457,490 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	};
 	module.exports = exports['default'];
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	var _image_loader = __webpack_require__(73);
+	
+	var _image_loader2 = _interopRequireDefault(_image_loader);
+	
+	var InputStream = {};
+	InputStream.createVideoStream = function (video) {
+	    var that = {},
+	        _config = null,
+	        _eventNames = ['canrecord', 'ended'],
+	        _eventHandlers = {},
+	        _calculatedWidth,
+	        _calculatedHeight,
+	        _topRight = { x: 0, y: 0 },
+	        _canvasSize = { x: 0, y: 0 };
+	
+	    function initSize() {
+	        var width = video.videoWidth,
+	            height = video.videoHeight;
+	
+	        _calculatedWidth = _config.size ? width / height > 1 ? _config.size : Math.floor(width / height * _config.size) : width;
+	        _calculatedHeight = _config.size ? width / height > 1 ? Math.floor(height / width * _config.size) : _config.size : height;
+	
+	        _canvasSize.x = _calculatedWidth;
+	        _canvasSize.y = _calculatedHeight;
+	    }
+	
+	    that.getRealWidth = function () {
+	        return video.videoWidth;
+	    };
+	
+	    that.getRealHeight = function () {
+	        return video.videoHeight;
+	    };
+	
+	    that.getWidth = function () {
+	        return _calculatedWidth;
+	    };
+	
+	    that.getHeight = function () {
+	        return _calculatedHeight;
+	    };
+	
+	    that.setWidth = function (width) {
+	        _calculatedWidth = width;
+	    };
+	
+	    that.setHeight = function (height) {
+	        _calculatedHeight = height;
+	    };
+	
+	    that.setInputStream = function (config) {
+	        _config = config;
+	        video.src = typeof config.src !== 'undefined' ? config.src : '';
+	    };
+	
+	    that.ended = function () {
+	        return video.ended;
+	    };
+	
+	    that.getConfig = function () {
+	        return _config;
+	    };
+	
+	    that.setAttribute = function (name, value) {
+	        video.setAttribute(name, value);
+	    };
+	
+	    that.pause = function () {
+	        video.pause();
+	    };
+	
+	    that.play = function () {
+	        video.play();
+	    };
+	
+	    that.setCurrentTime = function (time) {
+	        if (_config.type !== "LiveStream") {
+	            video.currentTime = time;
+	        }
+	    };
+	
+	    that.addEventListener = function (event, f, bool) {
+	        if (_eventNames.indexOf(event) !== -1) {
+	            if (!_eventHandlers[event]) {
+	                _eventHandlers[event] = [];
+	            }
+	            _eventHandlers[event].push(f);
+	        } else {
+	            video.addEventListener(event, f, bool);
+	        }
+	    };
+	
+	    that.clearEventHandlers = function () {
+	        _eventNames.forEach(function (eventName) {
+	            var handlers = _eventHandlers[eventName];
+	            if (handlers && handlers.length > 0) {
+	                handlers.forEach(function (handler) {
+	                    video.removeEventListener(eventName, handler);
+	                });
+	            }
+	        });
+	    };
+	
+	    that.trigger = function (eventName, args) {
+	        var j,
+	            handlers = _eventHandlers[eventName];
+	
+	        if (eventName === 'canrecord') {
+	            initSize();
+	        }
+	        if (handlers && handlers.length > 0) {
+	            for (j = 0; j < handlers.length; j++) {
+	                handlers[j].apply(that, args);
+	            }
+	        }
+	    };
+	
+	    that.setTopRight = function (topRight) {
+	        _topRight.x = topRight.x;
+	        _topRight.y = topRight.y;
+	    };
+	
+	    that.getTopRight = function () {
+	        return _topRight;
+	    };
+	
+	    that.setCanvasSize = function (size) {
+	        _canvasSize.x = size.x;
+	        _canvasSize.y = size.y;
+	    };
+	
+	    that.getCanvasSize = function () {
+	        return _canvasSize;
+	    };
+	
+	    that.getFrame = function () {
+	        return video;
+	    };
+	
+	    return that;
+	};
+	
+	InputStream.createLiveStream = function (video) {
+	    video.setAttribute("autoplay", true);
+	    var that = InputStream.createVideoStream(video);
+	
+	    that.ended = function () {
+	        return false;
+	    };
+	
+	    return that;
+	};
+	
+	InputStream.createImageStream = function () {
+	    var that = {};
+	    var _config = null;
+	
+	    var width = 0,
+	        height = 0,
+	        frameIdx = 0,
+	        paused = true,
+	        loaded = false,
+	        imgArray = null,
+	        size = 0,
+	        offset = 1,
+	        baseUrl = null,
+	        ended = false,
+	        calculatedWidth,
+	        calculatedHeight,
+	        _eventNames = ['canrecord', 'ended'],
+	        _eventHandlers = {},
+	        _topRight = { x: 0, y: 0 },
+	        _canvasSize = { x: 0, y: 0 };
+	
+	    function loadImages() {
+	        loaded = false;
+	        _image_loader2['default'].load(baseUrl, function (imgs) {
+	            imgArray = imgs;
+	            width = imgs[0].width;
+	            height = imgs[0].height;
+	            calculatedWidth = _config.size ? width / height > 1 ? _config.size : Math.floor(width / height * _config.size) : width;
+	            calculatedHeight = _config.size ? width / height > 1 ? Math.floor(height / width * _config.size) : _config.size : height;
+	            _canvasSize.x = calculatedWidth;
+	            _canvasSize.y = calculatedHeight;
+	            loaded = true;
+	            frameIdx = 0;
+	            setTimeout(function () {
+	                publishEvent("canrecord", []);
+	            }, 0);
+	        }, offset, size, _config.sequence);
+	    }
+	
+	    function publishEvent(eventName, args) {
+	        var j,
+	            handlers = _eventHandlers[eventName];
+	
+	        if (handlers && handlers.length > 0) {
+	            for (j = 0; j < handlers.length; j++) {
+	                handlers[j].apply(that, args);
+	            }
+	        }
+	    }
+	
+	    that.trigger = publishEvent;
+	
+	    that.getWidth = function () {
+	        return calculatedWidth;
+	    };
+	
+	    that.getHeight = function () {
+	        return calculatedHeight;
+	    };
+	
+	    that.setWidth = function (newWidth) {
+	        calculatedWidth = newWidth;
+	    };
+	
+	    that.setHeight = function (newHeight) {
+	        calculatedHeight = newHeight;
+	    };
+	
+	    that.getRealWidth = function () {
+	        return width;
+	    };
+	
+	    that.getRealHeight = function () {
+	        return height;
+	    };
+	
+	    that.setInputStream = function (stream) {
+	        _config = stream;
+	        if (stream.sequence === false) {
+	            baseUrl = stream.src;
+	            size = 1;
+	        } else {
+	            baseUrl = stream.src;
+	            size = stream.length;
+	        }
+	        loadImages();
+	    };
+	
+	    that.ended = function () {
+	        return ended;
+	    };
+	
+	    that.setAttribute = function () {};
+	
+	    that.getConfig = function () {
+	        return _config;
+	    };
+	
+	    that.pause = function () {
+	        paused = true;
+	    };
+	
+	    that.play = function () {
+	        paused = false;
+	    };
+	
+	    that.setCurrentTime = function (time) {
+	        frameIdx = time;
+	    };
+	
+	    that.addEventListener = function (event, f) {
+	        if (_eventNames.indexOf(event) !== -1) {
+	            if (!_eventHandlers[event]) {
+	                _eventHandlers[event] = [];
+	            }
+	            _eventHandlers[event].push(f);
+	        }
+	    };
+	
+	    that.setTopRight = function (topRight) {
+	        _topRight.x = topRight.x;
+	        _topRight.y = topRight.y;
+	    };
+	
+	    that.getTopRight = function () {
+	        return _topRight;
+	    };
+	
+	    that.setCanvasSize = function (canvasSize) {
+	        _canvasSize.x = canvasSize.x;
+	        _canvasSize.y = canvasSize.y;
+	    };
+	
+	    that.getCanvasSize = function () {
+	        return _canvasSize;
+	    };
+	
+	    that.getFrame = function () {
+	        var frame;
+	
+	        if (!loaded) {
+	            return null;
+	        }
+	        if (!paused) {
+	            frame = imgArray[frameIdx];
+	            if (frameIdx < size - 1) {
+	                frameIdx++;
+	            } else {
+	                setTimeout(function () {
+	                    ended = true;
+	                    publishEvent("ended", []);
+	                }, 0);
+	            }
+	        }
+	        return frame;
+	    };
+	
+	    return that;
+	};
+	
+	exports['default'] = InputStream;
+	module.exports = exports['default'];
+
+/***/ },
+/* 73 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	var ImageLoader = {};
+	ImageLoader.load = function (directory, callback, offset, size, sequence) {
+	    var htmlImagesSrcArray = new Array(size),
+	        htmlImagesArray = new Array(htmlImagesSrcArray.length),
+	        i,
+	        img,
+	        num;
+	
+	    if (sequence === false) {
+	        htmlImagesSrcArray[0] = directory;
+	    } else {
+	        for (i = 0; i < htmlImagesSrcArray.length; i++) {
+	            num = offset + i;
+	            htmlImagesSrcArray[i] = directory + "image-" + ("00" + num).slice(-3) + ".jpg";
+	        }
+	    }
+	    htmlImagesArray.notLoaded = [];
+	    htmlImagesArray.addImage = function (image) {
+	        htmlImagesArray.notLoaded.push(image);
+	    };
+	    htmlImagesArray.loaded = function (loadedImg) {
+	        var notloadedImgs = htmlImagesArray.notLoaded;
+	        for (var x = 0; x < notloadedImgs.length; x++) {
+	            if (notloadedImgs[x] === loadedImg) {
+	                notloadedImgs.splice(x, 1);
+	                for (var y = 0; y < htmlImagesSrcArray.length; y++) {
+	                    var imgName = htmlImagesSrcArray[y].substr(htmlImagesSrcArray[y].lastIndexOf("/"));
+	                    if (loadedImg.src.lastIndexOf(imgName) !== -1) {
+	                        htmlImagesArray[y] = loadedImg;
+	                        break;
+	                    }
+	                }
+	                break;
+	            }
+	        }
+	        if (notloadedImgs.length === 0) {
+	            console.log("Images loaded");
+	            callback.apply(null, [htmlImagesArray]);
+	        }
+	    };
+	
+	    for (i = 0; i < htmlImagesSrcArray.length; i++) {
+	        img = new Image();
+	        htmlImagesArray.addImage(img);
+	        addOnloadHandler(img, htmlImagesArray);
+	        img.src = htmlImagesSrcArray[i];
+	    }
+	};
+	
+	function addOnloadHandler(img, htmlImagesArray) {
+	    img.onload = function () {
+	        htmlImagesArray.loaded(this);
+	    };
+	}
+	
+	exports["default"] = ImageLoader;
+	module.exports = exports["default"];
+
+/***/ },
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	
+	var _cv_utils = __webpack_require__(5);
+	
+	var _cv_utils2 = _interopRequireDefault(_cv_utils);
+	
+	var FrameGrabber = {};
+	
+	FrameGrabber.create = function (inputStream, canvas) {
+	    var _that = {},
+	        _streamConfig = inputStream.getConfig(),
+	        _video_size = _cv_utils2["default"].imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
+	        _canvasSize = inputStream.getCanvasSize(),
+	        _size = _cv_utils2["default"].imageRef(inputStream.getWidth(), inputStream.getHeight()),
+	        topRight = inputStream.getTopRight(),
+	        _sx = topRight.x,
+	        _sy = topRight.y,
+	        _canvas,
+	        _ctx = null,
+	        _data = null;
+	
+	    _canvas = canvas ? canvas : document.createElement("canvas");
+	    _canvas.width = _canvasSize.x;
+	    _canvas.height = _canvasSize.y;
+	    _ctx = _canvas.getContext("2d");
+	    _data = new Uint8Array(_size.x * _size.y);
+	    console.log("FrameGrabber", JSON.stringify({
+	        size: _size,
+	        topRight: topRight,
+	        videoSize: _video_size,
+	        canvasSize: _canvasSize
+	    }));
+	
+	    /**
+	     * Uses the given array as frame-buffer
+	     */
+	    _that.attachData = function (data) {
+	        _data = data;
+	    };
+	
+	    /**
+	     * Returns the used frame-buffer
+	     */
+	    _that.getData = function () {
+	        return _data;
+	    };
+	
+	    /**
+	     * Fetches a frame from the input-stream and puts into the frame-buffer.
+	     * The image-data is converted to gray-scale and then half-sampled if configured.
+	     */
+	    _that.grab = function () {
+	        var doHalfSample = _streamConfig.halfSample,
+	            frame = inputStream.getFrame(),
+	            ctxData;
+	        if (frame) {
+	            _ctx.drawImage(frame, 0, 0, _canvasSize.x, _canvasSize.y);
+	            ctxData = _ctx.getImageData(_sx, _sy, _size.x, _size.y).data;
+	            if (doHalfSample) {
+	                _cv_utils2["default"].grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
+	            } else {
+	                _cv_utils2["default"].computeGray(ctxData, _data, _streamConfig);
+	            }
+	            return true;
+	        } else {
+	            return false;
+	        }
+	    };
+	
+	    _that.getSize = function () {
+	        return _size;
+	    };
+	
+	    return _that;
+	};
+	
+	exports["default"] = FrameGrabber;
+	module.exports = exports["default"];
 
 /***/ }
 /******/ ])

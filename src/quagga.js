@@ -1,9 +1,7 @@
 import TypeDefs from './typedefs'; // eslint-disable-line no-unused-vars
-import InputStream from './input_stream';
 import ImageWrapper from './image_wrapper';
 import BarcodeLocator from './barcode_locator';
 import BarcodeDecoder from './barcode_decoder';
-import FrameGrabber from './frame_grabber';
 import Config from './config';
 import Events from './events';
 import CameraAccess from './camera_access';
@@ -12,6 +10,8 @@ import {vec2} from 'gl-matrix';
 import ResultCollector from './result_collector';
 
 const merge = require('lodash/object/merge');
+const InputStream = require('input_stream');
+const FrameGrabber = require('frame_grabber');
 
 var _inputStream,
     _framegrabber,

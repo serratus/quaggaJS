@@ -1,5 +1,6 @@
 var webpack = require('webpack'),
-    MyUmdPlugin = require('./plugins/umd');
+    MyUmdPlugin = require('./plugins/umd'),
+    path = require('path');
 
 module.exports = {
     entry: [
@@ -14,7 +15,11 @@ module.exports = {
         }]
     },
     resolve: {
-        extensions: ['', '.js', '.jsx']
+        extensions: ['', '.js', '.jsx'],
+        alias: {
+            'input_stream$': path.resolve(__dirname, 'src/input_stream'),
+            'frame_grabber$': path.resolve(__dirname, 'src/frame_grabber')
+        }
     },
     output: {
         path: __dirname + '/dist',

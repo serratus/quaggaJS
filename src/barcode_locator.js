@@ -58,7 +58,7 @@ function initBuffers() {
     _skelImageWrapper = new ImageWrapper(_patchSize,
         new Uint8Array(skeletonImageData, _patchSize.x * _patchSize.y * 3, _patchSize.x * _patchSize.y),
         undefined, true);
-    _skeletonizer = skeletonizer((typeof window !== 'undefined') ? window : self, {
+    _skeletonizer = skeletonizer((typeof window !== 'undefined') ? window : (typeof self !== 'undefined') ? self : global, {
         size: _patchSize.x
     }, skeletonImageData);
 

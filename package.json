@@ -3,7 +3,7 @@
   "version": "0.7.0",
   "description": "An advanced barcode-scanner written in JavaScript",
   "main": "lib/quagga.js",
-  "browser": "dist/quagga.js",
+  "browser": "dist/quagga.min.js",
   "devDependencies": {
     "async": "^1.4.2",
     "babel-core": "^5.8.25",
