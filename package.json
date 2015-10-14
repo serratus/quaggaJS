@@ -31,8 +31,7 @@
     "karma-webpack": "^1.7.0",
     "mocha": "^2.3.2",
     "sinon": "^1.16.1",
-    "webpack": "^1.12.2",
-    "webpack-core": "^0.6.7"
+    "webpack": "^1.12.2"
   },
   "directories": {
     "doc": "doc"
@@ -41,7 +40,7 @@
     "test": "grunt test",
     "integrationtest": "grunt integrationtest",
     "build": "webpack && webpack --config webpack.config.min.js && grunt uglyasm && webpack --config webpack.node.config.js",
-    "dev-server": "webpack-dev-server"
+    "watch": "webpack --watch"
   },
   "repository": {
     "type": "git",
