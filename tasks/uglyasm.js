@@ -11,14 +11,17 @@ module.exports = function(grunt) {
         var code = fs.readFileSync('dist/quagga.js', 'utf-8'),
             minifiedCode = fs.readFileSync('dist/quagga.min.js', 'utf-8'),
             commentEnd = '/* @preserve ASM END */',
-            asmStartIdx = code.indexOf('/* @preserve ASM BEGIN */'),
-            asmEndIdx = code.indexOf(commentEnd),
-            asmCode = code.substring(asmStartIdx, asmEndIdx + commentEnd.length),
-            asmFunctionRegex = /function (\w+)\(\w+,\s*\w+,\s*\w+\)\s*\{\s*"use asm";/,
+            moduleFunctionRegex = /function\s*\((\w+,\s*\w+)\)\s*\{\s*\/\* \@preserve ASM BEGIN \*\//,
+            commentStartIdx = code.indexOf("/* @preserve ASM BEGIN */"),
+            asmEndIdxTmp = code.indexOf(commentEnd),
+            asmEndIdx = code.indexOf("}", asmEndIdxTmp),
+            asmCodeTmp = code.substring(commentStartIdx - Math.min(500, commentStartIdx),
+                asmEndIdx + 1),
+            asmStartIdx = asmCodeTmp.search(moduleFunctionRegex),
+            asmCode = asmCodeTmp.substring(asmStartIdx),
             asmModule,
-            asmModuleName,
-            asmCodeMinified,
-            asmMinifiedModuleName;
+            moduleArg1,
+            asmCodeMinified;
 
         asmCodeMinified = asmCode
             .replace(/\s*\/\/.*/g, '') // remove single-line comments
@@ -29,27 +32,31 @@ module.exports = function(grunt) {
 
         grunt.log.debug(asmCodeMinified);
 
-        asmModule = asmCode.match(asmFunctionRegex);
+        asmModule = moduleFunctionRegex.exec(asmCode);
         if (!asmModule) {
             grunt.log.error("No ASM module found");
             return;
         }
 
-        asmModuleName = asmModule[1];
-        grunt.log.debug(asmModuleName);
+        moduleArg1 = asmModule[1];
+        grunt.log.debug(moduleArg1);
 
-        asmModule = minifiedCode.match(asmFunctionRegex);
-        if (!asmModule) {
+        var insertionPoint = minifiedCode.search(moduleFunctionRegex);
+        if (insertionPoint === -1) {
             grunt.log.error("No ASM module found in minified file");
             return;
         }
+        grunt.log.debug(insertionPoint);
 
-        asmMinifiedModuleName = asmModule[1];
-        grunt.log.debug(asmMinifiedModuleName);
+        var insertionPointEnd = minifiedCode.indexOf(commentEnd, insertionPoint);
+        insertionPointEnd = minifiedCode.indexOf("}", insertionPointEnd) + 1;
 
-        asmCodeMinified = asmCodeMinified.replace(asmModuleName, asmMinifiedModuleName);
+        grunt.log.debug(insertionPointEnd);
 
-        minifiedCode = minifiedCode.replace(/\/\* @preserve ASM BEGIN \*\/[^]*?\/\* @preserve ASM END \*\//, asmCodeMinified);
+        minifiedCode = minifiedCode.substring(0, insertionPoint)
+            + asmCodeMinified
+            + minifiedCode.substring(insertionPointEnd);
+
         fs.writeFileSync('dist/quagga.min.js', minifiedCode);
         grunt.log.ok('dist/quagga.min.js written');
     });

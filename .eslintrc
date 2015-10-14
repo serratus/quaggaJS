@@ -1,0 +1,80 @@
+{
+    "settings" : {
+    "ecmascript": 6,
+    "jsx": true
+    },
+    "env": {
+        "browser": true,
+        "node": true
+    },
+    "ecmaFeatures": {
+        "blockBindings": true,
+        "forOf": true,
+        "blockBindings": true,
+        "defaultParams": true,
+        "globalReturn": false,
+        "modules": true,
+        "objectLiteralShorthandMethods": true,
+        "objectLiteralShorthandProperties": true,
+        "templateStrings": true,
+        "spread": true,
+        "jsx": true,
+        "arrowFunctions": true,
+        "classes": true,
+        "destructuring": true,
+        "objectLiteralComputedProperties": true
+    },
+    "globals": {},
+    "rules": {
+        "no-unused-expressions": 1,
+        "no-extra-boolean-cast": 1,
+        "no-multi-spaces": 2,
+        "no-underscore-dangle": 0,
+        "comma-dangle": 2,
+        "camelcase": 0,
+        "curly": 2,
+        "eqeqeq": 2,
+        "guard-for-in": 2,
+        "wrap-iife": 0,
+        "no-use-before-define": [1, "nofunc"],
+        "new-cap": 2,
+        "quotes": 0,
+        "strict": 0,
+        "no-caller": 2,
+        "no-empty": 1,
+        "no-new": 2,
+        "no-plusplus": 0,
+        "no-unused-vars": 1,
+        "no-trailing-spaces": 2,
+
+        // STYLE
+        "max-params": [2, 7],
+        "key-spacing": [1, {
+            beforeColon: false,
+            afterColon: true
+        }],
+        "indent": [2, 4],
+        "brace-style": [2, "1tbs"],
+        "comma-spacing": [2, {before: false, after: true}],
+        "comma-style": [2, "last"],
+        "consistent-this": [1, "self"],
+        "eol-last": 0,
+        "new-cap": 0,
+        "new-parens": 2,
+        "no-array-constructor": 2,
+        "no-mixed-spaces-and-tabs": 2,
+        "no-multiple-empty-lines": 2,
+        "semi-spacing": 2,
+        "dot-notation": 2,
+        "no-spaced-func": 1,
+        "no-shadow": 2,
+        "no-undef": 2,
+        "padded-blocks": [2, "never"],
+        "semi": [2, "always"],
+        "space-after-keywords": [2, "always"],
+        "space-infix-ops": 2,
+        "max-len" : [1, 120],
+        "consistent-return": 2,
+        "yoda": 2
+    }
+}

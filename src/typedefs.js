@@ -3,7 +3,6 @@
  * Normalizes browser-specific prefixes
  */
 
-glMatrixArrayType = Float32Array;
 if (typeof window !== 'undefined') {
     window.requestAnimFrame = (function () {
         return window.requestAnimationFrame ||
@@ -11,12 +10,13 @@ if (typeof window !== 'undefined') {
             window.mozRequestAnimationFrame ||
             window.oRequestAnimationFrame ||
             window.msRequestAnimationFrame ||
-            function (/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+            function (/* function FrameRequestCallback */ callback) {
                 window.setTimeout(callback, 1000 / 60);
             };
     })();
 
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+    navigator.getUserMedia = navigator.getUserMedia ||
+        navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
     window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
 }
 Math.imul = Math.imul || function(a, b) {
@@ -26,5 +26,5 @@ Math.imul = Math.imul || function(a, b) {
         bl = b & 0xffff;
     // the shift by 0 fixes the sign on the high part
     // the final |0 converts the unsigned value into a signed value
-    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
+    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0) | 0);
 };

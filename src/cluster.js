@@ -1,72 +1,65 @@
-/* jshint undef: true, unused: true, browser:true, devel: true */
-/* global define */
-
-define(["gl-matrix"], function(glMatrix) {
-    "use strict";
-
-    var vec2 = glMatrix.vec2;
+import {vec2} from 'gl-matrix';
     /**
-     * Creates a cluster for grouping similar orientations of datapoints 
+     * Creates a cluster for grouping similar orientations of datapoints
      */
-    var Cluster = {
-        create : function(point, threshold) {
-            var points = [], center = {
-                rad : 0,
-                vec : vec2.clone([0, 0])
-            }, pointMap = {};
+export default {
+    create: function(point, threshold) {
+        var points = [],
+            center = {
+                rad: 0,
+                vec: vec2.clone([0, 0])
+            },
+            pointMap = {};
 
-            function init() {
-                add(point);
-                updateCenter();
-            }
-
-            function add(point) {
-                pointMap[point.id] = point;
-                points.push(point);
-            }
-
-            function updateCenter() {
-                var i, sum = 0;
-                for ( i = 0; i < points.length; i++) {
-                    sum += points[i].rad;
-                }
-                center.rad = sum / points.length;
-                center.vec = vec2.clone([Math.cos(center.rad), Math.sin(center.rad)]);
-            }
-
-            init();
-
-            return {
-                add : function(point) {
-                    if (!pointMap[point.id]) {
-                        add(point);
-                        updateCenter();
-                    }
-                },
-                fits : function(point) {
-                    // check cosine similarity to center-angle
-                    var similarity = Math.abs(vec2.dot(point.point.vec, center.vec));
-                    if (similarity > threshold) {
-                        return true;
-                    }
-                    return false;
-                },
-                getPoints : function() {
-                    return points;
-                },
-                getCenter : function() {
-                    return center;
-                }
-            };
-        },
-        createPoint : function(point, id, property) {
-            return {
-                rad : point[property],
-                point : point,
-                id : id
-            };
+        function init() {
+            add(point);
+            updateCenter();
         }
-    };
 
-    return (Cluster);
-});
+        function add(pointToAdd) {
+            pointMap[pointToAdd.id] = pointToAdd;
+            points.push(pointToAdd);
+        }
+
+        function updateCenter() {
+            var i, sum = 0;
+            for ( i = 0; i < points.length; i++) {
+                sum += points[i].rad;
+            }
+            center.rad = sum / points.length;
+            center.vec = vec2.clone([Math.cos(center.rad), Math.sin(center.rad)]);
+        }
+
+        init();
+
+        return {
+            add: function(pointToAdd) {
+                if (!pointMap[pointToAdd.id]) {
+                    add(pointToAdd);
+                    updateCenter();
+                }
+            },
+            fits: function(otherPoint) {
+                // check cosine similarity to center-angle
+                var similarity = Math.abs(vec2.dot(otherPoint.point.vec, center.vec));
+                if (similarity > threshold) {
+                    return true;
+                }
+                return false;
+            },
+            getPoints: function() {
+                return points;
+            },
+            getCenter: function() {
+                return center;
+            }
+        };
+    },
+    createPoint: function(newPoint, id, property) {
+        return {
+            rad: newPoint[property],
+            point: newPoint,
+            id: id
+        };
+    }
+};

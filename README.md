@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-09-15)
+- [Changelog](#changelog) (2015-10-13)
 
 ## What is QuaggaJS?
 
@@ -34,9 +34,9 @@ be aligned with the viewport.
 
 In order to take full advantage of quaggaJS, the browser needs to support the
 `getUserMedia` API which is already implemented in recent versions of Firefox,
-Chrome, IE (Edge) and Opera. The API is also available on their mobile 
+Chrome, IE (Edge) and Opera. The API is also available on their mobile
 counterparts installed on Android (except IE). Safari does not allow the access
-to the camera yet, neither on desktop, nor on mobile. You can check 
+to the camera yet, neither on desktop, nor on mobile. You can check
 [caniuse][caniuse_getusermedia] for updates.
 
 In cases where real-time decoding is not needed, or the platform does not
@@ -90,11 +90,15 @@ You can build the library yourself by simply cloning the repo and typing:
 
 ```console
 > npm install
-> grunt dist
+> npm run build
 ```
 
-This grunt task builds a non optimized version `quagga.js` and a minified
+This npm script builds a non optimized version `quagga.js` and a minified
 version `quagga.min.js` and places both files in the `dist` folder.
+Additionally, a `quagga.map` source-map is placed alongside these files. This
+file is only valid for the non-uglified version `quagga.js` because the
+minified version is altered after compression and does not align with the map
+file any more.
 
 ## API
 
@@ -360,7 +364,7 @@ automatically generated in the coverage/ folder.
 
 ```console
 > npm install
-> grunt test
+> npm run test
 ```
 ## Image Debugging
 
@@ -429,6 +433,13 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-10-13
+Take a look at the release-notes ([0.8.0]
+(https://github.com/serratus/quaggaJS/releases/tag/v0.8.0))
+
+- Improvements
+  - Replaced RequireJS with webpack
 
 ### 2015-09-15
 Take a look at the release-notes ([0.7.0]
