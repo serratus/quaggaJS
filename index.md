@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-08-29)
+- [Changelog](#changelog) (2015-10-13)
 
 ## What is QuaggaJS?
 
@@ -49,12 +49,12 @@ In cases where real-time decoding is not needed, or the platform does not
 support `getUserMedia` QuaggaJS is also capable of decoding image-files using
 the File API or other URL sources.
 
-## Getting Started
+## Installing
 
-You can simply include `dist/quagga.min.js` in your project and you are ready
-to go.
+QuaggaJS can be installed using __npm__, __bower__, or by including it with
+the __script__ tag.
 
-If you want to keep your project modular, you can also install QuaggaJS via npm:
+### NPM
 
 ```console
 > npm install quagga
@@ -63,11 +63,32 @@ If you want to keep your project modular, you can also install QuaggaJS via npm:
 And then import it as dependency in your project:
 
 ```javascript
-var quagga = require('quagga');
+var Quagga = require('quagga');
 ```
+
+Currently, the full functionality is only available through the browser. When
+using QuaggaJS within __node__, only file-based decoding is available. See the
+example for [node_examples](#node-example).
+
+### Bower
+
+You can also install QuaggaJS through __bower__:
+
+```console
+> bower install quagga
+```
+
+### Script-Tag Anno 1998
+
+You can simply include `dist/quagga.min.js` in your project and you are ready
+to go.
+
+
+## Getting Started
 
 For starters, have a look at the [examples][github_examples] to get an idea
 where to go from here.
+
 
 ## <a name="Building">Building</a>
 
@@ -75,11 +96,15 @@ You can build the library yourself by simply cloning the repo and typing:
 
 ```console
 > npm install
-> grunt dist
+> npm run build
 ```
 
-This grunt task builds a non optimized version `quagga.js` and a minified
+This npm script builds a non optimized version `quagga.js` and a minified
 version `quagga.min.js` and places both files in the `dist` folder.
+Additionally, a `quagga.map` source-map is placed alongside these files. This
+file is only valid for the non-uglified version `quagga.js` because the
+minified version is altered after compression and does not align with the map
+file any more.
 
 ## API
 
@@ -169,6 +194,7 @@ empty.
   "codeResult": {
     "code": "FANAVF1461710",  // the decoded code as a string
     "format": "code_128", // or code_39, codabar, ean_13, ean_8, upc_a, upc_e
+    "start": 355,
     "end": 26,
     "codeset": 100,
     "startInfo": {
@@ -236,19 +262,19 @@ The default `config` object is set as followed:
 ```javascript
 {
   inputStream: { name: "Live",
-       type: "LiveStream",
-       constraints: {
-         width: 640,
-         height: 480,
-         facing: "environment"
-       },
-       area: { // defines rectangle of the detection/localization area
-           top: "0%",    // top offset
-           right: "0%",  // right offset
-           left: "0%",   // left offset
-           bottom: "0%"  // bottom offset
-       },
-       singleChannel: false // true: only the red color-channel is read
+      type: "LiveStream",
+      constraints: {
+          width: 640,
+          height: 480,
+          facing: "environment"
+      },
+      area: { // defines rectangle of the detection/localization area
+          top: "0%",    // top offset
+          right: "0%",  // right offset
+          left: "0%",   // left offset
+          bottom: "0%"  // bottom offset
+      },
+      singleChannel: false // true: only the red color-channel is read
   },
   tracking: false,
   debug: false,
@@ -300,7 +326,39 @@ Quagga.decodeSingle({
     locate: true, // try to locate the barcode in the image
     src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
 }, function(result){
-    console.log(result);
+    if(result.codeResult) {
+        console.log("result", result.codeResult.code);
+    } else {
+        console.log("not detected");
+    }
+});
+```
+
+### <a name="node-example">Using node</a>
+
+The following example illustrates the use of QuaggaJS within a node
+environment. It's almost identical to the browser version with the difference
+that node does not support web-workers out of the box. Therefore the config
+property `numOfWorkers` must be explicitly set to `0`.
+
+```javascript
+var Quagga = require('quagga');
+
+Quagga.decodeSingle({
+    src: "image-abc-123.jpg",
+    numOfWorkers: 0,  // Needs to be 0 when used within node
+    inputStream: {
+        size: 800  // restrict input-size to be 800px in width (long-side)
+    },
+    decoder: {
+        readers: ["code_128_reader"] // List of active readers
+    },
+}, function(result) {
+    if(result.codeResult) {
+        console.log("result", result.codeResult.code);
+    } else {
+        console.log("not detected");
+    }
 });
 ```
 
@@ -312,7 +370,7 @@ automatically generated in the coverage/ folder.
 
 ```console
 > npm install
-> grunt test
+> npm run test
 ```
 ## Image Debugging
 
@@ -382,6 +440,21 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
 
+### 2015-10-13
+Take a look at the release-notes ([0.8.0]
+(https://github.com/serratus/quaggaJS/releases/tag/v0.8.0))
+
+- Improvements
+  - Replaced RequireJS with webpack
+
+### 2015-09-15
+Take a look at the release-notes ([0.7.0]
+(https://github.com/serratus/quaggaJS/releases/tag/v0.7.0))
+
+- Features
+  - Added basic support for running QuaggaJS inside __node__ (see [example]
+  (#node-example))
+
 ### 2015-08-29
 - Improvements
   - Added support for Internet Explorer (only Edge+ supports `getUserMedia`)
@@ -414,7 +487,7 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
   - Added ``ResultCollector`` functionality (see [ResultCollector]
   (#resultcollector))
 
-### 2015-06-14
+### 2015-06-13
 - Improvements
   - Added ``format`` property to ``codeResult`` (in [result](#resultobject))
 
@@ -446,16 +519,14 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
   - Added support for [UPC-A and UPC-E][upc_wiki] barcodes
   - Added support for [EAN-8][ean_8_wiki] barcodes
 - Improvements
-  - Added extended configuration to the
-    [live-video example]({{ site.baseurl }}/examples/live_w_locator.html)
+  - Added extended configuration to the live-video example
   - Releasing resources when calling ``Quagga.stop()``
 
 ### 2015-04-25
 - Improvements
-  - Added extended configuration to the
-    [file-input example]({{ site.baseurl }}/examples/file_input.html)
+  - Added extended configuration to the file-input example
   - Configurable ``patchSize`` for better adjustment to small/medium/large
-    barcodes
+      barcodes
 
 ### 2015-04-16
 - Features
@@ -496,8 +567,8 @@ introduced to the API.
   object might not contain any `resultCode` and/or `box` properties.
 
 [zxing_github]: https://github.com/zxing/zxing
-[teaser_left]: {{ site.baseurl }}/assets/mobile-located.jpg
-[teaser_right]: {{ site.baseurl }}/assets/mobile-detected.jpg
+[teaser_left]: https://raw.githubusercontent.com/serratus/quaggaJS/master/doc/img/mobile-located.png
+[teaser_right]: https://raw.githubusercontent.com/serratus/quaggaJS/master/doc/img/mobile-detected.png
 [caniuse_getusermedia]: http://caniuse.com/#feat=stream
 [sinonUrl]: http://sinonjs.org/
 [chaiUrl]: http://chaijs.com/
