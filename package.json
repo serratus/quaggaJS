@@ -1,6 +1,6 @@
 {
   "name": "quagga",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "An advanced barcode-scanner written in JavaScript",
   "main": "lib/quagga.js",
   "browser": "dist/quagga.min.js",
@@ -38,8 +38,10 @@
     "doc": "doc"
   },
   "scripts": {
-    "test": "karma start",
-    "build": "webpack && webpack --config webpack.config.min.js && grunt uglyasm"
+    "test": "grunt test",
+    "integrationtest": "grunt integrationtest",
+    "build": "webpack && webpack --config webpack.config.min.js && grunt uglyasm && webpack --config webpack.node.config.js",
+    "dev-server": "webpack-dev-server"
   },
   "repository": {
     "type": "git",

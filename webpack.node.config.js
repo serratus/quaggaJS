@@ -3,8 +3,6 @@ var webpack = require('webpack'),
 
 module.exports = require('./webpack.config.js');
 
-console.log(path.resolve(__dirname, 'lib/input_stream'));
-
 module.exports.resolve = {
     extensions: ['', '.js', '.jsx'],
     alias: {

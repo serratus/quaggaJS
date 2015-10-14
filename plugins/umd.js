@@ -3,13 +3,11 @@ var OriginalSource = require("webpack-core/lib/OriginalSource");
 
 function MyUmdPlugin(options) {
 	this.name = options.library;
-    console.log(this.name);
 }
 module.exports = MyUmdPlugin;
 MyUmdPlugin.prototype.apply = function(compiler) {
     compiler.plugin("this-compilation", function(compilation) {
     	var mainTemplate = compilation.mainTemplate;
-        console.log("Compilation: " + (typeof compilation.templatesPlugin));
     	compilation.templatesPlugin("render-with-entry", function(source, chunk, hash) {
 
             var amdFactory = "factory";

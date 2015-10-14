@@ -30,7 +30,14 @@ module.exports = function(config) {
                         loader: 'isparta'
                     }
                 ]
-            }
+            },
+            resolve: {
+                extensions: ['', '.js', '.jsx'],
+                alias: {
+                    'input_stream$': path.resolve(__dirname, 'src/input_stream'),
+                    'frame_grabber$': path.resolve(__dirname, 'src/frame_grabber')
+                }
+            },
         },
         plugins: [
             'karma-chrome-launcher',

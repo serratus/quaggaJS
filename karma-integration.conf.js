@@ -1,3 +1,5 @@
+var path = require('path');
+
 module.exports = function(config) {
     config.set({
         basePath: '',
@@ -21,6 +23,13 @@ module.exports = function(config) {
                         loader: 'babel'
                     }
                 ]
+            },
+            resolve: {
+              extensions: ['', '.js', '.jsx'],
+              alias: {
+                  'input_stream$': path.resolve(__dirname, 'src/input_stream'),
+                  'frame_grabber$': path.resolve(__dirname, 'src/frame_grabber')
+              }
             }
         },
         plugins: [
