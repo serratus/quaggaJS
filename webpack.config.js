@@ -6,7 +6,7 @@ module.exports = {
     entry: [
         './src/quagga.js'
     ],
-    devtool: 'source-map',
+    devtool: 'inline-source-map',
     module: {
         loaders: [{
             test: /\.jsx?$/,
@@ -24,8 +24,7 @@ module.exports = {
     output: {
         path: __dirname + '/dist',
         publicPath: '/',
-        filename: 'quagga.js',
-        sourceMapFilename: 'quagga.map'
+        filename: 'quagga.js'
     },
     devServer: {
         contentBase: './',

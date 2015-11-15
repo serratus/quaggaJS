@@ -116,6 +116,7 @@ Code39Reader.prototype._patternToChar = function(pattern) {
             return String.fromCharCode(self.ALPHABET[i]);
         }
     }
+    return -1;
 };
 
 Code39Reader.prototype._findNextWidth = function(counters, current) {

@@ -10,7 +10,6 @@ MyUmdPlugin.prototype.apply = function(compiler) {
     	var mainTemplate = compilation.mainTemplate;
     	compilation.templatesPlugin("render-with-entry", function(source, chunk, hash) {
 
-            var amdFactory = "factory";
     		return new ConcatSource(new OriginalSource(
     			"(function webpackUniversalModuleDefinition(root, factory) {\n" +
     			"	if(typeof exports === 'object' && typeof module === 'object')\n" +
