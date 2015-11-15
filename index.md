@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-10-13)
+- [Changelog](#changelog) (2015-11-15)
 
 ## What is QuaggaJS?
 
@@ -439,6 +439,12 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-11-15
+
+- Fixes
+  - Fixed inconsistency in Code 39 decoding
+  - added inline-source-map to quagga.js file
 
 ### 2015-10-13
 Take a look at the release-notes ([0.8.0]
