@@ -12,7 +12,6 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.loadNpmTasks('grunt-requirejs');
     grunt.loadNpmTasks('grunt-karma');
 
     grunt.loadTasks('tasks');
