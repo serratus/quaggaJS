@@ -86,7 +86,7 @@ describe('decodeSingle', function () {
                 {"name": "image-005.jpg", "result": "419055603900009001012999"},
                 {"name": "image-006.jpg", "result": "419055603900009001012999"},
                 {"name": "image-007.jpg", "result": "T 000003552345"},
-                {"name": "image-008.jpg", "result": "FANAVF1461710"},
+                {"name": "image-008.jpg", "result": "FANAVF14617104"},
                 {"name": "image-009.jpg", "result": "0001285112001000040801"},
                 {"name": "image-010.jpg", "result": "673023"}
             ];

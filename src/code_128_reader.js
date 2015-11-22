@@ -247,7 +247,8 @@ Code128Reader.prototype._decode = function() {
         rawResult = [],
         decodedCodes = [],
         shiftNext = false,
-        unshift;
+        unshift,
+        removeLastCharacter = true;
 
     if (startInfo === null) {
         return null;
@@ -279,6 +280,10 @@ Code128Reader.prototype._decode = function() {
         code = self._decodeCode(code.end);
         if (code !== null) {
             if (code.code !== self.STOP_CODE) {
+                removeLastCharacter = true;
+            }
+
+            if (code.code !== self.STOP_CODE) {
                 rawResult.push(code.code);
                 multiplier++;
                 checksum += multiplier * code.code;
@@ -292,6 +297,9 @@ Code128Reader.prototype._decode = function() {
                 } else if (code.code < 96) {
                     result.push(String.fromCharCode(code.code - 64));
                 } else {
+                    if (code.code !== self.STOP_CODE) {
+                        removeLastCharacter = false;
+                    }
                     switch (code.code) {
                     case self.CODE_SHIFT:
                         shiftNext = true;
@@ -313,6 +321,9 @@ Code128Reader.prototype._decode = function() {
                 if (code.code < 96) {
                     result.push(String.fromCharCode(32 + code.code));
                 } else {
+                    if (code.code !== self.STOP_CODE) {
+                        removeLastCharacter = false;
+                    }
                     switch (code.code) {
                     case self.CODE_SHIFT:
                         shiftNext = true;
@@ -333,17 +344,21 @@ Code128Reader.prototype._decode = function() {
             case self.CODE_C:
                 if (code.code < 100) {
                     result.push(code.code < 10 ? "0" + code.code : code.code);
-                }
-                switch (code.code) {
-                case self.CODE_A:
-                    codeset = self.CODE_A;
-                    break;
-                case self.CODE_B:
-                    codeset = self.CODE_B;
-                    break;
-                case self.STOP_CODE:
-                    done = true;
-                    break;
+                } else {
+                    if (code.code !== self.STOP_CODE) {
+                        removeLastCharacter = false;
+                    }
+                    switch (code.code) {
+                    case self.CODE_A:
+                        codeset = self.CODE_A;
+                        break;
+                    case self.CODE_B:
+                        codeset = self.CODE_B;
+                        break;
+                    case self.STOP_CODE:
+                        done = true;
+                        break;
+                    }
                 }
                 break;
             }
@@ -359,14 +374,11 @@ Code128Reader.prototype._decode = function() {
         return null;
     }
 
-    // find end bar
     code.end = self._nextUnset(self._row, code.end);
     if (!self._verifyTrailingWhitespace(code)){
         return null;
     }
 
-    // checksum
-    // Does not work correctly yet!!! startcode - endcode?
     checksum -= multiplier * rawResult[rawResult.length - 1];
     if (checksum % 103 !== rawResult[rawResult.length - 1]) {
         return null;
@@ -377,7 +389,10 @@ Code128Reader.prototype._decode = function() {
     }
 
     // remove last code from result (checksum)
-    result.splice(result.length - 1, 1);
+    if (removeLastCharacter) {
+        result.splice(result.length - 1, 1);
+    }
+
 
     return {
         code: result.join(""),
