@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-11-15)
+- [Changelog](#changelog) (2015-11-22)
 
 ## What is QuaggaJS?
 
@@ -439,6 +439,12 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2015-11-22
+
+- Fixes
+  - Fixed inconsistencies for Code 128 decoding (See
+      [\#76](https://github.com/serratus/quaggaJS/issues/76))
 
 ### 2015-11-15
 
