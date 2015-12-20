@@ -39,28 +39,6 @@ function initializeData(imageWrapper) {
     _decoder = BarcodeDecoder.create(_config.decoder, _inputImageWrapper);
 }
 
-function initConfig() {
-    if (typeof document !== "undefined") {
-        var vis = [{
-            node: document.querySelector("div[data-controls]"),
-            prop: _config.controls
-        }, {
-            node: _canvasContainer.dom.overlay,
-            prop: _config.visual.show
-        }];
-
-        for (var i = 0; i < vis.length; i++) {
-            if (vis[i].node) {
-                if (vis[i].prop === true) {
-                    vis[i].node.style.display = "block";
-                } else {
-                    vis[i].node.style.display = "none";
-                }
-            }
-        }
-    }
-}
-
 function initInputStream(cb) {
     var video;
     if (_config.inputStream.type === "VideoStream") {
@@ -97,7 +75,6 @@ function canRecord(cb) {
     BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
     initCanvas();
     _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
-    initConfig();
 
     if (_config.numOfWorkers > 0) {
         initWorkers(function() {

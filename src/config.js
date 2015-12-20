@@ -17,14 +17,9 @@ export default {
         },
         singleChannel: false // true: only the red color-channel is read
     },
-    tracking: false,
     debug: false,
-    controls: false,
     locate: true,
     numOfWorkers: 4,
-    visual: {
-        show: true
-    },
     decoder: {
         drawBoundingBox: false,
         showFrequency: false,
