@@ -8,6 +8,10 @@ quaggaJS
 ========
 
 - [Changelog](#changelog) (2015-11-22)
+- [Installing](#installing)
+- [Getting Started](#gettingstarted)
+- [API](#api)
+- [Configuration](#configobject)
 
 ## What is QuaggaJS?
 
@@ -49,7 +53,7 @@ In cases where real-time decoding is not needed, or the platform does not
 support `getUserMedia` QuaggaJS is also capable of decoding image-files using
 the File API or other URL sources.
 
-## Installing
+## <a name="installing">Installing</a>
 
 QuaggaJS can be installed using __npm__, __bower__, or by including it with
 the __script__ tag.
@@ -83,8 +87,7 @@ You can also install QuaggaJS through __bower__:
 You can simply include `dist/quagga.min.js` in your project and you are ready
 to go.
 
-
-## Getting Started
+## <a name="gettingstarted">Getting Started</a>
 
 For starters, have a look at the [examples][github_examples] to get an idea
 where to go from here.
@@ -106,7 +109,7 @@ file is only valid for the non-uglified version `quagga.js` because the
 minified version is altered after compression and does not align with the map
 file any more.
 
-## API
+## <a name="api">API</a>
 
 You can check out the [examples][github_examples] to get an idea of how to
 use QuaggaJS. Basically the library exposes the following API:
@@ -255,62 +258,155 @@ empty.
 }
 ```
 
-## <a name="configobject">Config</a>
+## <a name="configobject">Configuration</a>
 
-The default `config` object is set as followed:
+The configuration that ships with QuaggaJS covers the default use-cases and can
+be fine-tuned for specific requirements.
+
+The configuration is managed by the `config` object defining the following
+high-level properties:
 
 ```javascript
 {
-  inputStream: { name: "Live",
-      type: "LiveStream",
-      constraints: {
-          width: 640,
-          height: 480,
-          facing: "environment"
-      },
-      area: { // defines rectangle of the detection/localization area
-          top: "0%",    // top offset
-          right: "0%",  // right offset
-          left: "0%",   // left offset
-          bottom: "0%"  // bottom offset
-      },
-      singleChannel: false // true: only the red color-channel is read
-  },
-  tracking: false,
-  debug: false,
-  controls: false,
-  locate: true,
   numOfWorkers: 4,
-  visual: {
-    show: true
-  },
-  decoder:{
-    drawBoundingBox: false,
-    showFrequency: false,
-    drawScanline: true,
-    showPattern: false,
-    readers: [
-      'code_128_reader'
-    ]
-  },
-  locator: {
-    halfSample: true,
-    patchSize: "medium", // x-small, small, medium, large, x-large
-    showCanvas: false,
-    showPatches: false,
-    showFoundPatches: false,
-    showSkeleton: false,
-    showLabels: false,
-    showPatchLabels: false,
-    showRemainingPatchLabels: false,
-    boxFromPatches: {
-      showTransformed: false,
-      showTransformedBox: false,
-      showBB: false
-    }
-  }
+  locate: true,
+  inputStream: {...},
+  decoder:{...},
+  locator: {...},
+  debug: false,
 }
 ```
+
+### numOfWorkers
+
+QuaggaJS supports web-workers out of the box and runs with `4` workers in its
+default configuration. The number should align with the number of cores
+available in your targeted devices.
+
+In case you don't know the number upfront, or if the variety of devices is
+too big, you can either use `navigator.hardwareConcurrency` (see
+[here](https://wiki.whatwg.org/wiki/Navigator_HW_Concurrency)) where available
+or make use of [core-estimator](https://github.com/oftn/core-estimator).
+
+### locate
+
+One of the main features of QuaggaJS is its ability to locate a barcode in a
+given image. The `locate` property controls whether this feature is turned on
+(default) or off.
+
+Why would someone turn this feature off? Localizing a barcode is a
+computationally expensive operation and might not work properly on some
+devices. Another reason would be the lack of auto-focus producing blurry
+images which makes the localization feature very unstable.
+
+However, even if none of the above apply, there is one more case where it might
+be useful to disable `locate`: If the orientation, and/or the approximate
+position of the barcode is known, or if you want to guide the user through a
+rectangular outline. This can increase performance and robustness at the same
+time.
+
+### inputStream
+
+The `inputStream` property defines the sources of images/videos within QuaggaJS.
+
+```javascript
+{
+  name: "Live",
+  type: "LiveStream",
+  constraints: {
+    width: 640,
+    height: 480,
+    facing: "environment"
+  },
+  area: { // defines rectangle of the detection/localization area
+    top: "0%",    // top offset
+    right: "0%",  // right offset
+    left: "0%",   // left offset
+    bottom: "0%"  // bottom offset
+  },
+  singleChannel: false // true: only the red color-channel is read
+}
+```
+
+First, the `type` property can be set to three different values:
+`ImageStream`, `VideoStream`, or `LiveStream` (default) and should be selected
+depending on the use-case. Most probably, the default value is sufficient.
+
+Second, the `constraint` key defines the physical dimensions of the input image
+and additional properties, such as `facing` which sets the source of the user's
+camera in case of multiple attached devices.
+
+Thirdly, the `area` prop restricts the decoding area of the image. The values
+are given in percentage, similar to the CSS style property when using
+`position: absolute`. This `area` is also useful in cases the `locate` property
+is set to `false`, defining the rectangle for the user.
+
+The last key `singleChannel` is only relevant in cases someone wants to debug
+erroneous behavior of the decoder. If set to `true` the input image's red
+color-channel is read instead of calculating the gray-scale values of the
+source's RGB. This is useful in combination with the `ResultCollector` where
+the gray-scale representations of the wrongly identified images are saved.
+
+### decoder
+
+QuaggaJS usually runs in a two-stage manner (`locate` is set to `true`) where,
+after the barcode is located, the decoding process starts. Decoding is the
+process of converting the bars into its true meaning. Most of the configuration
+options within the `decoder` are for debugging/visualization purposes only.
+
+```javascript
+{
+  drawBoundingBox: false,
+  showFrequency: false,
+  drawScanline: true,
+  showPattern: false,
+  readers: [
+    'code_128_reader'
+  ]
+}
+```
+
+The most important property is `readers` which takes an array of types of
+barcodes which should be decoded during the session. Possible values are:
+
+- code_128_reader (default)
+- ean_reader
+- ean_8_reader
+- code_39_reader
+- code_39_vin_reader
+- codabar_reader
+- upc_reader
+- upc_e_reader
+- i2of5_reader
+
+Why are not all types activated by default? Simply because one should
+explicitly define the set of barcodes for their use-case. More decoders means
+more possible clashes, or false-positives. One should take care of the order
+the readers are given, since some might return a value even though it is not
+the correct type (EAN-13 vs. UPC-A).
+
+The remaining properties `drawBoundingBox`, `showFrequency`, `drawScanline` and
+`showPattern` are mostly of interest during debugging and visualization.
+
+### locator
+
+```javascript
+{
+  halfSample: true,
+  patchSize: "medium", // x-small, small, medium, large, x-large
+  showCanvas: false,
+  showPatches: false,
+  showFoundPatches: false,
+  showSkeleton: false,
+  showLabels: false,
+  showPatchLabels: false,
+  showRemainingPatchLabels: false,
+  boxFromPatches: {
+    showTransformed: false,
+    showTransformedBox: false,
+    showBB: false
+  }
+}
 
 ## Examples
 
