@@ -23,7 +23,7 @@ describe('shuffle', function() {
 });
 
 describe('toPointList', function() {
-    it('converts an Array to a List of poitns', function() {
+    it('converts an Array to a List of points', function() {
         var input = [[1, 2], [2, 2], [3, 2]];
         expect(ArrayHelper.toPointList(input)).to.equal("[[1,2],\r\n[2,2],\r\n[3,2]]");
     });
