@@ -55,6 +55,7 @@ $(function() {
                 $li.find("img").attr("src", result.frame);
                 $li.find("h4.code").html(result.codeResult.code + " (" + result.codeResult.format + ")");
                 $ul.prepend($li);
+                if(result.codeResult.code==="9789400506")location.href="https://medewerkers.saxion.nl/wps/myportal/!ut/p/b1/04_SjzQ0MDUxsjAxNzLWj9CPykssy0xPLMnMz0vMAfGjzOJ9Pd1dDYwszQwNvP0tDDzDzN38gszMDC0szYEKIoEKDHAARwM0_cY-xgaeXiGB5mbmbgYG7oZQ_XgUELDfzyM_N1U_EqjMHKeyAGP93KgcNwtPR0UAKlhSJw!!/dl4/d5/L2dBISEvZ0FBIS9nQSEh/";
             });
         },
         _accessByPath: function(obj, path, val) {
