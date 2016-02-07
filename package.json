@@ -12,6 +12,7 @@
     "chai": "^3.4.1",
     "core-js": "^1.2.1",
     "grunt": "^0.4.5",
+    "grunt-cli": "0.1.13",
     "grunt-contrib-nodeunit": "^0.4.1",
     "grunt-karma": "^0.12.1",
     "isparta-loader": "^1.0.0",
@@ -21,7 +22,6 @@
     "karma-coverage": "^0.5.2",
     "karma-mocha": "~0.2.0",
     "karma-phantomjs-launcher": "^0.2.1",
-    "karma-sinon-chai": "^1.1.0",
     "karma-sinon": "^1.0.4",
     "karma-sinon-chai": "~0.2.0",
     "karma-source-map-support": "^1.1.0",
@@ -63,7 +63,7 @@
   ],
   "author": "Christoph Oberhofer <ch.oberhofer@gmail.com>",
   "license": "MIT",
-  "engines":{
+  "engines": {
     "node": ">= 4.0"
   },
   "dependencies": {
