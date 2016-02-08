@@ -381,8 +381,9 @@ more possible clashes, or false-positives. One should take care of the order
 the readers are given, since some might return a value even though it is not
 the correct type (EAN-13 vs. UPC-A).
 
-The `multiple` property tells the decoder if it should stop after finding a single result.  If multiple is set to
-`true`, the `result` object will have a `barcodes` array, each of which is a `result` object with it's own `codeResult`,
+The `multiple` property tells the decoder if it should stop after finding a 
+single result.  If multiple is set to `true`, the `result` object will have a
+`barcodes` array, each of which is a `result` object with it's own `codeResult`,
 `box`, `line`, etc.
 
 The remaining properties `drawBoundingBox`, `showFrequency`, `drawScanline` and
