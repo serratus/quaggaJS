@@ -168,10 +168,16 @@ function transformResult(result) {
         return;
     }
 
+    if (result.barcodes) {
+        for (i = 0; i < result.barcodes.length; i++) {
+            transformResult(result.barcodes[i]);
+        }
+    }
 
     if (result.line && result.line.length === 2) {
         moveLine(result.line);
     }
+
     if (result.boxes && result.boxes.length > 0) {
         for (i = 0; i < result.boxes.length; i++) {
             moveBox(result.boxes[i]);
@@ -195,14 +201,29 @@ function transformResult(result) {
     }
 }
 
+function addResult (result, imageData) {
+    var i;
+
+    if (!imageData || !result || !_resultCollector) {
+        return;
+    }
+
+    if (result.barcodes) {
+        for (i = 0; i < result.barcodes.length; i++) {
+            addResult(result.barcodes[i], imageData);
+        }
+        return;
+    }
+
+    if (result.codeResult) {
+        _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
+    }
+}
+
 function publishResult(result, imageData) {
     if (_onUIThread) {
         transformResult(result);
-        if (imageData && result && result.codeResult) {
-            if (_resultCollector) {
-                _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
-            }
-        }
+        addResult(result, imageData);
     }
 
     Events.publish("processed", result);
