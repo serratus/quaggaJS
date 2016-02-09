@@ -178,6 +178,10 @@ function transformResult(result) {
         moveLine(result.line);
     }
 
+    if (result.box) {
+        moveBox(result.box);
+    }
+
     if (result.boxes && result.boxes.length > 0) {
         for (i = 0; i < result.boxes.length; i++) {
             moveBox(result.boxes[i]);
@@ -202,39 +206,35 @@ function transformResult(result) {
 }
 
 function addResult (result, imageData) {
-    var i;
-
     if (!imageData || !_resultCollector) {
         return;
     }
 
     if (result.barcodes) {
-        for (i = 0; i < result.barcodes.length; i++) {
-            addResult(result.barcodes[i], imageData);
-        }
-        return;
-    }
-
-    if (result.codeResult) {
+        result.barcodes.filter(barcode => barcode.codeResult)
+            .forEach(barcode => addResult(barcode, imageData));
+    } else if (result.codeResult) {
         _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
     }
 }
 
 function hasCodeResult (result) {
-    return result && result.barcodes ?
+    return result && (result.barcodes ?
       result.barcodes.some(barcode => barcode.codeResult) :
-      result.codeResult;
+      result.codeResult);
 }
 
 function publishResult(result, imageData) {
+    const resultToPublish = result && (result.barcodes || result);
+
     if (result && _onUIThread) {
         transformResult(result);
         addResult(result, imageData);
     }
 
-    Events.publish("processed", result);
+    Events.publish("processed", resultToPublish);
     if (hasCodeResult(result)) {
-        Events.publish("detected", result);
+        Events.publish("detected", resultToPublish);
     }
 }
 
