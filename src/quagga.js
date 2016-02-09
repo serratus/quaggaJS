@@ -220,6 +220,12 @@ function addResult (result, imageData) {
     }
 }
 
+function hasCodeResult (result) {
+    return result && result.barcodes ?
+      result.barcodes.some(barcode => barcode.codeResult) :
+      result.codeResult;
+}
+
 function publishResult(result, imageData) {
     if (result && _onUIThread) {
         transformResult(result);
@@ -227,7 +233,7 @@ function publishResult(result, imageData) {
     }
 
     Events.publish("processed", result);
-    if (result && result.codeResult) {
+    if (hasCodeResult(result)) {
         Events.publish("detected", result);
     }
 }
