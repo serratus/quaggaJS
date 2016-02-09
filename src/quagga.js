@@ -164,7 +164,7 @@ function transformResult(result) {
         yOffset = topRight.y,
         i;
 
-    if (!result || (xOffset === 0 && yOffset === 0)) {
+    if (xOffset === 0 && yOffset === 0) {
         return;
     }
 
@@ -204,7 +204,7 @@ function transformResult(result) {
 function addResult (result, imageData) {
     var i;
 
-    if (!imageData || !result || !_resultCollector) {
+    if (!imageData || !_resultCollector) {
         return;
     }
 
@@ -221,7 +221,7 @@ function addResult (result, imageData) {
 }
 
 function publishResult(result, imageData) {
-    if (_onUIThread) {
+    if (result && _onUIThread) {
         transformResult(result);
         addResult(result, imageData);
     }
