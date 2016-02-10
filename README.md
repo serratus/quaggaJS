@@ -121,7 +121,7 @@ not support this API, or simply if the user denies the permission to use the
 camera.
 
 If you do not specify a target, QuaggaJS would look for an element that matches the CSS selector `#interactive.viewport` (for backwards compatibility).
-`Target` can be a string (CSS selector matching one of your DOM node) or a DOM node.
+`target` can be a string (CSS selector matching one of your DOM node) or a DOM node.
 
 ```javascript
 Quagga.init({
