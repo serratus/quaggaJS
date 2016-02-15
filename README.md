@@ -120,11 +120,15 @@ may be the `inputStream.type` is set to `LiveStream`, but the browser does
 not support this API, or simply if the user denies the permission to use the
 camera.
 
+If you do not specify a target, QuaggaJS would look for an element that matches the CSS selector `#interactive.viewport` (for backwards compatibility).
+`target` can be a string (CSS selector matching one of your DOM node) or a DOM node.
+
 ```javascript
 Quagga.init({
     inputStream : {
       name : "Live",
-      type : "LiveStream"
+      type : "LiveStream",
+      target: document.querySelector('#yourElement')    // Or '#yourElement' (optional)
     },
     decoder : {
       readers : ["code_128_reader"]

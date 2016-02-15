@@ -47,7 +47,7 @@ function initInputStream(cb) {
     } else if (_config.inputStream.type === "ImageStream") {
         _inputStream = InputStream.createImageStream();
     } else if (_config.inputStream.type === "LiveStream") {
-        var $viewport = document.querySelector("#interactive.viewport");
+        var $viewport = getViewPort();
         if ($viewport) {
             video = $viewport.querySelector("video");
             if (!video) {
@@ -71,9 +71,21 @@ function initInputStream(cb) {
     _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
 }
 
+function getViewPort() {
+    var target = _config.inputStream.target;
+    // Check if target is already a DOM element
+    if(target && target.nodeName && target.nodeType === 1) {
+        return target;
+    } else {
+        // Use '#interactive.viewport' as a fallback selector (backwards compatibility)
+        var selector = typeof target === 'string' ? target : '#interactive.viewport';
+        return document.querySelector(selector);
+    }
+}
+
 function canRecord(cb) {
     BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
-    initCanvas();
+    initCanvas(_config);
     _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
 
     if (_config.numOfWorkers > 0) {
@@ -94,7 +106,7 @@ function ready(cb){
 
 function initCanvas() {
     if (typeof document !== "undefined") {
-        var $viewport = document.querySelector("#interactive.viewport");
+        var $viewport = getViewPort();
         _canvasContainer.dom.image = document.querySelector("canvas.imgBuffer");
         if (!_canvasContainer.dom.image) {
             _canvasContainer.dom.image = document.createElement("canvas");
