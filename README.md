@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2015-11-22)
+- [Changelog](#changelog) (2016-02-15)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
 - [API](#api)
@@ -120,8 +120,10 @@ may be the `inputStream.type` is set to `LiveStream`, but the browser does
 not support this API, or simply if the user denies the permission to use the
 camera.
 
-If you do not specify a target, QuaggaJS would look for an element that matches the CSS selector `#interactive.viewport` (for backwards compatibility).
-`target` can be a string (CSS selector matching one of your DOM node) or a DOM node.
+If you do not specify a target, QuaggaJS would look for an element that matches
+the CSS selector `#interactive.viewport` (for backwards compatibility).
+`target` can be a string (CSS selector matching one of your DOM node) or a DOM
+node.
 
 ```javascript
 Quagga.init({
@@ -386,9 +388,9 @@ the readers are given, since some might return a value even though it is not
 the correct type (EAN-13 vs. UPC-A).
 
 The `multiple` property tells the decoder if it should continue decoding after
-finding a valid barcode.  If multiple is set to `true`, the results will be 
+finding a valid barcode.  If multiple is set to `true`, the results will be
 returned as an array of result objects.  Each object in the array will have a
-`box`, and may have a `codeResult` depending on the success of decoding the 
+`box`, and may have a `codeResult` depending on the success of decoding the
 individual box.
 
 The remaining properties `drawBoundingBox`, `showFrequency`, `drawScanline` and
@@ -542,6 +544,10 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2016-02-15
+Take a look at the release-notes ([0.9.0]
+(https://github.com/serratus/quaggaJS/releases/tag/v0.9.0))
 
 ### 2015-11-22
 
