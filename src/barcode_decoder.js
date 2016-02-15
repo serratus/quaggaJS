@@ -267,13 +267,26 @@ export default {
                 return decodeFromBoundingBox(box);
             },
             decodeFromBoundingBoxes: function(boxes) {
-                var i, result;
+                var i, result,
+                    barcodes = [],
+                    multiple = config.multiple;
+
                 for ( i = 0; i < boxes.length; i++) {
-                    result = decodeFromBoundingBox(boxes[i]);
-                    if (result && result.codeResult) {
-                        result.box = boxes[i];
+                    const box = boxes[i];
+                    result = decodeFromBoundingBox(box) || {};
+                    result.box = box;
+
+                    if (multiple) {
+                        barcodes.push(result);
+                    } else if (result.codeResult) {
                         return result;
                     }
+                }
+
+                if (multiple) {
+                    return {
+                        barcodes
+                    };
                 }
             },
             setReaders: function(readers) {

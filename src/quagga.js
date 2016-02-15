@@ -74,7 +74,7 @@ function initInputStream(cb) {
 function getViewPort() {
     var target = _config.inputStream.target;
     // Check if target is already a DOM element
-    if(target && target.nodeName && target.nodeType === 1) {
+    if (target && target.nodeName && target.nodeType === 1) {
         return target;
     } else {
         // Use '#interactive.viewport' as a fallback selector (backwards compatibility)
@@ -176,14 +176,24 @@ function transformResult(result) {
         yOffset = topRight.y,
         i;
 
-    if (!result || (xOffset === 0 && yOffset === 0)) {
+    if (xOffset === 0 && yOffset === 0) {
         return;
     }
 
+    if (result.barcodes) {
+        for (i = 0; i < result.barcodes.length; i++) {
+            transformResult(result.barcodes[i]);
+        }
+    }
 
     if (result.line && result.line.length === 2) {
         moveLine(result.line);
     }
+
+    if (result.box) {
+        moveBox(result.box);
+    }
+
     if (result.boxes && result.boxes.length > 0) {
         for (i = 0; i < result.boxes.length; i++) {
             moveBox(result.boxes[i]);
@@ -207,19 +217,36 @@ function transformResult(result) {
     }
 }
 
-function publishResult(result, imageData) {
-    if (_onUIThread) {
-        transformResult(result);
-        if (imageData && result && result.codeResult) {
-            if (_resultCollector) {
-                _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
-            }
-        }
+function addResult (result, imageData) {
+    if (!imageData || !_resultCollector) {
+        return;
     }
 
-    Events.publish("processed", result);
-    if (result && result.codeResult) {
-        Events.publish("detected", result);
+    if (result.barcodes) {
+        result.barcodes.filter(barcode => barcode.codeResult)
+            .forEach(barcode => addResult(barcode, imageData));
+    } else if (result.codeResult) {
+        _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
+    }
+}
+
+function hasCodeResult (result) {
+    return result && (result.barcodes ?
+      result.barcodes.some(barcode => barcode.codeResult) :
+      result.codeResult);
+}
+
+function publishResult(result, imageData) {
+    const resultToPublish = result && (result.barcodes || result);
+
+    if (result && _onUIThread) {
+        transformResult(result);
+        addResult(result, imageData);
+    }
+
+    Events.publish("processed", resultToPublish);
+    if (hasCodeResult(result)) {
+        Events.publish("detected", resultToPublish);
     }
 }
 

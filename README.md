@@ -361,7 +361,8 @@ options within the `decoder` are for debugging/visualization purposes only.
   showPattern: false,
   readers: [
     'code_128_reader'
-  ]
+  ],
+  multiple: false
 }
 ```
 
@@ -383,6 +384,12 @@ explicitly define the set of barcodes for their use-case. More decoders means
 more possible clashes, or false-positives. One should take care of the order
 the readers are given, since some might return a value even though it is not
 the correct type (EAN-13 vs. UPC-A).
+
+The `multiple` property tells the decoder if it should continue decoding after
+finding a valid barcode.  If multiple is set to `true`, the results will be 
+returned as an array of result objects.  Each object in the array will have a
+`box`, and may have a `codeResult` depending on the success of decoding the 
+individual box.
 
 The remaining properties `drawBoundingBox`, `showFrequency`, `drawScanline` and
 `showPattern` are mostly of interest during debugging and visualization.

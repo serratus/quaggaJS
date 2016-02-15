@@ -11,8 +11,9 @@
     "babel-loader": "^5.3.2",
     "chai": "^3.4.1",
     "core-js": "^1.2.1",
+    "eslint": "^1.10.3",
     "grunt": "^0.4.5",
-    "grunt-cli": "0.1.13",
+    "grunt-cli": "^0.1.13",
     "grunt-contrib-nodeunit": "^0.4.1",
     "grunt-karma": "^0.12.1",
     "isparta-loader": "^1.0.0",
@@ -23,7 +24,7 @@
     "karma-mocha": "~0.2.0",
     "karma-phantomjs-launcher": "^0.2.1",
     "karma-sinon": "^1.0.4",
-    "karma-sinon-chai": "~0.2.0",
+    "karma-sinon-chai": "^1.1.0",
     "karma-source-map-support": "^1.1.0",
     "karma-webpack": "^1.7.0",
     "mocha": "^2.3.2",
@@ -39,7 +40,8 @@
     "test": "grunt test",
     "integrationtest": "grunt integrationtest",
     "build": "webpack && webpack --config webpack.config.min.js && grunt uglyasm && webpack --config webpack.node.config.js",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "lint": "eslint src"
   },
   "repository": {
     "type": "git",
