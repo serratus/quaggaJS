@@ -1,14 +1,14 @@
 import Bresenham from './bresenham';
-import ImageDebug from './image_debug';
-import Code128Reader from './code_128_reader';
-import EANReader from './ean_reader';
-import Code39Reader from './code_39_reader';
-import Code39VINReader from './code_39_vin_reader';
-import CodabarReader from './codabar_reader';
-import UPCReader from './upc_reader';
-import EAN8Reader from './ean_8_reader';
-import UPCEReader from './upc_e_reader';
-import I2of5Reader from './i2of5_reader';
+import ImageDebug from '../common/image_debug';
+import Code128Reader from '../reader/code_128_reader';
+import EANReader from '../reader/ean_reader';
+import Code39Reader from '../reader/code_39_reader';
+import Code39VINReader from '../reader/code_39_vin_reader';
+import CodabarReader from '../reader/codabar_reader';
+import UPCReader from '../reader/upc_reader';
+import EAN8Reader from '../reader/ean_8_reader';
+import UPCEReader from '../reader/upc_e_reader';
+import I2of5Reader from '../reader/i2of5_reader';
 
 const READERS = {
     code_128_reader: Code128Reader,

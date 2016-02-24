@@ -1,4 +1,4 @@
-import ImageDebug from './image_debug';
+import ImageDebug from '../common/image_debug';
 
 function contains(codeResult, list) {
     if (list) {

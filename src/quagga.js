@@ -1,17 +1,17 @@
 import TypeDefs from './typedefs'; // eslint-disable-line no-unused-vars
-import ImageWrapper from './image_wrapper';
-import BarcodeLocator from './barcode_locator';
-import BarcodeDecoder from './barcode_decoder';
-import Config from './config';
-import Events from './events';
-import CameraAccess from './camera_access';
-import ImageDebug from './image_debug';
+import ImageWrapper from './common/image_wrapper';
+import BarcodeLocator from './locator/barcode_locator';
+import BarcodeDecoder from './decoder/barcode_decoder';
+import Events from './common/events';
+import CameraAccess from './input/camera_access';
+import ImageDebug from './common/image_debug';
 import {vec2} from 'gl-matrix';
-import ResultCollector from './result_collector';
+import ResultCollector from './analytics/result_collector';
+import Config from './config/config';
 
 const merge = require('lodash/object/merge');
-const InputStream = require('input_stream');
-const FrameGrabber = require('frame_grabber');
+const InputStream = require('./input/input_stream');
+const FrameGrabber = require('./input/frame_grabber');
 
 var _inputStream,
     _framegrabber,

@@ -1,10 +1,10 @@
-import ImageWrapper from './image_wrapper';
-import CVUtils from './cv_utils';
+import ImageWrapper from '../common/image_wrapper';
+import CVUtils from '../common/cv_utils';
+import ArrayHelper from '../common/array_helper';
+import ImageDebug from '../common/image_debug';
 import Rasterizer from './rasterizer';
 import Tracer from './tracer';
 import skeletonizer from './skeletonizer';
-import ArrayHelper from './array_helper';
-import ImageDebug from './image_debug';
 import glMatrix from 'gl-matrix';
 
 var _config,

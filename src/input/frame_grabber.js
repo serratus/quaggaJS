@@ -1,4 +1,4 @@
-import CVUtils from './cv_utils';
+import CVUtils from '../common/cv_utils';
 
 var FrameGrabber = {};
 
