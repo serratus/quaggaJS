@@ -158,7 +158,9 @@ export default {
                 ImageDebug.drawPath(line, {x: 'x', y: 'y'}, _canvas.ctx.overlay, {color: 'red', lineWidth: 3});
                 Bresenham.debug.printFrequency(barcodeLine.line, _canvas.dom.frequency);
             }
+
             Bresenham.toBinaryLine(barcodeLine);
+
             if (ENV.development && config.debug.showPattern) {
                 Bresenham.debug.printPattern(barcodeLine.line, _canvas.dom.pattern);
             }
@@ -251,7 +253,7 @@ export default {
                 return null;
             }
 
-            if (result && config.drawScanline && ctx) {
+            if (ENV.development && result && config.debug.drawScanline && ctx) {
                 ImageDebug.drawPath(line, {x: 'x', y: 'y'}, ctx, {color: 'red', lineWidth: 3});
             }
 

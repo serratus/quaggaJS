@@ -5,7 +5,7 @@ import ImageDebug from '../common/image_debug';
 import Rasterizer from './rasterizer';
 import Tracer from './tracer';
 import skeletonizer from './skeletonizer';
-import glMatrix from 'gl-matrix';
+import {vec2, mat2} from 'gl-matrix';
 
 var _config,
     _currentImageWrapper,
@@ -27,9 +27,7 @@ var _config,
     },
     _numPatches = {x: 0, y: 0},
     _inputImageWrapper,
-    _skeletonizer,
-    vec2 = glMatrix.vec2,
-    mat2 = glMatrix.mat2;
+    _skeletonizer;
 
 function initBuffers() {
     var skeletonImageData;
@@ -76,7 +74,7 @@ function initCanvas() {
     }
     _canvasContainer.dom.binary = document.createElement("canvas");
     _canvasContainer.dom.binary.className = "binaryBuffer";
-    if (_config.showCanvas === true) {
+    if (ENV.development && _config.debug.showCanvas === true) {
         document.querySelector("#debug").appendChild(_canvasContainer.dom.binary);
     }
     _canvasContainer.ctx.binary = _canvasContainer.dom.binary.getContext("2d");
@@ -107,7 +105,7 @@ function boxFromPatches(patches) {
     for ( i = 0; i < patches.length; i++) {
         patch = patches[i];
         overAvg += patch.rad;
-        if (_config.showPatches) {
+        if (ENV.development && _config.debug.showPatches) {
             ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary, {color: "red"});
         }
     }
@@ -128,7 +126,7 @@ function boxFromPatches(patches) {
             vec2.transformMat2(patch.box[j], patch.box[j], transMat);
         }
 
-        if (_config.boxFromPatches.showTransformed) {
+        if (ENV.development && _config.debug.boxFromPatches.showTransformed) {
             ImageDebug.drawPath(patch.box, {x: 0, y: 1}, _canvasContainer.ctx.binary, {color: '#99ff00', lineWidth: 2});
         }
     }
@@ -154,7 +152,7 @@ function boxFromPatches(patches) {
 
     box = [[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy]];
 
-    if (_config.boxFromPatches.showTransformedBox) {
+    if (ENV.development && _config.debug.boxFromPatches.showTransformedBox) {
         ImageDebug.drawPath(box, {x: 0, y: 1}, _canvasContainer.ctx.binary, {color: '#ff0000', lineWidth: 2});
     }
 
@@ -165,7 +163,7 @@ function boxFromPatches(patches) {
         vec2.transformMat2(box[j], box[j], transMat);
     }
 
-    if (_config.boxFromPatches.showBB) {
+    if (ENV.development && _config.development.boxFromPatches.showBB) {
         ImageDebug.drawPath(box, {x: 0, y: 1}, _canvasContainer.ctx.binary, {color: '#ff0000', lineWidth: 2});
     }
 
@@ -215,7 +213,7 @@ function findPatches() {
             rasterizer = Rasterizer.create(_skelImageWrapper, _labelImageWrapper);
             rasterResult = rasterizer.rasterize(0);
 
-            if (_config.showLabels) {
+            if (ENV.development && _config.debug.showLabels) {
                 _labelImageWrapper.overlay(_canvasContainer.dom.binary, Math.floor(360 / rasterResult.count),
                     {x: x, y: y});
             }
@@ -228,7 +226,7 @@ function findPatches() {
         }
     }
 
-    if (_config.showFoundPatches) {
+    if (ENV.development && _config.debug.showFoundPatches) {
         for ( i = 0; i < patchesFound.length; i++) {
             patch = patchesFound[i];
             ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary,
@@ -307,7 +305,7 @@ function findBoxes(topLabels, maxLabel) {
             boxes.push(box);
 
             // draw patch-labels if requested
-            if (_config.showRemainingPatchLabels) {
+            if (ENV.development && _config.debug.showRemainingPatchLabels) {
                 for ( j = 0; j < patches.length; j++) {
                     patch = patches[j];
                     hsv[0] = (topLabels[i].label / (maxLabel + 1)) * 360;
@@ -345,7 +343,7 @@ function skeletonize(x, y) {
     _skeletonizer.skeletonize();
 
     // Show skeleton if requested
-    if (_config.showSkeleton) {
+    if (ENV.development && _config.debug.showSkeleton) {
         _skelImageWrapper.overlay(_canvasContainer.dom.binary, 360, CVUtils.imageRef(x, y));
     }
 }
@@ -493,7 +491,7 @@ function rasterizeAngularSimilarity(patchesFound) {
     }
 
     // draw patch-labels if requested
-    if (_config.showPatchLabels) {
+    if (ENV.development && _config.debug.showPatchLabels) {
         for ( j = 0; j < _patchLabelGrid.data.length; j++) {
             if (_patchLabelGrid.data[j] > 0 && _patchLabelGrid.data[j] <= label) {
                 patch = _imageToPatchGrid.data[j];

@@ -40,7 +40,10 @@
   "scripts": {
     "test": "grunt test",
     "integrationtest": "grunt integrationtest",
-    "build:dev": "webpack && webpack --config webpack.config.min.js && grunt uglyasm && webpack --config webpack.node.config.js",
+    "build:dev": "cross-env BUILD_ENV=development webpack",
+    "build:prod": "cross-env BUILD_ENV=production webpack --config webpack.config.min.js && grunt uglyasm",
+    "build:node": "cross-env BUILD_ENV=node webpack --config webpack.node.config.js",
+    "build": "npm run build:dev && npm run build:prod && npm run build:node",
     "watch": "cross-env BUILD_ENV=development webpack --watch",
     "lint": "eslint src"
   },

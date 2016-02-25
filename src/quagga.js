@@ -1,4 +1,4 @@
-import TypeDefs from './typedefs'; // eslint-disable-line no-unused-vars
+import TypeDefs from './common/typedefs'; // eslint-disable-line no-unused-vars
 import ImageWrapper from './common/image_wrapper';
 import BarcodeLocator from './locator/barcode_locator';
 import BarcodeDecoder from './decoder/barcode_decoder';
@@ -489,6 +489,7 @@ export default {
                 size: 800,
                 src: config.src
             },
+            numOfWorkers: ENV.development ? 0 : 1,
             locator: {
                 halfSample: false
             }
