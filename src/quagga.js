@@ -8,10 +8,10 @@ import ImageDebug from './common/image_debug';
 import {vec2} from 'gl-matrix';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
+import InputStream from 'input_stream';
+import FrameGrabber from 'frame_grabber';
 
 const merge = require('lodash/object/merge');
-const InputStream = require('./input/input_stream');
-const FrameGrabber = require('./input/frame_grabber');
 
 var _inputStream,
     _framegrabber,

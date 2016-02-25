@@ -1,6 +1,5 @@
 let config;
 
-console.log(ENV);
 if(ENV.development){
     config = require('./config.dev.js');
 } else if (ENV.node) {

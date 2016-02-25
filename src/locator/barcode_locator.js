@@ -163,7 +163,7 @@ function boxFromPatches(patches) {
         vec2.transformMat2(box[j], box[j], transMat);
     }
 
-    if (ENV.development && _config.development.boxFromPatches.showBB) {
+    if (ENV.development && _config.debug.boxFromPatches.showBB) {
         ImageDebug.drawPath(box, {x: 0, y: 1}, _canvasContainer.ctx.binary, {color: '#ff0000', lineWidth: 2});
     }
 

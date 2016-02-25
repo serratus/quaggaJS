@@ -16,9 +16,10 @@ module.exports = {
     },
     resolve: {
         extensions: ['', '.js', '.jsx'],
+        root: path.resolve(__dirname),
         alias: {
-            'input_stream$': path.resolve(__dirname, 'src/input/input_stream'),
-            'frame_grabber$': path.resolve(__dirname, 'src/input/frame_grabber')
+            'input_stream$': 'src/input/input_stream',
+            'frame_grabber$': 'src/input/frame_grabber'
         }
     },
     output: {
