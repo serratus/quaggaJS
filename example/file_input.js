@@ -95,7 +95,6 @@ $(function() {
                 patchSize: "large",
                 halfSample: false
             },
-            numOfWorkers: 1,
             decoder: {
                 readers: ["code_128_reader"]
             },
@@ -103,7 +102,7 @@ $(function() {
             src: null
         }
     };
-    
+
     App.init();
 
     function calculateRectFromArea(canvas, area) {
@@ -168,4 +167,4 @@ $(function() {
         $node.find("h4.code").html(code);
         $("#result_strip ul.thumbnails").prepend($node);
     });
-}); 
+});

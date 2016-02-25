@@ -33,6 +33,9 @@ module.exports = {
     plugins: [
         new MyUmdPlugin({
             library: 'Quagga'
+        }),
+        new webpack.DefinePlugin({
+            ENV: require(path.join(__dirname, './env/', process.env.BUILD_ENV))
         })
     ]
 };

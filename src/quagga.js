@@ -489,7 +489,6 @@ export default {
                 size: 800,
                 src: config.src
             },
-            numOfWorkers: 1,
             locator: {
                 halfSample: false
             }

@@ -95,10 +95,10 @@ export default {
                 var i,
                     vis = [{
                         node: _canvas.dom.frequency,
-                        prop: config.showFrequency
+                        prop: config.debug.showFrequency
                     }, {
                         node: _canvas.dom.pattern,
-                        prop: config.showPattern
+                        prop: config.debug.showPattern
                     }];
 
                 for (i = 0; i < vis.length; i++) {
@@ -154,12 +154,12 @@ export default {
                 i,
                 barcodeLine = Bresenham.getBarcodeLine(inputImageWrapper, line[0], line[1]);
 
-            if (config.showFrequency) {
+            if (ENV.development && config.debug.showFrequency) {
                 ImageDebug.drawPath(line, {x: 'x', y: 'y'}, _canvas.ctx.overlay, {color: 'red', lineWidth: 3});
                 Bresenham.debug.printFrequency(barcodeLine.line, _canvas.dom.frequency);
             }
             Bresenham.toBinaryLine(barcodeLine);
-            if (config.showPattern) {
+            if (ENV.development && config.debug.showPattern) {
                 Bresenham.debug.printPattern(barcodeLine.line, _canvas.dom.pattern);
             }
 
@@ -228,8 +228,10 @@ export default {
                 result,
                 lineLength;
 
-            if (config.drawBoundingBox && ctx) {
-                ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
+            if (ENV.development) {
+                if (config.debug.drawBoundingBox && ctx) {
+                    ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
+                }
             }
 
             line = getLine(box);
