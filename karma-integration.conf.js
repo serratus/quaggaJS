@@ -1,4 +1,5 @@
 var path = require('path');
+var webpack = require('webpack');
 
 module.exports = function(config) {
     config.set({
@@ -25,12 +26,18 @@ module.exports = function(config) {
                 ]
             },
             resolve: {
-              extensions: ['', '.js', '.jsx'],
-              alias: {
-                  'input_stream$': path.resolve(__dirname, 'src/input_stream'),
-                  'frame_grabber$': path.resolve(__dirname, 'src/frame_grabber')
-              }
-            }
+                extensions: ['', '.js', '.jsx'],
+                root: path.resolve(__dirname),
+                alias: {
+                    'input_stream$': 'src/input/input_stream',
+                    'frame_grabber$': 'src/input/frame_grabber'
+                }
+            },
+            plugins: [
+                new webpack.DefinePlugin({
+                    ENV: require(path.join(__dirname, './env/production'))
+                })
+            ]
         },
         plugins: [
             'karma-chrome-launcher',

@@ -42,7 +42,7 @@ export default {
         initConfig();
 
         function initCanvas() {
-            if (typeof document !== 'undefined') {
+            if (ENV.development && typeof document !== 'undefined') {
                 var $debug = document.querySelector("#debug.detection");
                 _canvas.dom.frequency = document.querySelector("canvas.frequency");
                 if (!_canvas.dom.frequency) {
@@ -91,7 +91,7 @@ export default {
         }
 
         function initConfig() {
-            if (typeof document !== 'undefined') {
+            if (ENV.development && typeof document !== 'undefined') {
                 var i,
                     vis = [{
                         node: _canvas.dom.frequency,

@@ -34,8 +34,8 @@ module.exports = {
         halfSample: true,
         patchSize: "medium", // x-small, small, medium, large, x-large
         debug: {
-            showCanvas: true,
-            showPatches: true,
+            showCanvas: false,
+            showPatches: false,
             showFoundPatches: false,
             showSkeleton: false,
             showLabels: false,
