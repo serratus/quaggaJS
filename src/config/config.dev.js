@@ -27,7 +27,7 @@ module.exports = {
             drawBoundingBox: false,
             showFrequency: false,
             drawScanline: false,
-            showPattern: false,
+            showPattern: false
         }
     },
     locator: {

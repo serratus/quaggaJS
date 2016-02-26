@@ -20,6 +20,6 @@ module.exports = {
     },
     locator: {
         halfSample: true,
-        patchSize: "medium", // x-small, small, medium, large, x-large
+        patchSize: "medium" // x-small, small, medium, large, x-large
     }
 };

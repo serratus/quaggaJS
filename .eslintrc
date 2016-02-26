@@ -23,7 +23,9 @@
         "destructuring": true,
         "objectLiteralComputedProperties": true
     },
-    "globals": {},
+    "globals": {
+        "ENV": true
+    },
     "rules": {
         "no-unused-expressions": 1,
         "no-extra-boolean-cast": 1,

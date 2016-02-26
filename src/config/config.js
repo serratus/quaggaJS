@@ -1,6 +1,6 @@
 let config;
 
-if(ENV.development){
+if (ENV.development){
     config = require('./config.dev.js');
 } else if (ENV.node) {
     config = require('./config.node.js');
