@@ -34,7 +34,9 @@ ImageLoader.load = function(directory, callback, offset, size, sequence) {
             }
         }
         if (notloadedImgs.length === 0) {
-            console.log("Images loaded");
+            if (ENV.development) {
+                console.log("Images loaded");
+            }
             callback.apply(null, [htmlImagesArray]);
         }
     };

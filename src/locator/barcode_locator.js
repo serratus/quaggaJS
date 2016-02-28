@@ -570,7 +570,9 @@ export default {
         };
 
         patchSize = CVUtils.calculatePatchSize(config.patchSize, size);
-        console.log("Patch-Size: " + JSON.stringify(patchSize));
+        if (ENV.development) {
+            console.log("Patch-Size: " + JSON.stringify(patchSize));
+        }
 
         inputStream.setWidth(Math.floor(Math.floor(size.x / patchSize.x) * (1 / halfSample) * patchSize.x));
         inputStream.setHeight(Math.floor(Math.floor(size.y / patchSize.y) * (1 / halfSample) * patchSize.y));

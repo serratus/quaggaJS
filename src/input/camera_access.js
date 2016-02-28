@@ -27,7 +27,9 @@ function loadedData(video, callback) {
     function checkVideo() {
         if (attempts > 0) {
             if (video.videoWidth > 0 && video.videoHeight > 0) {
-                console.log(video.videoWidth + "px x " + video.videoHeight + "px");
+                if (ENV.development) {
+                    console.log(video.videoWidth + "px x " + video.videoHeight + "px");
+                }
                 callback();
             } else {
                 window.setTimeout(checkVideo, 500);

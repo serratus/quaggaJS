@@ -82,12 +82,16 @@ export default {
                 } else if (typeof readerConfig === 'string') {
                     reader = readerConfig;
                 }
-                console.log("Before registering reader: ", reader);
+                if (ENV.development) {
+                    console.log("Before registering reader: ", reader);
+                }
                 _barcodeReaders.push(new READERS[reader](configuration));
             });
-            console.log("Registered Readers: " + _barcodeReaders
-                .map((reader) => JSON.stringify({format: reader.FORMAT, config: reader.config}))
-                .join(', '));
+            if (ENV.development) {
+                console.log("Registered Readers: " + _barcodeReaders
+                    .map((reader) => JSON.stringify({format: reader.FORMAT, config: reader.config}))
+                    .join(', '));
+            }
         }
 
         function initConfig() {

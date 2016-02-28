@@ -20,12 +20,14 @@ FrameGrabber.create = function(inputStream, canvas) {
     _canvas.height = _canvasSize.y;
     _ctx = _canvas.getContext("2d");
     _data = new Uint8Array(_size.x * _size.y);
-    console.log("FrameGrabber", JSON.stringify({
-        size: _size,
-        topRight: topRight,
-        videoSize: _video_size,
-        canvasSize: _canvasSize
-    }));
+    if (ENV.development) {
+        console.log("FrameGrabber", JSON.stringify({
+            size: _size,
+            topRight: topRight,
+            videoSize: _video_size,
+            canvasSize: _canvasSize
+        }));
+    }
 
     /**
      * Uses the given array as frame-buffer

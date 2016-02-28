@@ -90,7 +90,9 @@ function canRecord(cb) {
 
     if (_config.numOfWorkers > 0) {
         initWorkers(function() {
-            console.log("Workers created");
+            if (ENV.development) {
+                console.log("Workers created");
+            }
             ready(cb);
         });
     } else {
@@ -148,7 +150,9 @@ function initBuffers(imageWrapper) {
         });
     }
 
-    console.log(_inputImageWrapper.size);
+    if (ENV.development) {
+        console.log(_inputImageWrapper.size);
+    }
     _boxSize = [
         vec2.clone([0, 0]),
         vec2.clone([0, _inputImageWrapper.size.y]),
@@ -341,14 +345,18 @@ function initWorker(cb) {
             URL.revokeObjectURL(blobURL);
             workerThread.busy = false;
             workerThread.imageData = new Uint8Array(e.data.imageData);
-            console.log("Worker initialized");
+            if (ENV.development) {
+                console.log("Worker initialized");
+            }
             return cb(workerThread);
         } else if (e.data.event === 'processed') {
             workerThread.imageData = new Uint8Array(e.data.imageData);
             workerThread.busy = false;
             publishResult(e.data.result, workerThread.imageData);
         } else if (e.data.event === 'error') {
-            console.log("Worker error: " + e.data.message);
+            if (ENV.development) {
+                console.log("Worker error: " + e.data.message);
+            }
         }
     };
 
@@ -449,7 +457,9 @@ export default {
         _stopped = true;
         _workerPool.forEach(function(workerThread) {
             workerThread.worker.terminate();
-            console.log("Worker terminated!");
+            if (ENV.development) {
+                console.log("Worker terminated!");
+            }
         });
         _workerPool.length = 0;
         if (_config.inputStream.type === "LiveStream") {
@@ -489,7 +499,7 @@ export default {
                 size: 800,
                 src: config.src
             },
-            numOfWorkers: ENV.development ? 0 : 1,
+            numOfWorkers: (ENV.development && config.debug) ? 0 : 1,
             locator: {
                 halfSample: false
             }
