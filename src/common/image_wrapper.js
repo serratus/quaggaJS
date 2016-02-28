@@ -1,6 +1,6 @@
 import SubImage from './subImage';
-import CVUtils from './cv_utils';
-import ArrayHelper from './array_helper';
+import CVUtils from '../common/cv_utils';
+import ArrayHelper from '../common/array_helper';
 import {vec2} from 'gl-matrix';
 
 /**

@@ -11,6 +11,7 @@
     "babel-loader": "^5.3.2",
     "chai": "^3.4.1",
     "core-js": "^1.2.1",
+    "cross-env": "^1.0.7",
     "eslint": "^1.10.3",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
@@ -39,8 +40,11 @@
   "scripts": {
     "test": "grunt test",
     "integrationtest": "grunt integrationtest",
-    "build": "webpack && webpack --config webpack.config.min.js && grunt uglyasm && webpack --config webpack.node.config.js",
-    "watch": "webpack --watch",
+    "build:dev": "cross-env BUILD_ENV=development webpack",
+    "build:prod": "cross-env BUILD_ENV=production webpack --config webpack.config.min.js && grunt uglyasm",
+    "build:node": "cross-env BUILD_ENV=node webpack --config webpack.node.config.js",
+    "build": "npm run build:dev && npm run build:prod && npm run build:node",
+    "watch": "cross-env BUILD_ENV=development webpack --watch",
     "lint": "eslint src"
   },
   "repository": {

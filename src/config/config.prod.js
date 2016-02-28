@@ -1,4 +1,4 @@
-export default {
+module.exports = {
     inputStream: {
         name: "Live",
         type: "LiveStream",
@@ -17,32 +17,15 @@ export default {
         },
         singleChannel: false // true: only the red color-channel is read
     },
-    debug: false,
     locate: true,
     numOfWorkers: 4,
     decoder: {
-        drawBoundingBox: false,
-        showFrequency: false,
-        drawScanline: false,
-        showPattern: false,
         readers: [
             'code_128_reader'
         ]
     },
     locator: {
         halfSample: true,
-        patchSize: "medium", // x-small, small, medium, large, x-large
-        showCanvas: false,
-        showPatches: false,
-        showFoundPatches: false,
-        showSkeleton: false,
-        showLabels: false,
-        showPatchLabels: false,
-        showRemainingPatchLabels: false,
-        boxFromPatches: {
-            showTransformed: false,
-            showTransformedBox: false,
-            showBB: false
-        }
+        patchSize: "medium" // x-small, small, medium, large, x-large
     }
 };

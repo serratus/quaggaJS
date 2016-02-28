@@ -29,7 +29,9 @@ Code39VINReader.prototype._decode = function() {
     code = code.replace(patterns.IOQ, '');
 
     if (!code.match(patterns.AZ09)) {
-        console.log('Failed AZ09 pattern code:', code);
+        if (ENV.development) {
+            console.log('Failed AZ09 pattern code:', code);
+        }
         return null;
     }
 

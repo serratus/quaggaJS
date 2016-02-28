@@ -5,9 +5,10 @@ module.exports = require('./webpack.config.js');
 
 module.exports.resolve = {
     extensions: ['', '.js', '.jsx'],
+    root: path.resolve(__dirname),
     alias: {
-        'input_stream$': path.resolve(__dirname, 'lib/input_stream'),
-        'frame_grabber$': path.resolve(__dirname, 'lib/frame_grabber')
+        'input_stream': 'lib/input_stream',
+        'frame_grabber': 'lib/frame_grabber'
     }
 };
 
@@ -19,6 +20,10 @@ module.exports.externals = [
     "ndarray-linear-interpolate"
 ];
 module.exports.output.libraryTarget = "commonjs2";
-module.exports.plugins = [];
+module.exports.plugins = [
+    new webpack.DefinePlugin({
+        ENV: require(path.join(__dirname, './env/', process.env.BUILD_ENV))
+    })
+];
 module.exports.output.path = __dirname + '/lib';
 module.exports.output.filename = 'quagga.js';

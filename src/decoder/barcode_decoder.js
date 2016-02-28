@@ -1,14 +1,14 @@
 import Bresenham from './bresenham';
-import ImageDebug from './image_debug';
-import Code128Reader from './code_128_reader';
-import EANReader from './ean_reader';
-import Code39Reader from './code_39_reader';
-import Code39VINReader from './code_39_vin_reader';
-import CodabarReader from './codabar_reader';
-import UPCReader from './upc_reader';
-import EAN8Reader from './ean_8_reader';
-import UPCEReader from './upc_e_reader';
-import I2of5Reader from './i2of5_reader';
+import ImageDebug from '../common/image_debug';
+import Code128Reader from '../reader/code_128_reader';
+import EANReader from '../reader/ean_reader';
+import Code39Reader from '../reader/code_39_reader';
+import Code39VINReader from '../reader/code_39_vin_reader';
+import CodabarReader from '../reader/codabar_reader';
+import UPCReader from '../reader/upc_reader';
+import EAN8Reader from '../reader/ean_8_reader';
+import UPCEReader from '../reader/upc_e_reader';
+import I2of5Reader from '../reader/i2of5_reader';
 
 const READERS = {
     code_128_reader: Code128Reader,
@@ -42,7 +42,7 @@ export default {
         initConfig();
 
         function initCanvas() {
-            if (typeof document !== 'undefined') {
+            if (ENV.development && typeof document !== 'undefined') {
                 var $debug = document.querySelector("#debug.detection");
                 _canvas.dom.frequency = document.querySelector("canvas.frequency");
                 if (!_canvas.dom.frequency) {
@@ -82,23 +82,27 @@ export default {
                 } else if (typeof readerConfig === 'string') {
                     reader = readerConfig;
                 }
-                console.log("Before registering reader: ", reader);
+                if (ENV.development) {
+                    console.log("Before registering reader: ", reader);
+                }
                 _barcodeReaders.push(new READERS[reader](configuration));
             });
-            console.log("Registered Readers: " + _barcodeReaders
-                .map((reader) => JSON.stringify({format: reader.FORMAT, config: reader.config}))
-                .join(', '));
+            if (ENV.development) {
+                console.log("Registered Readers: " + _barcodeReaders
+                    .map((reader) => JSON.stringify({format: reader.FORMAT, config: reader.config}))
+                    .join(', '));
+            }
         }
 
         function initConfig() {
-            if (typeof document !== 'undefined') {
+            if (ENV.development && typeof document !== 'undefined') {
                 var i,
                     vis = [{
                         node: _canvas.dom.frequency,
-                        prop: config.showFrequency
+                        prop: config.debug.showFrequency
                     }, {
                         node: _canvas.dom.pattern,
-                        prop: config.showPattern
+                        prop: config.debug.showPattern
                     }];
 
                 for (i = 0; i < vis.length; i++) {
@@ -154,12 +158,14 @@ export default {
                 i,
                 barcodeLine = Bresenham.getBarcodeLine(inputImageWrapper, line[0], line[1]);
 
-            if (config.showFrequency) {
+            if (ENV.development && config.debug.showFrequency) {
                 ImageDebug.drawPath(line, {x: 'x', y: 'y'}, _canvas.ctx.overlay, {color: 'red', lineWidth: 3});
                 Bresenham.debug.printFrequency(barcodeLine.line, _canvas.dom.frequency);
             }
+
             Bresenham.toBinaryLine(barcodeLine);
-            if (config.showPattern) {
+
+            if (ENV.development && config.debug.showPattern) {
                 Bresenham.debug.printPattern(barcodeLine.line, _canvas.dom.pattern);
             }
 
@@ -228,8 +234,10 @@ export default {
                 result,
                 lineLength;
 
-            if (config.drawBoundingBox && ctx) {
-                ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
+            if (ENV.development) {
+                if (config.debug.drawBoundingBox && ctx) {
+                    ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "blue", lineWidth: 2});
+                }
             }
 
             line = getLine(box);
@@ -249,7 +257,7 @@ export default {
                 return null;
             }
 
-            if (result && config.drawScanline && ctx) {
+            if (ENV.development && result && config.debug.drawScanline && ctx) {
                 ImageDebug.drawPath(line, {x: 'x', y: 'y'}, ctx, {color: 'red', lineWidth: 3});
             }
 

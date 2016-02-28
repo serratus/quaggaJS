@@ -1,5 +1,5 @@
-import CVUtils from './cv_utils';
-import ImageWrapper from './image_wrapper';
+import CVUtils from '../common/cv_utils';
+import ImageWrapper from '../common/image_wrapper';
 
 var Bresenham = {};
 

@@ -16,9 +16,10 @@ module.exports = {
     },
     resolve: {
         extensions: ['', '.js', '.jsx'],
+        root: path.resolve(__dirname),
         alias: {
-            'input_stream$': path.resolve(__dirname, 'src/input_stream'),
-            'frame_grabber$': path.resolve(__dirname, 'src/frame_grabber')
+            'input_stream$': 'src/input/input_stream',
+            'frame_grabber$': 'src/input/frame_grabber'
         }
     },
     output: {
@@ -33,6 +34,9 @@ module.exports = {
     plugins: [
         new MyUmdPlugin({
             library: 'Quagga'
+        }),
+        new webpack.DefinePlugin({
+            ENV: require(path.join(__dirname, './env/', process.env.BUILD_ENV))
         })
     ]
 };

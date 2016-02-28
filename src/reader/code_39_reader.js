@@ -1,5 +1,5 @@
 import BarcodeReader from './barcode_reader';
-import ArrayHelper from './array_helper';
+import ArrayHelper from '../common/array_helper';
 
 function Code39Reader() {
     BarcodeReader.call(this);
