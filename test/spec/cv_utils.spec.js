@@ -1,4 +1,4 @@
-const CVUtils = require('../../src/cv_utils');
+const CVUtils = require('../../src/common/cv_utils');
 
 describe('imageRef', function() {
     it('gets the image Reference for a coordinate', function() {

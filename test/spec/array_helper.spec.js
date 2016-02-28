@@ -1,4 +1,4 @@
-const ArrayHelper = require('../../src/array_helper');
+const ArrayHelper = require('../../src/common/array_helper');
 
 describe('init', function() {
     it('initializes an array with the given value', function() {

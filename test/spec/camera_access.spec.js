@@ -1,4 +1,4 @@
-const CameraAccess = require('../../src/camera_access');
+const CameraAccess = require('../../src/input/camera_access');
 
 var originalURL,
     originalMediaStreamTrack,

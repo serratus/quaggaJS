@@ -1,4 +1,4 @@
-const Events = require('../../src/events');
+const Events = require('../../src/common/events');
 
 beforeEach(function() {
     Events.unsubscribe();

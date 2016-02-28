@@ -1,5 +1,5 @@
-const ResultCollector = require('../../src/result_collector');
-const ImageDebug = require('../../src/image_debug');
+const ResultCollector = require('../../src/analytics/result_collector');
+const ImageDebug = require('../../src/common/image_debug');
 
 var canvasMock,
     imageSize,

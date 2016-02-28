@@ -1,4 +1,5 @@
 var path = require('path');
+var webpack = require('webpack');
 
 module.exports = function(config) {
     config.set({
@@ -39,6 +40,11 @@ module.exports = function(config) {
                     'frame_grabber$': 'src/input/frame_grabber'
                 }
             },
+            plugins: [
+                new webpack.DefinePlugin({
+                    ENV: require(path.join(__dirname, './env/production'))
+                })
+            ]
         },
         plugins: [
             'karma-chrome-launcher',
