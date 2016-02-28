@@ -109,6 +109,12 @@ file is only valid for the non-uglified version `quagga.js` because the
 minified version is altered after compression and does not align with the map
 file any more.
 
+### Node
+
+The code in the `dist` folder is only targeted to the browser and won't work in
+node due to the dependency on the DOM. For the use in node, the `build` command
+also creates a `quagga.js` file in the `lib` folder.
+
 ## <a name="api">API</a>
 
 You can check out the [examples][github_examples] to get an idea of how to
@@ -549,6 +555,12 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2016-02-18
+
+- Internal Changes
+  - Restructuring into meaningful folders
+  - Removing debug-code in production build
 
 ### 2016-02-15
 Take a look at the release-notes ([0.9.0]
