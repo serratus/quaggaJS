@@ -1,6 +1,8 @@
 name: QuaggaJS
 markdown: kramdown
 baseurl: /quaggaJS
+scheme: https://
 url: https://serratus.github.io
+host: serratus.github.io
 
 exclude: [node_modules]
