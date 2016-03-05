@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>QuaggaJS, an advanced barcode-reader written in JavaScript</title>
-    
+
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="copyright" content="This project is maintained by Christoph Oberhofer" />
     <meta name="description" content="QuaggaJS is an advanced barcode-reader written in JavaScript" />
     <meta name="keywords" content="barcode, javascript, canvas, computer vision, image processing, ean, code128" />
     <meta name="robots" content="index,follow" />
-    
+
+    <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
     <link rel="stylesheet" href="{{ site.baseurl }}/stylesheets/styles.css">
     <link rel="stylesheet" href="{{ site.baseurl }}/stylesheets/example.css">
     <link rel="stylesheet" href="{{ site.baseurl }}/stylesheets/pygment_trac.css">
@@ -19,14 +20,20 @@
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     <script>
+        var host = "{{ site.url }}";
+        if ((host == window.location.host) && (window.location.protocol != "https:")) {
+            window.location.protocol = "https";
+        }
+    </script>
+    <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    
+
       ga('create', 'UA-56318310-1', 'auto');
       ga('send', 'pageview');
-    
+
     </script>
   </head>
   <body>
