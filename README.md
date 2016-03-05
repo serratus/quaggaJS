@@ -17,7 +17,7 @@ access to the user's camera stream. Although the code relies on heavy image-
 processing even recent smartphones are capable of locating and decoding
 barcodes in real-time.
 
-Try some [examples](http://serratus.github.io/quaggaJS/examples) and check out
+Try some [examples](https://serratus.github.io/quaggaJS/examples) and check out
 the blog post ([How barcode-localization works in QuaggaJS][oberhofer_co_how])
 if you want to dive deeper into this topic.
 
@@ -713,5 +713,5 @@ introduced to the API.
 [upc_wiki]: http://en.wikipedia.org/wiki/Universal_Product_Code
 [ean_8_wiki]: http://en.wikipedia.org/wiki/EAN-8
 [oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
-[github_examples]: http://serratus.github.io/quaggaJS/examples
+[github_examples]: https://serratus.github.io/quaggaJS/examples
 [i2of5_wiki]: https://en.wikipedia.org/wiki/Interleaved_2_of_5
