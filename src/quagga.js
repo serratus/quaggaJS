@@ -88,17 +88,12 @@ function canRecord(cb) {
     initCanvas(_config);
     _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
 
-    if (_config.numOfWorkers > 0) {
-        initWorkers(function() {
-            if (ENV.development) {
-                console.log("Workers created");
-            }
-            ready(cb);
-        });
-    } else {
-        initializeData();
+    adjustWorkerPool(_config.numOfWorkers, function() {
+        if (_config.numOfWorkers === 0) {
+            initializeData();
+        }
         ready(cb);
-    }
+    });
 }
 
 function ready(cb){
@@ -313,22 +308,6 @@ function start() {
     }());
 }
 
-function initWorkers(cb) {
-    var i;
-    _workerPool = [];
-
-    for (i = 0; i < _config.numOfWorkers; i++) {
-        initWorker(workerInitialized);
-    }
-
-    function workerInitialized(workerThread) {
-        _workerPool.push(workerThread);
-        if (_workerPool.length >= _config.numOfWorkers){
-            cb();
-        }
-    }
-}
-
 function initWorker(cb) {
     var blobURL,
         workerThread = {
@@ -439,6 +418,35 @@ function setReaders(readers) {
     }
 }
 
+function adjustWorkerPool(capacity, cb) {
+    const increaseBy = capacity - _workerPool.length;
+    if (increaseBy === 0) {
+        return cb && cb();
+    }
+    if (increaseBy < 0) {
+        const workersToTerminate = _workerPool.slice(increaseBy);
+        workersToTerminate.forEach(function(workerThread) {
+            workerThread.worker.terminate();
+            if (ENV.development) {
+                console.log("Worker terminated!");
+            }
+        });
+        _workerPool = _workerPool.slice(0, increaseBy);
+        return cb && cb();
+    } else {
+        for (var i = 0; i < increaseBy; i++) {
+            initWorker(workerInitialized);
+        }
+
+        function workerInitialized(workerThread) {
+            _workerPool.push(workerThread);
+            if (_workerPool.length >= capacity){
+                cb && cb();
+            }
+        }
+    }
+}
+
 export default {
     init: function(config, cb, imageWrapper) {
         _config = merge({}, Config, config);
@@ -455,13 +463,7 @@ export default {
     },
     stop: function() {
         _stopped = true;
-        _workerPool.forEach(function(workerThread) {
-            workerThread.worker.terminate();
-            if (ENV.development) {
-                console.log("Worker terminated!");
-            }
-        });
-        _workerPool.length = 0;
+        adjustWorkerPool(0);
         if (_config.inputStream.type === "LiveStream") {
             CameraAccess.release();
             _inputStream.clearEventHandlers();

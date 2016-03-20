@@ -133,7 +133,7 @@ export default {
     },
     release: function() {
         var tracks = streamRef && streamRef.getVideoTracks();
-        if (tracks.length) {
+        if (tracks && tracks.length) {
             tracks[0].stop();
         }
         streamRef = null;
