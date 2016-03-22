@@ -360,21 +360,23 @@ function workerInterface(factory) {
     var imageWrapper;
 
     self.onmessage = function(e) {
-        if (e.data.cmd === 'init') {
-            var config = e.data.config;
-            config.numOfWorkers = 0;
-            imageWrapper = new Quagga.ImageWrapper({
-                x: e.data.size.x,
-                y: e.data.size.y
-            }, new Uint8Array(e.data.imageData));
-            Quagga.init(config, ready, imageWrapper);
-            Quagga.onProcessed(onProcessed);
-        } else if (e.data.cmd === 'process') {
-            imageWrapper.data = new Uint8Array(e.data.imageData);
-            Quagga.start();
-        } else if (e.data.cmd === 'setReaders') {
-            Quagga.setReaders(e.data.readers);
-        }
+        setTimeout(function() {
+            if (e.data.cmd === 'init') {
+                var config = e.data.config;
+                config.numOfWorkers = 0;
+                imageWrapper = new Quagga.ImageWrapper({
+                    x: e.data.size.x,
+                    y: e.data.size.y
+                }, new Uint8Array(e.data.imageData));
+                Quagga.init(config, ready, imageWrapper);
+                Quagga.onProcessed(onProcessed);
+            } else if (e.data.cmd === 'process') {
+                imageWrapper.data = new Uint8Array(e.data.imageData);
+                Quagga.start();
+            } else if (e.data.cmd === 'setReaders') {
+                Quagga.setReaders(e.data.readers);
+            }
+        }, Quagga.getConfig().scanDelay || 0);
     };
 
     function onProcessed(result) {
@@ -516,5 +518,8 @@ export default {
     },
     ImageWrapper: ImageWrapper,
     ImageDebug: ImageDebug,
-    ResultCollector: ResultCollector
+    ResultCollector: ResultCollector,
+    getConfig: function getConfig() {
+        return _config;
+    }
 };
