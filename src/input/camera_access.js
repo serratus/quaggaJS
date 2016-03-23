@@ -84,15 +84,16 @@ function normalizeConstraints(config, cb) {
 
     if ( typeof MediaStreamTrack !== 'undefined' && typeof MediaStreamTrack.getSources !== 'undefined') {
         MediaStreamTrack.getSources(function(sourceInfos) {
-            var videoSourceId, facingDetected, videoIndex = 0;
+            var videoSourceId, videoIndex = 0;
             for (var i = 0; i < sourceInfos.length; ++i) {
                 var sourceInfo = sourceInfos[i];
-                if (sourceInfo.kind === "video" && !facingDetected) {
+                if (sourceInfo.kind === "video") {
                     if (sourceInfo.facing === videoConstraints.facing) {
-                        facingDetected = true;
+                        videoSourceId = sourceInfo.id;
+                        break;
                     }
                     
-                    if (!config.cameraIndex || config.cameraIndex <= videoIndex) {
+                    if (videoConstraints.cameraIndex === 'undefined' || videoConstraints.cameraIndex >= videoIndex) {
                         videoSourceId = sourceInfo.id;
                     }
                     
