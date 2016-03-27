@@ -77,6 +77,7 @@
     "gl-matrix": "^2.3.1",
     "lodash": "^3.10.1",
     "ndarray": "^1.0.18",
-    "ndarray-linear-interpolate": "^1.0.0"
+    "ndarray-linear-interpolate": "^1.0.0",
+    "webrtc-adapter": "^1.0.6"
   }
 }

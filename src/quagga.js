@@ -1,4 +1,5 @@
 import TypeDefs from './common/typedefs'; // eslint-disable-line no-unused-vars
+import WebrtcAdapter from 'webrtc-adapter'; // eslint-disable-line no-unused-vars
 import ImageWrapper from './common/image_wrapper';
 import BarcodeLocator from './locator/barcode_locator';
 import BarcodeDecoder from './decoder/barcode_decoder';
@@ -56,12 +57,11 @@ function initInputStream(cb) {
             }
         }
         _inputStream = InputStream.createLiveStream(video);
-        CameraAccess.request(video, _config.inputStream.constraints, function(err) {
-            if (!err) {
-                _inputStream.trigger("canrecord");
-            } else {
-                return cb(err);
-            }
+        CameraAccess.request(video, _config.inputStream.constraints)
+        .then(() => {
+            _inputStream.trigger("canrecord");
+        }).catch((err) => {
+            return cb(err);
         });
     }
 

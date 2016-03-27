@@ -98,8 +98,7 @@ $(function() {
                     var values = value.split('x');
                     return {
                         width: parseInt(values[0]),
-                        height: parseInt(values[1]),
-                        facing: "environment"
+                        height: parseInt(values[1])
                     }
                 }
             },
@@ -118,7 +117,7 @@ $(function() {
                 constraints: {
                     width: 640,
                     height: 480,
-                    facing: "environment" // or user
+                    facingMode: "environment"
                 }
             },
             locator: {
