@@ -296,16 +296,29 @@ function update() {
     }
 }
 
-function start() {
+function startContinuousUpdate() {
+    var next = null,
+        delay = 1000 / (_config.frequency || 60);
+
     _stopped = false;
-    ( function frame() {
+    (function frame(timestamp) {
+        next = next || timestamp;
         if (!_stopped) {
-            update();
-            if (_onUIThread && _config.inputStream.type === "LiveStream") {
-                window.requestAnimFrame(frame);
+            if (timestamp >= next) {
+                next += delay;
+                update();
             }
+            window.requestAnimFrame(frame);
         }
-    }());
+    }(performance.now()));
+}
+
+function start() {
+    if (_onUIThread && _config.inputStream.type === "LiveStream") {
+        startContinuousUpdate();
+    } else {
+        update();
+    }
 }
 
 function initWorker(cb) {
