@@ -84,7 +84,7 @@ function applyCameraFacing(facing, constraints) {
             });
         });
     }
-    return Promise.resolve(merge({}, videoConstraints, {facingMode: facing}));
+    return Promise.resolve(merge({}, constraints, {video: {facingMode: facing}}));
 }
 
 function pickConstraints(videoConstraints) {
