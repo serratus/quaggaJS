@@ -1,4 +1,4 @@
-var Quagga = require('../lib/quagga');
+var Quagga = require('../lib/quagga').default;
 
 Quagga.decodeSingle({
     src: "../test/fixtures/code_128/image-001.jpg",

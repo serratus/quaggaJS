@@ -6,13 +6,14 @@ import BarcodeDecoder from './decoder/barcode_decoder';
 import Events from './common/events';
 import CameraAccess from './input/camera_access';
 import ImageDebug from './common/image_debug';
-import {vec2} from 'gl-matrix';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
 import InputStream from 'input_stream';
 import FrameGrabber from 'frame_grabber';
-
-const merge = require('lodash/object/merge');
+import {merge} from 'lodash';
+const vec2 = {
+    clone: require('gl-vec2/clone')
+};
 
 var _inputStream,
     _framegrabber,
@@ -364,7 +365,7 @@ function initWorker(cb) {
 function workerInterface(factory) {
     /* eslint-disable no-undef*/
     if (factory) {
-        var Quagga = factory();
+        var Quagga = factory().default;
         if (!Quagga) {
             self.postMessage({'event': 'error', message: 'Quagga could not be created'});
             return;

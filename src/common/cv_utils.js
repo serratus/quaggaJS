@@ -1,15 +1,18 @@
 import Cluster2 from './cluster';
 import ArrayHelper from './array_helper';
-import {vec2, vec3} from 'gl-matrix';
-
-var CVUtils = {};
+const vec2 = {
+    clone: require('gl-vec2/clone'),
+};
+const vec3 = {
+    clone: require('gl-vec3/clone'),
+};
 
 /**
  * @param x x-coordinate
  * @param y y-coordinate
  * @return ImageReference {x,y} Coordinate
  */
-CVUtils.imageRef = function(x, y) {
+export function imageRef(x, y) {
     var that = {
         x: x,
         y: y,
@@ -32,7 +35,7 @@ CVUtils.imageRef = function(x, y) {
  * Computes an integral image of a given grayscale image.
  * @param imageDataContainer {ImageDataContainer} the image to be integrated
  */
-CVUtils.computeIntegralImage2 = function(imageWrapper, integralWrapper) {
+export function computeIntegralImage2(imageWrapper, integralWrapper) {
     var imageData = imageWrapper.data;
     var width = imageWrapper.size.x;
     var height = imageWrapper.size.y;
@@ -75,7 +78,7 @@ CVUtils.computeIntegralImage2 = function(imageWrapper, integralWrapper) {
     }
 };
 
-CVUtils.computeIntegralImage = function(imageWrapper, integralWrapper) {
+export function computeIntegralImage(imageWrapper, integralWrapper) {
     var imageData = imageWrapper.data;
     var width = imageWrapper.size.x;
     var height = imageWrapper.size.y;
@@ -97,7 +100,7 @@ CVUtils.computeIntegralImage = function(imageWrapper, integralWrapper) {
     }
 };
 
-CVUtils.thresholdImage = function(imageWrapper, threshold, targetWrapper) {
+export function thresholdImage(imageWrapper, threshold, targetWrapper) {
     if (!targetWrapper) {
         targetWrapper = imageWrapper;
     }
@@ -108,7 +111,7 @@ CVUtils.thresholdImage = function(imageWrapper, threshold, targetWrapper) {
     }
 };
 
-CVUtils.computeHistogram = function(imageWrapper, bitsPerPixel) {
+export function computeHistogram(imageWrapper, bitsPerPixel) {
     if (!bitsPerPixel) {
         bitsPerPixel = 8;
     }
@@ -124,7 +127,7 @@ CVUtils.computeHistogram = function(imageWrapper, bitsPerPixel) {
     return hist;
 };
 
-CVUtils.sharpenLine = function(line) {
+export function sharpenLine(line) {
     var i,
         length = line.length,
         left = line[0],
@@ -141,7 +144,7 @@ CVUtils.sharpenLine = function(line) {
     return line;
 };
 
-CVUtils.determineOtsuThreshold = function(imageWrapper, bitsPerPixel) {
+export function determineOtsuThreshold(imageWrapper, bitsPerPixel) {
     if (!bitsPerPixel) {
         bitsPerPixel = 8;
     }
@@ -171,7 +174,7 @@ CVUtils.determineOtsuThreshold = function(imageWrapper, bitsPerPixel) {
         var vet = [0], p1, p2, p12, k, m1, m2, m12,
             max = (1 << bitsPerPixel) - 1;
 
-        hist = CVUtils.computeHistogram(imageWrapper, bitsPerPixel);
+        hist = computeHistogram(imageWrapper, bitsPerPixel);
         for ( k = 1; k < max; k++) {
             p1 = px(0, k);
             p2 = px(k + 1, max);
@@ -191,16 +194,16 @@ CVUtils.determineOtsuThreshold = function(imageWrapper, bitsPerPixel) {
     return threshold << bitShift;
 };
 
-CVUtils.otsuThreshold = function(imageWrapper, targetWrapper) {
-    var threshold = CVUtils.determineOtsuThreshold(imageWrapper);
+export function otsuThreshold(imageWrapper, targetWrapper) {
+    var threshold = determineOtsuThreshold(imageWrapper);
 
-    CVUtils.thresholdImage(imageWrapper, threshold, targetWrapper);
+    thresholdImage(imageWrapper, threshold, targetWrapper);
     return threshold;
 };
 
 // local thresholding
-CVUtils.computeBinaryImage = function(imageWrapper, integralWrapper, targetWrapper) {
-    CVUtils.computeIntegralImage(imageWrapper, integralWrapper);
+export function computeBinaryImage(imageWrapper, integralWrapper, targetWrapper) {
+    computeIntegralImage(imageWrapper, integralWrapper);
 
     if (!targetWrapper) {
         targetWrapper = imageWrapper;
@@ -241,7 +244,7 @@ CVUtils.computeBinaryImage = function(imageWrapper, integralWrapper, targetWrapp
     }
 };
 
-CVUtils.cluster = function(points, threshold, property) {
+export function cluster(points, threshold, property) {
     var i, k, cluster, point, clusters = [];
 
     if (!property) {
@@ -270,7 +273,7 @@ CVUtils.cluster = function(points, threshold, property) {
     return clusters;
 };
 
-CVUtils.Tracer = {
+export const Tracer = {
     trace: function(points, vec) {
         var iteration, maxIterations = 10, top = [], result = [], centerPos = 0, currentPos = 0;
 
@@ -340,10 +343,10 @@ CVUtils.Tracer = {
     }
 };
 
-CVUtils.DILATE = 1;
-CVUtils.ERODE = 2;
+export const DILATE = 1;
+export const ERODE = 2;
 
-CVUtils.dilate = function(inImageWrapper, outImageWrapper) {
+export function dilate(inImageWrapper, outImageWrapper) {
     var v,
         u,
         inImageData = inImageWrapper.data,
@@ -370,7 +373,7 @@ CVUtils.dilate = function(inImageWrapper, outImageWrapper) {
     }
 };
 
-CVUtils.erode = function(inImageWrapper, outImageWrapper) {
+export function erode(inImageWrapper, outImageWrapper) {
     var v,
         u,
         inImageData = inImageWrapper.data,
@@ -397,7 +400,7 @@ CVUtils.erode = function(inImageWrapper, outImageWrapper) {
     }
 };
 
-CVUtils.subtract = function(aImageWrapper, bImageWrapper, resultImageWrapper) {
+export function subtract(aImageWrapper, bImageWrapper, resultImageWrapper) {
     if (!resultImageWrapper) {
         resultImageWrapper = aImageWrapper;
     }
@@ -411,7 +414,7 @@ CVUtils.subtract = function(aImageWrapper, bImageWrapper, resultImageWrapper) {
     }
 };
 
-CVUtils.bitwiseOr = function(aImageWrapper, bImageWrapper, resultImageWrapper) {
+export function bitwiseOr(aImageWrapper, bImageWrapper, resultImageWrapper) {
     if (!resultImageWrapper) {
         resultImageWrapper = aImageWrapper;
     }
@@ -425,7 +428,7 @@ CVUtils.bitwiseOr = function(aImageWrapper, bImageWrapper, resultImageWrapper) {
     }
 };
 
-CVUtils.countNonZero = function(imageWrapper) {
+export function countNonZero(imageWrapper) {
     var length = imageWrapper.data.length, data = imageWrapper.data, sum = 0;
 
     while (length--) {
@@ -434,7 +437,7 @@ CVUtils.countNonZero = function(imageWrapper) {
     return sum;
 };
 
-CVUtils.topGeneric = function(list, top, scoreFunc) {
+export function topGeneric(list, top, scoreFunc) {
     var i, minIdx = 0, min = 0, queue = [], score, hit, pos;
 
     for ( i = 0; i < top; i++) {
@@ -463,18 +466,18 @@ CVUtils.topGeneric = function(list, top, scoreFunc) {
     return queue;
 };
 
-CVUtils.grayArrayFromImage = function(htmlImage, offsetX, ctx, array) {
+export function grayArrayFromImage(htmlImage, offsetX, ctx, array) {
     ctx.drawImage(htmlImage, offsetX, 0, htmlImage.width, htmlImage.height);
     var ctxData = ctx.getImageData(offsetX, 0, htmlImage.width, htmlImage.height).data;
-    CVUtils.computeGray(ctxData, array);
+    computeGray(ctxData, array);
 };
 
-CVUtils.grayArrayFromContext = function(ctx, size, offset, array) {
+export function grayArrayFromContext(ctx, size, offset, array) {
     var ctxData = ctx.getImageData(offset.x, offset.y, size.x, size.y).data;
-    CVUtils.computeGray(ctxData, array);
+    computeGray(ctxData, array);
 };
 
-CVUtils.grayAndHalfSampleFromCanvasData = function(canvasData, size, outArray) {
+export function grayAndHalfSampleFromCanvasData(canvasData, size, outArray) {
     var topRowIdx = 0;
     var bottomRowIdx = size.x;
     var endIdx = Math.floor(canvasData.length / 4);
@@ -507,7 +510,7 @@ CVUtils.grayAndHalfSampleFromCanvasData = function(canvasData, size, outArray) {
     }
 };
 
-CVUtils.computeGray = function(imageData, outArray, config) {
+export function computeGray(imageData, outArray, config) {
     var l = (imageData.length / 4) | 0,
         i,
         singleChannel = config && config.singleChannel === true;
@@ -524,7 +527,7 @@ CVUtils.computeGray = function(imageData, outArray, config) {
     }
 };
 
-CVUtils.loadImageArray = function(src, callback, canvas) {
+export function loadImageArray(src, callback, canvas) {
     if (!canvas) {
         canvas = document.createElement('canvas');
     }
@@ -538,7 +541,7 @@ CVUtils.loadImageArray = function(src, callback, canvas) {
         var array = new Uint8Array(this.width * this.height);
         ctx.drawImage(this, 0, 0);
         var data = ctx.getImageData(0, 0, this.width, this.height).data;
-        CVUtils.computeGray(data, array);
+        computeGray(data, array);
         this.callback(array, {
             x: this.width,
             y: this.height
@@ -551,7 +554,7 @@ CVUtils.loadImageArray = function(src, callback, canvas) {
  * @param inImg {ImageWrapper} input image to be sampled
  * @param outImg {ImageWrapper} to be stored in
  */
-CVUtils.halfSample = function(inImgWrapper, outImgWrapper) {
+export function halfSample(inImgWrapper, outImgWrapper) {
     var inImg = inImgWrapper.data;
     var inWidth = inImgWrapper.size.x;
     var outImg = outImgWrapper.data;
@@ -573,7 +576,7 @@ CVUtils.halfSample = function(inImgWrapper, outImgWrapper) {
     }
 };
 
-CVUtils.hsv2rgb = function(hsv, rgb) {
+export function hsv2rgb(hsv, rgb) {
     var h = hsv[0],
         s = hsv[1],
         v = hsv[2],
@@ -611,7 +614,7 @@ CVUtils.hsv2rgb = function(hsv, rgb) {
     return rgb;
 };
 
-CVUtils._computeDivisors = function(n) {
+export function _computeDivisors(n) {
     var largeDivisors = [],
         divisors = [],
         i;
@@ -627,7 +630,7 @@ CVUtils._computeDivisors = function(n) {
     return divisors.concat(largeDivisors);
 };
 
-CVUtils._computeIntersection = function(arr1, arr2) {
+function _computeIntersection(arr1, arr2) {
     var i = 0,
         j = 0,
         result = [];
@@ -646,11 +649,11 @@ CVUtils._computeIntersection = function(arr1, arr2) {
     return result;
 };
 
-CVUtils.calculatePatchSize = function(patchSize, imgSize) {
-    var divisorsX = this._computeDivisors(imgSize.x),
-        divisorsY = this._computeDivisors(imgSize.y),
+export function calculatePatchSize(patchSize, imgSize) {
+    var divisorsX = _computeDivisors(imgSize.x),
+        divisorsY = _computeDivisors(imgSize.y),
         wideSide = Math.max(imgSize.x, imgSize.y),
-        common = this._computeIntersection(divisorsX, divisorsY),
+        common = _computeIntersection(divisorsX, divisorsY),
         nrOfPatchesList = [8, 10, 15, 20, 32, 60, 80],
         nrOfPatchesMap = {
             "x-small": 5,
@@ -687,15 +690,15 @@ CVUtils.calculatePatchSize = function(patchSize, imgSize) {
 
     optimalPatchSize = findPatchSizeForDivisors(common);
     if (!optimalPatchSize) {
-        optimalPatchSize = findPatchSizeForDivisors(this._computeDivisors(wideSide));
+        optimalPatchSize = findPatchSizeForDivisors(_computeDivisors(wideSide));
         if (!optimalPatchSize) {
-            optimalPatchSize = findPatchSizeForDivisors((this._computeDivisors(desiredPatchSize * nrOfPatches)));
+            optimalPatchSize = findPatchSizeForDivisors((_computeDivisors(desiredPatchSize * nrOfPatches)));
         }
     }
     return optimalPatchSize;
 };
 
-CVUtils._parseCSSDimensionValues = function(value) {
+export function _parseCSSDimensionValues(value) {
     var dimension = {
         value: parseFloat(value),
         unit: value.indexOf("%") === value.length - 1 ? "%" : "%"
@@ -704,7 +707,7 @@ CVUtils._parseCSSDimensionValues = function(value) {
     return dimension;
 };
 
-CVUtils._dimensionsConverters = {
+export const _dimensionsConverters = {
     top: function(dimension, context) {
         if (dimension.unit === "%") {
             return Math.floor(context.height * (dimension.value / 100));
@@ -727,13 +730,13 @@ CVUtils._dimensionsConverters = {
     }
 };
 
-CVUtils.computeImageArea = function(inputWidth, inputHeight, area) {
+export function computeImageArea(inputWidth, inputHeight, area) {
     var context = {width: inputWidth, height: inputHeight};
 
     var parsedArea = Object.keys(area).reduce(function(result, key) {
         var value = area[key],
-            parsed = CVUtils._parseCSSDimensionValues(value),
-            calculated = CVUtils._dimensionsConverters[key](parsed, context);
+            parsed = _parseCSSDimensionValues(value),
+            calculated = _dimensionsConverters[key](parsed, context);
 
         result[key] = calculated;
         return result;
@@ -746,5 +749,3 @@ CVUtils.computeImageArea = function(inputWidth, inputHeight, area) {
         sh: parsedArea.bottom - parsedArea.top
     };
 };
-
-export default CVUtils;

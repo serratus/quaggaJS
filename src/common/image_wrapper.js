@@ -1,7 +1,9 @@
 import SubImage from './subImage';
-import CVUtils from '../common/cv_utils';
+import {hsv2rgb} from '../common/cv_utils';
 import ArrayHelper from '../common/array_helper';
-import {vec2} from 'gl-matrix';
+const vec2 = {
+    clone: require('gl-vec2/clone'),
+};
 
 /**
  * Represents a basic image combining the data and size.
@@ -335,7 +337,7 @@ ImageWrapper.prototype.overlay = function(canvas, scale, from) {
     var length = this.data.length;
     while (length--) {
         hsv[0] = this.data[length] * scale;
-        result = hsv[0] <= 0 ? whiteRgb : hsv[0] >= 360 ? blackRgb : CVUtils.hsv2rgb(hsv, rgb);
+        result = hsv[0] <= 0 ? whiteRgb : hsv[0] >= 360 ? blackRgb : hsv2rgb(hsv, rgb);
         data[length * 4 + 0] = result[0];
         data[length * 4 + 1] = result[1];
         data[length * 4 + 2] = result[2];

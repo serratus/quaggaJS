@@ -1,6 +1,4 @@
-const merge = require('lodash/object/merge');
-const pick = require('lodash/object/pick');
-const mapKeys = require('lodash/object/mapKeys');
+import {merge, pick} from 'lodash';
 
 var streamRef,
     loadedDataHandler;

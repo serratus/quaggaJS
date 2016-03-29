@@ -1,5 +1,5 @@
-var ConcatSource = require("webpack-core/lib/ConcatSource");
-var OriginalSource = require("webpack-core/lib/OriginalSource");
+var ConcatSource = require("webpack-sources").ConcatSource;
+var OriginalSource = require("webpack-sources").OriginalSource;
 
 function MyUmdPlugin(options) {
 	this.name = options.library;
@@ -13,11 +13,11 @@ MyUmdPlugin.prototype.apply = function(compiler) {
     		return new ConcatSource(new OriginalSource(
     			"(function webpackUniversalModuleDefinition(root, factory) {\n" +
     			"	if(typeof exports === 'object' && typeof module === 'object')\n" +
-    			"		module.exports = factory(factory.toString());\n" +
+    			"		module.exports = factory(factory.toString()).default;\n" +
     			"	else if(typeof exports === 'object')\n" +
-    			"		exports[\"" + this.name + "\"] = factory(factory.toString());\n" +
+    			"		exports[\"" + this.name + "\"] = factory(factory.toString()).default;\n" +
     			"	else\n" +
-    			"		root[\"" + this.name + "\"] = factory(factory.toString());\n" +
+    			"		root[\"" + this.name + "\"] = factory(factory.toString()).default;\n" +
     			"})(this, function(__factorySource__) {\nreturn ", "webpack/myModuleDefinition"), source, "\n});\n");
     	}.bind(this));
     	mainTemplate.plugin("global-hash-paths", function(paths) {

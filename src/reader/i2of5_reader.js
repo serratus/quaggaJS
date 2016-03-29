@@ -1,5 +1,5 @@
 import BarcodeReader from './barcode_reader';
-const merge = require('lodash/object/merge');
+import {merge} from 'lodash';
 
 function I2of5Reader(opts) {
     opts = merge(getDefaulConfig(), opts);

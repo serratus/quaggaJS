@@ -1,11 +1,30 @@
 import ImageWrapper from '../common/image_wrapper';
-import CVUtils from '../common/cv_utils';
+import {
+    calculatePatchSize,
+    otsuThreshold,
+    hsv2rgb,
+    cluster,
+    topGeneric,
+    imageRef,
+    halfSample,
+    computeImageArea
+} from '../common/cv_utils';
 import ArrayHelper from '../common/array_helper';
 import ImageDebug from '../common/image_debug';
 import Rasterizer from './rasterizer';
 import Tracer from './tracer';
 import skeletonizer from './skeletonizer';
-import {vec2, mat2} from 'gl-matrix';
+const vec2 = {
+    clone: require('gl-vec2/clone'),
+    dot:  require('gl-vec2/dot'),
+    scale: require('gl-vec2/scale'),
+    transformMat2: require('gl-vec2/transformMat2')
+};
+const mat2 = {
+    copy: require('gl-mat2/copy'),
+    create: require('gl-mat2/create'),
+    invert: require('gl-mat2/invert')
+}
 
 var _config,
     _currentImageWrapper,
@@ -41,7 +60,7 @@ function initBuffers() {
         _currentImageWrapper = _inputImageWrapper;
     }
 
-    _patchSize = CVUtils.calculatePatchSize(_config.patchSize, _currentImageWrapper.size);
+    _patchSize = calculatePatchSize(_config.patchSize, _currentImageWrapper.size);
 
     _numPatches.x = _currentImageWrapper.size.x / _patchSize.x | 0;
     _numPatches.y = _currentImageWrapper.size.y / _patchSize.y | 0;
@@ -117,7 +136,7 @@ function boxFromPatches(patches) {
     }
 
     overAvg = (180 - overAvg) * Math.PI / 180;
-    transMat = mat2.clone([Math.cos(overAvg), Math.sin(overAvg), -Math.sin(overAvg), Math.cos(overAvg)]);
+    transMat = mat2.copy(mat2.create(), [Math.cos(overAvg), Math.sin(overAvg), -Math.sin(overAvg), Math.cos(overAvg)]);
 
     // iterate over patches and rotate by angle
     for ( i = 0; i < patches.length; i++) {
@@ -178,7 +197,7 @@ function boxFromPatches(patches) {
  * Creates a binary image of the current image
  */
 function binarizeImage() {
-    CVUtils.otsuThreshold(_currentImageWrapper, _binaryImageWrapper);
+    otsuThreshold(_currentImageWrapper, _binaryImageWrapper);
     _binaryImageWrapper.zeroBorder();
     if (_config.showCanvas) {
         _binaryImageWrapper.show(_canvasContainer.dom.binary, 255);
@@ -309,7 +328,7 @@ function findBoxes(topLabels, maxLabel) {
                 for ( j = 0; j < patches.length; j++) {
                     patch = patches[j];
                     hsv[0] = (topLabels[i].label / (maxLabel + 1)) * 360;
-                    CVUtils.hsv2rgb(hsv, rgb);
+                    hsv2rgb(hsv, rgb);
                     ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary,
                         {color: "rgb(" + rgb.join(",") + ")", lineWidth: 2});
                 }
@@ -324,8 +343,8 @@ function findBoxes(topLabels, maxLabel) {
  * @param {Object} moments
  */
 function similarMoments(moments) {
-    var clusters = CVUtils.cluster(moments, 0.90);
-    var topCluster = CVUtils.topGeneric(clusters, 1, function(e) {
+    var clusters = cluster(moments, 0.90);
+    var topCluster = topGeneric(clusters, 1, function(e) {
         return e.getPoints().length;
     });
     var points = [], result = [];
@@ -339,12 +358,12 @@ function similarMoments(moments) {
 }
 
 function skeletonize(x, y) {
-    _binaryImageWrapper.subImageAsCopy(_subImageWrapper, CVUtils.imageRef(x, y));
+    _binaryImageWrapper.subImageAsCopy(_subImageWrapper, imageRef(x, y));
     _skeletonizer.skeletonize();
 
     // Show skeleton if requested
     if (ENV.development && _config.debug.showSkeleton) {
-        _skelImageWrapper.overlay(_canvasContainer.dom.binary, 360, CVUtils.imageRef(x, y));
+        _skelImageWrapper.overlay(_canvasContainer.dom.binary, 360, imageRef(x, y));
     }
 }
 
@@ -496,7 +515,7 @@ function rasterizeAngularSimilarity(patchesFound) {
             if (_patchLabelGrid.data[j] > 0 && _patchLabelGrid.data[j] <= label) {
                 patch = _imageToPatchGrid.data[j];
                 hsv[0] = (_patchLabelGrid.data[j] / (label + 1)) * 360;
-                CVUtils.hsv2rgb(hsv, rgb);
+                hsv2rgb(hsv, rgb);
                 ImageDebug.drawRect(patch.pos, _subImageWrapper.size, _canvasContainer.ctx.binary,
                     {color: "rgb(" + rgb.join(",") + ")", lineWidth: 2});
             }
@@ -521,7 +540,7 @@ export default {
             boxes;
 
         if (_config.halfSample) {
-            CVUtils.halfSample(_inputImageWrapper, _currentImageWrapper);
+            halfSample(_inputImageWrapper, _currentImageWrapper);
         }
 
         binarizeImage();
@@ -557,7 +576,7 @@ export default {
 
         // calculate width and height based on area
         if (inputStream.getConfig().area) {
-            area = CVUtils.computeImageArea(width, height, inputStream.getConfig().area);
+            area = computeImageArea(width, height, inputStream.getConfig().area);
             inputStream.setTopRight({x: area.sx, y: area.sy});
             inputStream.setCanvasSize({x: width, y: height});
             width = area.sw;
@@ -569,7 +588,7 @@ export default {
             y: Math.floor(height * halfSample)
         };
 
-        patchSize = CVUtils.calculatePatchSize(config.patchSize, size);
+        patchSize = calculatePatchSize(config.patchSize, size);
         if (ENV.development) {
             console.log("Patch-Size: " + JSON.stringify(patchSize));
         }

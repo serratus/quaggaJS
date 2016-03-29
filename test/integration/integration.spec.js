@@ -1,4 +1,4 @@
-const Quagga = require('../../src/quagga');
+const Quagga = require('../../src/quagga').default;
 const async = require('async');
 
 describe('decodeSingle', function () {

@@ -4,12 +4,10 @@ var webpack = require('webpack'),
 module.exports = require('./webpack.config.js');
 
 module.exports.resolve = {
-    extensions: ['', '.js', '.jsx'],
-    root: path.resolve(__dirname),
-    alias: {
-        'input_stream': 'lib/input_stream',
-        'frame_grabber': 'lib/frame_grabber'
-    }
+    modules: [
+        path.resolve('./lib/'),
+        'node_modules'
+    ]
 };
 
 module.exports.externals = [
@@ -19,7 +17,8 @@ module.exports.externals = [
     "ndarray",
     "ndarray-linear-interpolate"
 ];
-module.exports.output.libraryTarget = "commonjs2";
+module.exports.output.libraryTarget = "umd";
+module.exports.output.library = "Quagga";
 module.exports.plugins = [
     new webpack.DefinePlugin({
         ENV: require(path.join(__dirname, './env/', process.env.BUILD_ENV))

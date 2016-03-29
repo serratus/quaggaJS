@@ -1,8 +1,14 @@
-const CVUtils = require('../../src/common/cv_utils');
+const {
+    imageRef,
+    calculatePatchSize,
+    _parseCSSDimensionValues,
+    _dimensionsConverters,
+    computeImageArea
+} = require('../../src/common/cv_utils');
 
 describe('imageRef', function() {
     it('gets the image Reference for a coordinate', function() {
-        var res = CVUtils.imageRef(1, 2);
+        var res = imageRef(1, 2);
         expect(res.x).to.equal(1);
         expect(res.y).to.equal(2);
         expect(res.toVec2()[0]).to.equal(1);
@@ -12,14 +18,14 @@ describe('imageRef', function() {
 describe('calculatePatchSize', function() {
     it('should not throw an error in case of valid image size', function() {
         var expected = {x: 32, y: 32},
-            patchSize = CVUtils.calculatePatchSize("medium", {x: 640, y: 480});
+            patchSize = calculatePatchSize("medium", {x: 640, y: 480});
 
         expect(patchSize).to.be.deep.equal(expected);
     });
 
     it('should thow an error if image size it not valid', function() {
         var expected = {x: 32, y: 32},
-            patchSize = CVUtils.calculatePatchSize("medium", {x: 640, y: 480});
+            patchSize = calculatePatchSize("medium", {x: 640, y: 480});
 
         expect(patchSize).to.be.deep.equal(expected);
     });
@@ -31,7 +37,7 @@ describe('_parseCSSDimensionValues', function() {
                 value: 10,
                 unit: "%"
             },
-            result = CVUtils._parseCSSDimensionValues("10%");
+            result = _parseCSSDimensionValues("10%");
 
         expect(result).to.be.deep.equal(expected);
     });
@@ -41,7 +47,7 @@ describe('_parseCSSDimensionValues', function() {
                 value: 100,
                 unit: "%"
             },
-            result = CVUtils._parseCSSDimensionValues("100%");
+            result = _parseCSSDimensionValues("100%");
 
         expect(result).to.be.deep.equal(expected);
     });
@@ -51,7 +57,7 @@ describe('_parseCSSDimensionValues', function() {
                 value: 0,
                 unit: "%"
             },
-            result = CVUtils._parseCSSDimensionValues("0%");
+            result = _parseCSSDimensionValues("0%");
 
         expect(result).to.be.deep.equal(expected);
     });
@@ -61,7 +67,7 @@ describe('_parseCSSDimensionValues', function() {
                 value: 26.3,
                 unit: "%"
             },
-            result = CVUtils._parseCSSDimensionValues("26.3px");
+            result = _parseCSSDimensionValues("26.3px");
 
         console.log(result);
         expect(result).to.be.deep.equal(expected);
@@ -80,28 +86,28 @@ describe("_dimensionsConverters", function(){
 
     it("should convert a top-value correclty", function() {
         var expected = 48,
-            result = CVUtils._dimensionsConverters.top({value: 10, unit: "%"}, context);
+            result = _dimensionsConverters.top({value: 10, unit: "%"}, context);
 
         expect(result).to.be.equal(expected);
     });
 
     it("should convert a right-value correclty", function() {
         var expected = 640 - 128,
-            result = CVUtils._dimensionsConverters.right({value: 20, unit: "%"}, context);
+            result = _dimensionsConverters.right({value: 20, unit: "%"}, context);
 
         expect(result).to.be.equal(expected);
     });
 
     it("should convert a bottom-value correclty", function() {
         var expected = 480 - 77,
-            result = CVUtils._dimensionsConverters.bottom({value: 16, unit: "%"}, context);
+            result = _dimensionsConverters.bottom({value: 16, unit: "%"}, context);
 
         expect(result).to.be.equal(expected);
     });
 
     it("should convert a left-value correclty", function() {
         var expected = 57,
-            result = CVUtils._dimensionsConverters.left({value: 9, unit: "%"}, context);
+            result = _dimensionsConverters.left({value: 9, unit: "%"}, context);
 
         expect(result).to.be.equal(expected);
     });
@@ -115,7 +121,7 @@ describe("computeImageArea", function() {
                 sw: 429,
                 sh: 336
             },
-            result = CVUtils.computeImageArea(640, 480, {
+            result = computeImageArea(640, 480, {
                 top: "10%",
                 right: "15%",
                 bottom: "20%",
@@ -132,7 +138,7 @@ describe("computeImageArea", function() {
                 sw: 640,
                 sh: 480
             },
-            result = CVUtils.computeImageArea(640, 480, {
+            result = computeImageArea(640, 480, {
                 top: "0%",
                 right: "0%",
                 bottom: "0%",

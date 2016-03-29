@@ -1,6 +1,6 @@
-const BarcodeLocator = require('../../src/locator/barcode_locator');
-const Config = require('../../src/config/config');
-const merge = require('lodash/object/merge');
+import BarcodeLocator from '../../src/locator/barcode_locator';
+import Config from '../../src/config/config';
+import {merge} from 'lodash';
 
 describe('checkImageConstraints', function() {
     var config,

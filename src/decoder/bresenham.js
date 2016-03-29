@@ -1,4 +1,3 @@
-import CVUtils from '../common/cv_utils';
 import ImageWrapper from '../common/image_wrapper';
 
 var Bresenham = {};
@@ -87,20 +86,6 @@ Bresenham.getBarcodeLine = function(imageWrapper, p1, p2) {
         line: line,
         min: min,
         max: max
-    };
-};
-
-Bresenham.toOtsuBinaryLine = function(result) {
-    var line = result.line,
-        image = new ImageWrapper({x: line.length - 1, y: 1}, line),
-        threshold = CVUtils.determineOtsuThreshold(image, 5);
-
-    line = CVUtils.sharpenLine(line);
-    CVUtils.thresholdImage(image, threshold);
-
-    return {
-        line: line,
-        threshold: threshold
     };
 };
 
