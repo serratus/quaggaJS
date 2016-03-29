@@ -520,9 +520,9 @@ export default {
                 halfSample: false
             }
         }, config);
-        this.init(config, function() {
-            Events.once("processed", function(result) {
-                _stopped = true;
+        this.init(config, () => {
+            Events.once("processed", (result) => {
+                this.stop();
                 resultCallback.call(null, result);
             }, true);
             start();
