@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2016-02-15)
+- [Changelog](#changelog) (2016-03-31)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
 - [API](#api)
@@ -61,7 +61,8 @@ the __script__ tag.
 And then import it as dependency in your project:
 
 ```javascript
-var Quagga = require('quagga');
+import Quagga from 'quagga'; // ES6
+const Quagga = require('quagga').default; // Common JS (important: default)
 ```
 
 Currently, the full functionality is only available through the browser. When
@@ -79,7 +80,7 @@ You can also install QuaggaJS through __bower__:
 ### Script-Tag Anno 1998
 
 You can simply include `dist/quagga.min.js` in your project and you are ready
-to go.
+to go. The script exposes the library on the global namespace under `Quagga`.
 
 
 ## <a name="gettingstarted">Getting Started</a>
@@ -323,7 +324,8 @@ The `inputStream` property defines the sources of images/videos within QuaggaJS.
   constraints: {
     width: 640,
     height: 480,
-    facing: "environment"
+    facingMode: "environment",
+    deviceId: "7832475934759384534"
   },
   area: { // defines rectangle of the detection/localization area
     top: "0%",    // top offset
@@ -340,8 +342,11 @@ First, the `type` property can be set to three different values:
 depending on the use-case. Most probably, the default value is sufficient.
 
 Second, the `constraint` key defines the physical dimensions of the input image
-and additional properties, such as `facing` which sets the source of the user's
-camera in case of multiple attached devices.
+and additional properties, such as `facingMode` which sets the source of the
+user's camera in case of multiple attached devices. Additionally, if required,
+the `deviceId` can be set if the selection of the camera is given to the user.
+This can be easily achieved via
+[MediaDevices.enumerateDevices()][enumerateDevices]
 
 Thirdly, the `area` prop restricts the decoding area of the image. The values
 are given in percentage, similar to the CSS style property when using
@@ -353,6 +358,13 @@ erroneous behavior of the decoder. If set to `true` the input image's red
 color-channel is read instead of calculating the gray-scale values of the
 source's RGB. This is useful in combination with the `ResultCollector` where
 the gray-scale representations of the wrongly identified images are saved.
+
+### frequency
+
+This top-level property controls the scan-frequency of the video-stream. It's
+optional and defines the maximum number of scans per second. This renders
+useful for cases where the scan-session is long-running and resources such as
+CPU power are of concern.
 
 ### decoder
 
@@ -551,6 +563,10 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
 
+### 2016-03-31
+Take a look at the release-notes ([0.10.0]
+(https://github.com/serratus/quaggaJS/releases/tag/v0.10.0))
+
 ### 2016-02-18
 
 - Internal Changes
@@ -715,3 +731,4 @@ introduced to the API.
 [oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
 [github_examples]: https://serratus.github.io/quaggaJS/examples
 [i2of5_wiki]: https://en.wikipedia.org/wiki/Interleaved_2_of_5
+[enumerateDevices]: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/enumerateDevices
