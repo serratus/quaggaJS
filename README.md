@@ -279,6 +279,7 @@ high-level properties:
   numOfWorkers: 4,
   locate: true,
   inputStream: {...},
+  frequency: 10,
   decoder:{...},
   locator: {...},
   debug: false,
@@ -564,8 +565,8 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 ## <a name="changelog">Changelog</a>
 
 ### 2016-03-31
-Take a look at the release-notes ([0.10.0]
-(https://github.com/serratus/quaggaJS/releases/tag/v0.10.0))
+Take a look at the release-notes (
+    [0.10.0](https://github.com/serratus/quaggaJS/releases/tag/v0.10.0))
 
 ### 2016-02-18
 
@@ -575,8 +576,8 @@ Take a look at the release-notes ([0.10.0]
 
 
 ### 2016-02-15
-Take a look at the release-notes ([0.9.0]
-(https://github.com/serratus/quaggaJS/releases/tag/v0.9.0))
+Take a look at the release-notes (
+    [0.9.0](https://github.com/serratus/quaggaJS/releases/tag/v0.9.0))
 
 ### 2015-11-22
 
