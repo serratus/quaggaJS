@@ -376,13 +376,15 @@ options within the `decoder` are for debugging/visualization purposes only.
 
 ```javascript
 {
-  drawBoundingBox: false,
-  showFrequency: false,
-  drawScanline: true,
-  showPattern: false,
   readers: [
     'code_128_reader'
   ],
+  debug: {
+      drawBoundingBox: false,
+      showFrequency: false,
+      drawScanline: false,
+      showPattern: false
+  }
   multiple: false
 }
 ```
@@ -417,24 +419,52 @@ The remaining properties `drawBoundingBox`, `showFrequency`, `drawScanline` and
 
 ### locator
 
+The `locator` config is only relevant if the `locate` flag is set to `true`.
+It controls the behavior of the localization-process and needs to be adjusted
+for each specific use-case. The default settings are simply a combination of
+values which worked best during development.
+
+Only two properties are relevant for the use in Quagga (`halfSample` and
+`patchSize`) whereas the rest is only needed for development and debugging.
+
+
 ```javascript
 {
   halfSample: true,
   patchSize: "medium", // x-small, small, medium, large, x-large
-  showCanvas: false,
-  showPatches: false,
-  showFoundPatches: false,
-  showSkeleton: false,
-  showLabels: false,
-  showPatchLabels: false,
-  showRemainingPatchLabels: false,
-  boxFromPatches: {
-    showTransformed: false,
-    showTransformedBox: false,
-    showBB: false
+  debug: {
+    showCanvas: false,
+    showPatches: false,
+    showFoundPatches: false,
+    showSkeleton: false,
+    showLabels: false,
+    showPatchLabels: false,
+    showRemainingPatchLabels: false,
+    boxFromPatches: {
+      showTransformed: false,
+      showTransformedBox: false,
+      showBB: false
+    }
   }
 }
 ```
+
+The `halfSample` flag tells the locator-process whether it should operate on an
+image scaled down (half width/height, quarter pixel-count ) or not. Turning
+`halfSample` on reduces the processing-time significantly and also helps
+finding a barcode pattern due to implicit smoothing.
+It should be turned off in cases where the barcode is really small and the full
+resolution is needed to find the position. It's recommended to keep it turned
+on and use a higher resolution video-image if needed.
+
+The second property `patchSize` defines the density of the search-grid. The
+property accepts strings of the value `x-small`, `small`, `medium`, `large` and
+`x-large`. The `patchSize` is proportional to the size of the scanned barcodes.
+If you have really large barcodes which can be read close-up, then the use of
+`large` or `x-large` is recommended. In cases where the barcode is further away
+from the camera lens (lack of auto-focus, or small barcodes) then it's advised
+to set the size to `small` or even `x-small`. For the latter it's also
+recommended to crank up the resolution in order to find a barcode.
 
 ## Examples
 
