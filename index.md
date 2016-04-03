@@ -8,6 +8,7 @@ quaggaJS
 ========
 
 - [Changelog](#changelog) (2016-03-31)
+- [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
 - [API](#api)
@@ -40,18 +41,30 @@ invariant to scale and rotation, whereas other libraries require the barcode to
 be aligned with the viewport.
 
 
-## Requirements
+## <a name="browser-support">Browser Support</a>
 
-In order to take full advantage of quaggaJS, the browser needs to support the
-`getUserMedia` API which is already implemented in recent versions of Firefox,
-Chrome, IE (Edge) and Opera. The API is also available on their mobile
-counterparts installed on Android (except IE). Safari does not allow the access
-to the camera yet, neither on desktop, nor on mobile. You can check
-[caniuse][caniuse_getusermedia] for updates.
+Quagga makes use of many modern Web-APIs which are not implemented by all
+browsers yet. There are two modes in which Quagga operates: 1. analyzing static
+images and 2. using a camera to decode the images from a live-stream. The latter
+requires the presence of the MediaDevices API. You can track the compatibility
+of the used Web-APIs for each mode:
 
-In cases where real-time decoding is not needed, or the platform does not
-support `getUserMedia` QuaggaJS is also capable of decoding image-files using
-the File API or other URL sources.
+- [Static Images](http://caniuse.com/#feat=webworkers,canvas,typedarrays,bloburls,blobbuilder)
+- [Live Stream](http://caniuse.com/#feat=webworkers,canvas,typedarrays,bloburls,blobbuilder,stream)
+
+### Static Images
+
+The following APIs need to be implemented in your browser:
+- [webworkers](http://caniuse.com/#feat=webworkers)
+- [canvas](http://caniuse.com/#feat=canvas)
+- [typedarrays](http://caniuse.com/#feat=typedarrays)
+- [bloburls](http://caniuse.com/#feat=bloburls)
+- [blobbuilder](http://caniuse.com/#feat=blobbuilder)
+
+### Live Stream
+
+In addition to the APIs mentioned above:
+- [MediaDevices](http://caniuse.com/#feat=stream)
 
 ## <a name="installing">Installing</a>
 
