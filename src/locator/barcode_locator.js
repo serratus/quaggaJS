@@ -199,7 +199,7 @@ function boxFromPatches(patches) {
 function binarizeImage() {
     otsuThreshold(_currentImageWrapper, _binaryImageWrapper);
     _binaryImageWrapper.zeroBorder();
-    if (_config.showCanvas) {
+    if (_config.debug.showCanvas) {
         _binaryImageWrapper.show(_canvasContainer.dom.binary, 255);
     }
 }
