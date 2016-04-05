@@ -237,11 +237,12 @@ function hasCodeResult (result) {
 }
 
 function publishResult(result, imageData) {
-    const resultToPublish = result && (result.barcodes || result);
+    let resultToPublish = result;
 
     if (result && _onUIThread) {
         transformResult(result);
         addResult(result, imageData);
+        resultToPublish = result.barcodes || result;
     }
 
     Events.publish("processed", resultToPublish);
