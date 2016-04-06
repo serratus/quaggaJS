@@ -1,17 +1,19 @@
 import TypeDefs from './common/typedefs'; // eslint-disable-line no-unused-vars
+import WebrtcAdapter from 'webrtc-adapter'; // eslint-disable-line no-unused-vars
 import ImageWrapper from './common/image_wrapper';
 import BarcodeLocator from './locator/barcode_locator';
 import BarcodeDecoder from './decoder/barcode_decoder';
 import Events from './common/events';
 import CameraAccess from './input/camera_access';
 import ImageDebug from './common/image_debug';
-import {vec2} from 'gl-matrix';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
 import InputStream from 'input_stream';
 import FrameGrabber from 'frame_grabber';
-
-const merge = require('lodash/object/merge');
+import {merge} from 'lodash';
+const vec2 = {
+    clone: require('gl-vec2/clone')
+};
 
 var _inputStream,
     _framegrabber,
@@ -56,12 +58,11 @@ function initInputStream(cb) {
             }
         }
         _inputStream = InputStream.createLiveStream(video);
-        CameraAccess.request(video, _config.inputStream.constraints, function(err) {
-            if (!err) {
-                _inputStream.trigger("canrecord");
-            } else {
-                return cb(err);
-            }
+        CameraAccess.request(video, _config.inputStream.constraints)
+        .then(() => {
+            _inputStream.trigger("canrecord");
+        }).catch((err) => {
+            return cb(err);
         });
     }
 
@@ -236,11 +237,12 @@ function hasCodeResult (result) {
 }
 
 function publishResult(result, imageData) {
-    const resultToPublish = result && (result.barcodes || result);
+    let resultToPublish = result;
 
     if (result && _onUIThread) {
         transformResult(result);
         addResult(result, imageData);
+        resultToPublish = result.barcodes || result;
     }
 
     Events.publish("processed", resultToPublish);
@@ -356,15 +358,24 @@ function initWorker(cb) {
         cmd: 'init',
         size: {x: _inputStream.getWidth(), y: _inputStream.getHeight()},
         imageData: workerThread.imageData,
-        config: _config
+        config: configForWorker(_config)
     }, [workerThread.imageData.buffer]);
 }
 
+function configForWorker(config) {
+    return {
+        ...config,
+        inputStream: {
+            ...config.inputStream,
+            target: null
+        }
+    };
+}
 
 function workerInterface(factory) {
     /* eslint-disable no-undef*/
     if (factory) {
-        var Quagga = factory();
+        var Quagga = factory().default;
         if (!Quagga) {
             self.postMessage({'event': 'error', message: 'Quagga could not be created'});
             return;
@@ -519,9 +530,9 @@ export default {
                 halfSample: false
             }
         }, config);
-        this.init(config, function() {
-            Events.once("processed", function(result) {
-                _stopped = true;
+        this.init(config, () => {
+            Events.once("processed", (result) => {
+                this.stop();
                 resultCallback.call(null, result);
             }, true);
             start();

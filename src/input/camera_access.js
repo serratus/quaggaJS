@@ -1,45 +1,29 @@
-const merge = require('lodash/object/merge');
+import {merge, pick} from 'lodash';
 
 var streamRef,
     loadedDataHandler;
 
-/**
- * Wraps browser-specific getUserMedia
- * @param {Object} constraints
- * @param {Object} success Callback
- * @param {Object} failure Callback
- */
-function getUserMedia(constraints, success, failure) {
-    if (typeof navigator.getUserMedia !== 'undefined') {
-        navigator.getUserMedia(constraints, function (stream) {
-            streamRef = stream;
-            var videoSrc = (window.URL && window.URL.createObjectURL(stream)) || stream;
-            success.apply(null, [videoSrc]);
-        }, failure);
-    } else {
-        failure(new TypeError("getUserMedia not available"));
-    }
-}
+function waitForVideo(video) {
+    return new Promise((resolve, reject) => {
+        let attempts = 10;
 
-function loadedData(video, callback) {
-    var attempts = 10;
-
-    function checkVideo() {
-        if (attempts > 0) {
-            if (video.videoWidth > 0 && video.videoHeight > 0) {
-                if (ENV.development) {
-                    console.log(video.videoWidth + "px x " + video.videoHeight + "px");
+        function checkVideo() {
+            if (attempts > 0) {
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    if (ENV.development) {
+                        console.log(video.videoWidth + "px x " + video.videoHeight + "px");
+                    }
+                    resolve();
+                } else {
+                    window.setTimeout(checkVideo, 500);
                 }
-                callback();
             } else {
-                window.setTimeout(checkVideo, 500);
+                reject('Unable to play video stream. Is webcam working?');
             }
-        } else {
-            callback('Unable to play video stream. Is webcam working?');
+            attempts--;
         }
-        attempts--;
-    }
-    checkVideo();
+        checkVideo();
+    });
 }
 
 /**
@@ -47,89 +31,72 @@ function loadedData(video, callback) {
  * and calls the callback function when the content is ready
  * @param {Object} constraints
  * @param {Object} video
- * @param {Object} callback
  */
-function initCamera(constraints, video, callback) {
-    getUserMedia(constraints, function(src) {
-        video.src = src;
-        if (loadedDataHandler) {
-            video.removeEventListener("loadeddata", loadedDataHandler, false);
-        }
-        loadedDataHandler = loadedData.bind(null, video, callback);
-        video.addEventListener('loadeddata', loadedDataHandler, false);
-        video.play();
-    }, function(e) {
-        callback(e);
-    });
-}
-
-/**
- * Normalizes the incoming constraints to satisfy the current browser
- * @param config
- * @param cb Callback which is called whenever constraints are created
- * @returns {*}
- */
-function normalizeConstraints(config, cb) {
-    var constraints = {
-            audio: false,
-            video: true
-        },
-        videoConstraints = merge({
-            width: 640,
-            height: 480,
-            minAspectRatio: 0,
-            maxAspectRatio: 100,
-            facing: "environment"
-        }, config);
-
-    if ( typeof MediaStreamTrack !== 'undefined' && typeof MediaStreamTrack.getSources !== 'undefined') {
-        MediaStreamTrack.getSources(function(sourceInfos) {
-            var videoSourceId;
-            for (var i = 0; i < sourceInfos.length; ++i) {
-                var sourceInfo = sourceInfos[i];
-                if (sourceInfo.kind === "video" && sourceInfo.facing === videoConstraints.facing) {
-                    videoSourceId = sourceInfo.id;
-                }
-            }
-            constraints.video = {
-                mandatory: {
-                    minWidth: videoConstraints.width,
-                    minHeight: videoConstraints.height,
-                    minAspectRatio: videoConstraints.minAspectRatio,
-                    maxAspectRatio: videoConstraints.maxAspectRatio
-                },
-                optional: [{
-                    sourceId: videoSourceId
-                }]
+function initCamera(video, constraints) {
+    return navigator.mediaDevices.getUserMedia(constraints)
+    .then((stream) => {
+        return new Promise((resolve, reject) => {
+            streamRef = stream;
+            video.src = window.URL.createObjectURL(stream);
+            video.onloadedmetadata = (e) => {
+                video.play();
+                resolve();
             };
-            return cb(constraints);
         });
-    } else {
-        constraints.video = {
-            mediaSource: "camera",
-            width: { min: videoConstraints.width, max: videoConstraints.width },
-            height: { min: videoConstraints.height, max: videoConstraints.height },
-            require: ["width", "height"]
-        };
-        return cb(constraints);
-    }
+    })
+    .then(waitForVideo.bind(null, video));
 }
 
-/**
- * Requests the back-facing camera of the user. The callback is called
- * whenever the stream is ready to be consumed, or if an error occures.
- * @param {Object} video
- * @param {Object} callback
- */
-function request(video, videoConstraints, callback) {
-    normalizeConstraints(videoConstraints, function(constraints) {
-        initCamera(constraints, video, callback);
-    });
+function deprecatedConstraints(videoConstraints) {
+    const normalized = pick(videoConstraints, ["width", "height", "facingMode",
+            "aspectRatio", "deviceId"]);
+
+    if (typeof videoConstraints["minAspectRatio"] !== 'undefined' &&
+            videoConstraints["minAspectRatio"] > 0) {
+        normalized["aspectRatio"] = videoConstraints["minAspectRatio"];
+        console.log("WARNING: Constraint 'minAspectRatio' is deprecated; Use 'aspectRatio' instead");
+    }
+    if (typeof videoConstraints["facing"] !== 'undefined') {
+        normalized["facingMode"] = videoConstraints["facing"];
+        console.log("WARNING: Constraint 'facing' is deprecated. Use 'facingMode' instead'");
+    }
+    return normalized;
+}
+
+function applyCameraFacing(facing, constraints) {
+    if (typeof constraints.video.deviceId !== 'undefined' || !facing){
+        return Promise.resolve(constraints);
+    }
+    if ( typeof MediaStreamTrack !== 'undefined' &&
+            typeof MediaStreamTrack.getSources !== 'undefined') {
+        return new Promise((resolve, reject) => {
+            MediaStreamTrack.getSources((sourceInfos) => {
+                const videoSource = sourceInfos.filter((sourceInfo) => (
+                    sourceInfo.kind === "video" && sourceInfo.facing === facing
+                ))[0];
+                if (videoSource) {
+                    return resolve(merge({}, constraints,
+                        {video: {deviceId: videoSource.id}}));
+                }
+                return resolve(constraints);
+            });
+        });
+    }
+    return Promise.resolve(merge({}, constraints, {video: {facingMode: facing}}));
+}
+
+function pickConstraints(videoConstraints) {
+    const constraints = {
+        audio: false,
+        video: deprecatedConstraints(videoConstraints)
+    };
+    return applyCameraFacing(constraints.video.facingMode, constraints);
 }
 
 export default {
-    request: function(video, constraints, callback) {
-        request(video, constraints, callback);
+    request: function(video, videoConstraints) {
+        return pickConstraints(videoConstraints)
+            .then(initCamera.bind(null, video));
     },
     release: function() {
         var tracks = streamRef && streamRef.getVideoTracks();

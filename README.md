@@ -1,7 +1,8 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2016-02-15)
+- [Changelog](#changelog) (2016-03-31)
+- [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
 - [API](#api)
@@ -34,18 +35,30 @@ invariant to scale and rotation, whereas other libraries require the barcode to
 be aligned with the viewport.
 
 
-## Requirements
+## <a name="browser-support">Browser Support</a>
 
-In order to take full advantage of quaggaJS, the browser needs to support the
-`getUserMedia` API which is already implemented in recent versions of Firefox,
-Chrome, IE (Edge) and Opera. The API is also available on their mobile
-counterparts installed on Android (except IE). Safari does not allow the access
-to the camera yet, neither on desktop, nor on mobile. You can check
-[caniuse][caniuse_getusermedia] for updates.
+Quagga makes use of many modern Web-APIs which are not implemented by all
+browsers yet. There are two modes in which Quagga operates: 1. analyzing static
+images and 2. using a camera to decode the images from a live-stream. The latter
+requires the presence of the MediaDevices API. You can track the compatibility
+of the used Web-APIs for each mode:
 
-In cases where real-time decoding is not needed, or the platform does not
-support `getUserMedia` QuaggaJS is also capable of decoding image-files using
-the File API or other URL sources.
+- [Static Images](http://caniuse.com/#feat=webworkers,canvas,typedarrays,bloburls,blobbuilder)
+- [Live Stream](http://caniuse.com/#feat=webworkers,canvas,typedarrays,bloburls,blobbuilder,stream)
+
+### Static Images
+
+The following APIs need to be implemented in your browser:
+- [webworkers](http://caniuse.com/#feat=webworkers)
+- [canvas](http://caniuse.com/#feat=canvas)
+- [typedarrays](http://caniuse.com/#feat=typedarrays)
+- [bloburls](http://caniuse.com/#feat=bloburls)
+- [blobbuilder](http://caniuse.com/#feat=blobbuilder)
+
+### Live Stream
+
+In addition to the APIs mentioned above:
+- [MediaDevices](http://caniuse.com/#feat=stream)
 
 ## <a name="installing">Installing</a>
 
@@ -61,7 +74,8 @@ the __script__ tag.
 And then import it as dependency in your project:
 
 ```javascript
-var Quagga = require('quagga');
+import Quagga from 'quagga'; // ES6
+const Quagga = require('quagga').default; // Common JS (important: default)
 ```
 
 Currently, the full functionality is only available through the browser. When
@@ -79,7 +93,7 @@ You can also install QuaggaJS through __bower__:
 ### Script-Tag Anno 1998
 
 You can simply include `dist/quagga.min.js` in your project and you are ready
-to go.
+to go. The script exposes the library on the global namespace under `Quagga`.
 
 
 ## <a name="gettingstarted">Getting Started</a>
@@ -278,6 +292,7 @@ high-level properties:
   numOfWorkers: 4,
   locate: true,
   inputStream: {...},
+  frequency: 10,
   decoder:{...},
   locator: {...},
   debug: false,
@@ -323,7 +338,8 @@ The `inputStream` property defines the sources of images/videos within QuaggaJS.
   constraints: {
     width: 640,
     height: 480,
-    facing: "environment"
+    facingMode: "environment",
+    deviceId: "7832475934759384534"
   },
   area: { // defines rectangle of the detection/localization area
     top: "0%",    // top offset
@@ -340,8 +356,11 @@ First, the `type` property can be set to three different values:
 depending on the use-case. Most probably, the default value is sufficient.
 
 Second, the `constraint` key defines the physical dimensions of the input image
-and additional properties, such as `facing` which sets the source of the user's
-camera in case of multiple attached devices.
+and additional properties, such as `facingMode` which sets the source of the
+user's camera in case of multiple attached devices. Additionally, if required,
+the `deviceId` can be set if the selection of the camera is given to the user.
+This can be easily achieved via
+[MediaDevices.enumerateDevices()][enumerateDevices]
 
 Thirdly, the `area` prop restricts the decoding area of the image. The values
 are given in percentage, similar to the CSS style property when using
@@ -354,6 +373,13 @@ color-channel is read instead of calculating the gray-scale values of the
 source's RGB. This is useful in combination with the `ResultCollector` where
 the gray-scale representations of the wrongly identified images are saved.
 
+### frequency
+
+This top-level property controls the scan-frequency of the video-stream. It's
+optional and defines the maximum number of scans per second. This renders
+useful for cases where the scan-session is long-running and resources such as
+CPU power are of concern.
+
 ### decoder
 
 QuaggaJS usually runs in a two-stage manner (`locate` is set to `true`) where,
@@ -363,13 +389,15 @@ options within the `decoder` are for debugging/visualization purposes only.
 
 ```javascript
 {
-  drawBoundingBox: false,
-  showFrequency: false,
-  drawScanline: true,
-  showPattern: false,
   readers: [
     'code_128_reader'
   ],
+  debug: {
+      drawBoundingBox: false,
+      showFrequency: false,
+      drawScanline: false,
+      showPattern: false
+  }
   multiple: false
 }
 ```
@@ -404,24 +432,52 @@ The remaining properties `drawBoundingBox`, `showFrequency`, `drawScanline` and
 
 ### locator
 
+The `locator` config is only relevant if the `locate` flag is set to `true`.
+It controls the behavior of the localization-process and needs to be adjusted
+for each specific use-case. The default settings are simply a combination of
+values which worked best during development.
+
+Only two properties are relevant for the use in Quagga (`halfSample` and
+`patchSize`) whereas the rest is only needed for development and debugging.
+
+
 ```javascript
 {
   halfSample: true,
   patchSize: "medium", // x-small, small, medium, large, x-large
-  showCanvas: false,
-  showPatches: false,
-  showFoundPatches: false,
-  showSkeleton: false,
-  showLabels: false,
-  showPatchLabels: false,
-  showRemainingPatchLabels: false,
-  boxFromPatches: {
-    showTransformed: false,
-    showTransformedBox: false,
-    showBB: false
+  debug: {
+    showCanvas: false,
+    showPatches: false,
+    showFoundPatches: false,
+    showSkeleton: false,
+    showLabels: false,
+    showPatchLabels: false,
+    showRemainingPatchLabels: false,
+    boxFromPatches: {
+      showTransformed: false,
+      showTransformedBox: false,
+      showBB: false
+    }
   }
 }
 ```
+
+The `halfSample` flag tells the locator-process whether it should operate on an
+image scaled down (half width/height, quarter pixel-count ) or not. Turning
+`halfSample` on reduces the processing-time significantly and also helps
+finding a barcode pattern due to implicit smoothing.
+It should be turned off in cases where the barcode is really small and the full
+resolution is needed to find the position. It's recommended to keep it turned
+on and use a higher resolution video-image if needed.
+
+The second property `patchSize` defines the density of the search-grid. The
+property accepts strings of the value `x-small`, `small`, `medium`, `large` and
+`x-large`. The `patchSize` is proportional to the size of the scanned barcodes.
+If you have really large barcodes which can be read close-up, then the use of
+`large` or `x-large` is recommended. In cases where the barcode is further away
+from the camera lens (lack of auto-focus, or small barcodes) then it's advised
+to set the size to `small` or even `x-small`. For the latter it's also
+recommended to crank up the resolution in order to find a barcode.
 
 ## Examples
 
@@ -551,6 +607,10 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
 
+### 2016-03-31
+Take a look at the release-notes (
+    [0.10.0](https://github.com/serratus/quaggaJS/releases/tag/v0.10.0))
+
 ### 2016-02-18
 
 - Internal Changes
@@ -559,8 +619,8 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 
 ### 2016-02-15
-Take a look at the release-notes ([0.9.0]
-(https://github.com/serratus/quaggaJS/releases/tag/v0.9.0))
+Take a look at the release-notes (
+    [0.9.0](https://github.com/serratus/quaggaJS/releases/tag/v0.9.0))
 
 ### 2015-11-22
 
@@ -715,3 +775,4 @@ introduced to the API.
 [oberhofer_co_how]: http://www.oberhofer.co/how-barcode-localization-works-in-quaggajs/
 [github_examples]: https://serratus.github.io/quaggaJS/examples
 [i2of5_wiki]: https://en.wikipedia.org/wiki/Interleaved_2_of_5
+[enumerateDevices]: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/enumerateDevices

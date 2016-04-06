@@ -1,13 +1,17 @@
-import CVUtils from '../common/cv_utils';
+import {
+    imageRef,
+    grayAndHalfSampleFromCanvasData,
+    computeGray
+} from '../common/cv_utils';
 
 var FrameGrabber = {};
 
 FrameGrabber.create = function(inputStream, canvas) {
     var _that = {},
         _streamConfig = inputStream.getConfig(),
-        _video_size = CVUtils.imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
+        _video_size = imageRef(inputStream.getRealWidth(), inputStream.getRealHeight()),
         _canvasSize = inputStream.getCanvasSize(),
-        _size = CVUtils.imageRef(inputStream.getWidth(), inputStream.getHeight()),
+        _size = imageRef(inputStream.getWidth(), inputStream.getHeight()),
         topRight = inputStream.getTopRight(),
         _sx = topRight.x,
         _sy = topRight.y,
@@ -55,9 +59,9 @@ FrameGrabber.create = function(inputStream, canvas) {
             _ctx.drawImage(frame, 0, 0, _canvasSize.x, _canvasSize.y);
             ctxData = _ctx.getImageData(_sx, _sy, _size.x, _size.y).data;
             if (doHalfSample){
-                CVUtils.grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
+                grayAndHalfSampleFromCanvasData(ctxData, _size, _data);
             } else {
-                CVUtils.computeGray(ctxData, _data, _streamConfig);
+                computeGray(ctxData, _data, _streamConfig);
             }
             return true;
         } else {

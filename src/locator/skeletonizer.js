@@ -198,12 +198,10 @@ function Skeletonizer(stdlib, foreign, buffer) {
             done = ((sum | 0) == 0 | 0);
         } while (!done);
     }
-
     return {
         skeletonize: skeletonize
     };
 }
-
+/* @preserve ASM END */
 export default Skeletonizer;
 /* eslint-enable eqeqeq*/
-/* @preserve ASM END */

@@ -5,9 +5,9 @@ module.exports = {
         constraints: {
             width: 640,
             height: 480,
-            minAspectRatio: 0,
-            maxAspectRatio: 100,
-            facing: "environment" // or user
+            // aspectRatio: 640/480, // optional
+            facingMode: "environment", // or user
+            // deviceId: "38745983457387598375983759834"
         },
         area: {
             top: "0%",

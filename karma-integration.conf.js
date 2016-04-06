@@ -15,23 +15,17 @@ module.exports = function(config) {
         },
         webpack: {
             module: {
-                preLoaders: [
-                    {
-                        test: /\.js$/,
-                        exclude: [
-                            /node_modules/
-                        ],
-                        loader: 'babel'
-                    }
-                ]
+                loaders: [{
+                    test: /\.jsx?$/,
+                    exclude: /node_modules/,
+                    loader: 'babel-loader'
+                }]
             },
             resolve: {
-                extensions: ['', '.js', '.jsx'],
-                root: path.resolve(__dirname),
-                alias: {
-                    'input_stream$': 'src/input/input_stream',
-                    'frame_grabber$': 'src/input/frame_grabber'
-                }
+                modules: [
+                    path.resolve('./src/input/'),
+                    'node_modules'
+                ]
             },
             plugins: [
                 new webpack.DefinePlugin({
