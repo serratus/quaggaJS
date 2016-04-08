@@ -9,6 +9,13 @@ import UPCReader from '../reader/upc_reader';
 import EAN8Reader from '../reader/ean_8_reader';
 import UPCEReader from '../reader/upc_e_reader';
 import I2of5Reader from '../reader/i2of5_reader';
+import Pdf417Reader from '../reader/pdf_417_reader';
+import {
+    getCenterLineFromBox as getLine,
+    getLineLength,
+    getLineAngle,
+    getExtendedLine
+} from '../common/geometric';
 
 const READERS = {
     code_128_reader: Code128Reader,
@@ -19,7 +26,8 @@ const READERS = {
     codabar_reader: CodabarReader,
     upc_reader: UPCReader,
     upc_e_reader: UPCEReader,
-    i2of5_reader: I2of5Reader
+    i2of5_reader: I2of5Reader,
+    pdf_417_reader: Pdf417Reader
 };
 export default {
     create: function(config, inputImageWrapper) {
@@ -115,44 +123,6 @@ export default {
             }
         }
 
-        /**
-         * extend the line on both ends
-         * @param {Array} line
-         * @param {Number} angle
-         */
-        function getExtendedLine(line, angle, ext) {
-            function extendLine(amount) {
-                var extension = {
-                    y: amount * Math.sin(angle),
-                    x: amount * Math.cos(angle)
-                };
-
-                line[0].y -= extension.y;
-                line[0].x -= extension.x;
-                line[1].y += extension.y;
-                line[1].x += extension.x;
-            }
-
-            // check if inside image
-            extendLine(ext);
-            while (ext > 1 && (!inputImageWrapper.inImageWithBorder(line[0], 0)
-                    || !inputImageWrapper.inImageWithBorder(line[1], 0))) {
-                ext -= Math.ceil(ext / 2);
-                extendLine(-ext);
-            }
-            return line;
-        }
-
-        function getLine(box) {
-            return [{
-                x: (box[1][0] - box[0][0]) / 2 + box[0][0],
-                y: (box[1][1] - box[0][1]) / 2 + box[0][1]
-            }, {
-                x: (box[3][0] - box[2][0]) / 2 + box[2][0],
-                y: (box[3][1] - box[2][1]) / 2 + box[2][1]
-            }];
-        }
-
         function tryDecode(line) {
             var result = null,
                 i,
@@ -215,12 +185,6 @@ export default {
             return result;
         }
 
-        function getLineLength(line) {
-            return Math.sqrt(
-                Math.pow(Math.abs(line[1].y - line[0].y), 2) +
-                Math.pow(Math.abs(line[1].x - line[0].x), 2));
-        }
-
         /**
          * With the help of the configured readers (Code128 or EAN) this function tries to detect a
          * valid barcode pattern within the given area.
@@ -240,10 +204,17 @@ export default {
                 }
             }
 
+            if (_barcodeReaders.some((reader) => (reader.FORMAT === 'pdf147'))) {
+                const reader = _barcodeReaders
+                    .filter((reader) => (reader.FORMAT === 'pdf147'))[0];
+                reader.decode(inputImageWrapper, box, ctx);
+                return null;
+            }
+
             line = getLine(box);
             lineLength = getLineLength(line);
-            lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-            line = getExtendedLine(line, lineAngle, Math.floor(lineLength * 0.1));
+            lineAngle = getLineAngle(line);
+            line = getExtendedLine(inputImageWrapper, line, lineAngle, Math.floor(lineLength * 0.1));
             if (line === null){
                 return null;
             }
@@ -279,6 +250,7 @@ export default {
                     barcodes = [],
                     multiple = config.multiple;
 
+                console.log(boxes);
                 for ( i = 0; i < boxes.length; i++) {
                     const box = boxes[i];
                     result = decodeFromBoundingBox(box) || {};

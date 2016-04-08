@@ -88,16 +88,17 @@ $(function() {
         },
         state: {
             inputStream: {
-                size: 640,
+                size: 800,
                 singleChannel: false
             },
             locator: {
                 patchSize: "large",
-                halfSample: false
+                halfSample: true
             },
             decoder: {
-                readers: ["code_128_reader"]
+                readers: ["pdf_417_reader"]
             },
+            debug: true,
             locate: true,
             src: null
         }
@@ -131,7 +132,7 @@ $(function() {
             drawingCanvas = Quagga.canvas.dom.overlay,
             area;
 
-        if (result) {
+        if (false) {
             if (result.boxes) {
                 drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
                 result.boxes.filter(function (box) {

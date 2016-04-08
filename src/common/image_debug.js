@@ -15,8 +15,23 @@ export default {
         for (var j = 1; j < path.length; j++) {
             ctx.lineTo(path[j][def.x], path[j][def.y]);
         }
-        ctx.closePath();
         ctx.stroke();
+    },
+    drawVertex: function(vertex, def, ctx) {
+        ctx.beginPath();
+        ctx.moveTo(vertex[def.x]-2, vertex[def.y]-2);
+        ctx.lineTo(vertex[def.x]+2, vertex[def.y]+2);
+        ctx.moveTo(vertex[def.x]-2, vertex[def.y]+2);
+        ctx.lineTo(vertex[def.x]+2, vertex[def.y]-2);
+        ctx.stroke();
+    },
+    drawVertices: function(vertices, def, ctx, style) {
+        ctx.strokeStyle = style.color;
+        ctx.fillStyle = style.color;
+        ctx.lineWidth = style.lineWidth;
+        vertices.forEach((vertex) => {
+            this.drawVertex(vertex, def, ctx);
+        });
     },
     drawImage: function(imageData, size, ctx) {
         var canvasData = ctx.getImageData(0, 0, size.x, size.y),
