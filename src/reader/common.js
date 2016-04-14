@@ -60,8 +60,8 @@ export function findPattern(row, pattern, {
         offset,
         isWhite=false,
         tryHarder=true,
-        epsilon=0.5,
-        maxSingleError=0.5,
+        epsilon=0.8,
+        maxSingleError=0.8,
         modulo}) {
     var counter = [],
         i,

@@ -1,3 +1,6 @@
+const vec2 = {
+    clone: require('gl-vec2/clone')
+};
 
 export function getCenterLineFromBox(box) {
     return [{
@@ -40,4 +43,11 @@ export function getExtendedLine(inputImageWrapper, line, angle, ext) {
         line = extendLine(line, angle, -ext);
     }
     return line;
+}
+
+export function getPointOnLine(line, distance, angle) {
+    const x = distance * Math.cos(angle) + line[0].x,
+        y = distance * Math.sin(angle) + line[0].y;
+
+    return vec2.clone([x, y]);
 }
