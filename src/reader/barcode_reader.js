@@ -47,40 +47,41 @@ BarcodeReader.prototype._nextSet = function(line, offset) {
     return line.length;
 };
 
-BarcodeReader.prototype._normalize = function(counter, modulo) {
+BarcodeReader.prototype._normalize = function(counter, correction) {
     var i,
         self = this,
         sum = 0,
         ratio,
         numOnes = 0,
-        normalized = [],
-        norm = 0;
-
-    if (!modulo) {
+        normalized = new Array(counter.length),
+        norm = 0,
         modulo = self.MODULO;
+
+    if (correction) {
+        correct(counter, correction.bar, [0, 2, 4]);
+        correct(counter, correction.space, [1, 3, 5]);
     }
     for (i = 0; i < counter.length; i++) {
-        if (counter[i] === 1) {
-            numOnes++;
-        } else {
-            sum += counter[i];
-        }
+        sum += counter[i];
     }
     ratio = sum / (modulo - numOnes);
-    if (ratio > 1.0) {
-        for (i = 0; i < counter.length; i++) {
-            norm = counter[i] === 1 ? counter[i] : counter[i] / ratio;
-            normalized.push(norm);
-        }
-    } else {
-        ratio = (sum + numOnes) / modulo;
-        for (i = 0; i < counter.length; i++) {
-            norm = counter[i] / ratio;
-            normalized.push(norm);
-        }
+    for (i = 0; i < counter.length; i++) {
+        norm = counter[i] === 1 ? counter[i] : counter[i] / ratio;
+        normalized[i] = norm;
     }
     return normalized;
 };
+
+function correct(counter, correction, indices) {
+    var length = indices.length,
+        tmp = 0;
+    while(length--) {
+        tmp = counter[indices[length]] * (1 - ((1 - correction) / 2));
+        if (tmp > 1) {
+            counter[indices[length]] = tmp;
+        }
+    }
+}
 
 BarcodeReader.prototype._matchTrace = function(cmpCounter, epsilon) {
     var counter = [],

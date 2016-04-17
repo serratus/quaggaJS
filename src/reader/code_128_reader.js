@@ -123,15 +123,15 @@ var properties = {
         [2, 1, 1, 2, 3, 2],
         [2, 3, 3, 1, 1, 1, 2]
     ]},
-    SINGLE_CODE_ERROR: {value: 1},
-    AVG_CODE_ERROR: {value: 0.5},
+    SINGLE_CODE_ERROR: {value: 0.64},
+    AVG_CODE_ERROR: {value: 0.30},
     FORMAT: {value: "code_128", writeable: false}
 };
 
 Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
 Code128Reader.prototype.constructor = Code128Reader;
 
-Code128Reader.prototype._decodeCode = function(start) {
+Code128Reader.prototype._decodeCode = function(start, correction) {
     var counter = [0, 0, 0, 0, 0, 0],
         i,
         self = this,
@@ -142,7 +142,11 @@ Code128Reader.prototype._decodeCode = function(start) {
             error: Number.MAX_VALUE,
             code: -1,
             start: start,
-            end: start
+            end: start,
+            correction: {
+                bar: 1,
+                space: 1
+            }
         },
         code,
         error,
@@ -153,7 +157,7 @@ Code128Reader.prototype._decodeCode = function(start) {
             counter[counterPos]++;
         } else {
             if (counterPos === counter.length - 1) {
-                normalized = self._normalize(counter);
+                normalized = self._normalize(counter, correction);
                 if (normalized) {
                     for (code = 0; code < self.CODE_PATTERN.length; code++) {
                         error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
@@ -163,6 +167,15 @@ Code128Reader.prototype._decodeCode = function(start) {
                         }
                     }
                     bestMatch.end = i;
+                    if (bestMatch.code === -1) {
+                        return null;
+                    }
+                    if (self.CODE_PATTERN[bestMatch.code]) {
+                        bestMatch.correction.bar = calculateCorrection(
+                            self.CODE_PATTERN[bestMatch.code], normalized, [0, 2, 4]);
+                        bestMatch.correction.space = calculateCorrection(
+                            self.CODE_PATTERN[bestMatch.code], normalized, [1, 3, 5]);
+                    }
                     return bestMatch;
                 }
             } else {
@@ -175,6 +188,18 @@ Code128Reader.prototype._decodeCode = function(start) {
     return null;
 };
 
+function calculateCorrection(expected, normalized, indices) {
+    var length = indices.length,
+        sumNormalized = 0,
+        sumExpected = 0;
+
+    while(length--) {
+        sumExpected += expected[indices[length]];
+        sumNormalized += normalized[indices[length]];
+    }
+    return sumExpected/sumNormalized;
+}
+
 Code128Reader.prototype._findStart = function() {
     var counter = [0, 0, 0, 0, 0, 0],
         i,
@@ -186,7 +211,11 @@ Code128Reader.prototype._findStart = function() {
             error: Number.MAX_VALUE,
             code: -1,
             start: 0,
-            end: 0
+            end: 0,
+            correction: {
+                bar: 1,
+                space: 1
+            }
         },
         code,
         error,
@@ -215,6 +244,10 @@ Code128Reader.prototype._findStart = function() {
                     if (bestMatch.error < self.AVG_CODE_ERROR) {
                         bestMatch.start = i - sum;
                         bestMatch.end = i;
+                        bestMatch.correction.bar = calculateCorrection(
+                            self.CODE_PATTERN[code], normalized, [0, 2, 4]);
+                        bestMatch.correction.space = calculateCorrection(
+                            self.CODE_PATTERN[code], normalized, [1, 3, 5]);
                         return bestMatch;
                     }
                 }
@@ -256,7 +289,11 @@ Code128Reader.prototype._decode = function() {
     code = {
         code: startInfo.code,
         start: startInfo.start,
-        end: startInfo.end
+        end: startInfo.end,
+        correction: {
+            bar: startInfo.correction.bar,
+            space: startInfo.correction.space
+        }
     };
     decodedCodes.push(code);
     checksum = code.code;
@@ -277,7 +314,7 @@ Code128Reader.prototype._decode = function() {
     while (!done) {
         unshift = shiftNext;
         shiftNext = false;
-        code = self._decodeCode(code.end);
+        code = self._decodeCode(code.end, code.correction);
         if (code !== null) {
             if (code.code !== self.STOP_CODE) {
                 removeLastCharacter = true;
