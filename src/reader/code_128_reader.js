@@ -125,7 +125,8 @@ var properties = {
     ]},
     SINGLE_CODE_ERROR: {value: 0.64},
     AVG_CODE_ERROR: {value: 0.30},
-    FORMAT: {value: "code_128", writeable: false}
+    FORMAT: {value: "code_128", writeable: false},
+    MODULE_INDICES: {value: {bar: [0, 2, 4], space: [1, 3, 5]}}
 };
 
 Code128Reader.prototype = Object.create(BarcodeReader.prototype, properties);
@@ -172,9 +173,11 @@ Code128Reader.prototype._decodeCode = function(start, correction) {
                     }
                     if (self.CODE_PATTERN[bestMatch.code]) {
                         bestMatch.correction.bar = calculateCorrection(
-                            self.CODE_PATTERN[bestMatch.code], normalized, [0, 2, 4]);
+                            self.CODE_PATTERN[bestMatch.code], normalized,
+                            this.MODULE_INDICES.bar);
                         bestMatch.correction.space = calculateCorrection(
-                            self.CODE_PATTERN[bestMatch.code], normalized, [1, 3, 5]);
+                            self.CODE_PATTERN[bestMatch.code], normalized,
+                            this.MODULE_INDICES.space);
                     }
                     return bestMatch;
                 }
@@ -188,17 +191,10 @@ Code128Reader.prototype._decodeCode = function(start, correction) {
     return null;
 };
 
-function calculateCorrection(expected, normalized, indices) {
-    var length = indices.length,
-        sumNormalized = 0,
-        sumExpected = 0;
-
-    while(length--) {
-        sumExpected += expected[indices[length]];
-        sumNormalized += normalized[indices[length]];
-    }
-    return sumExpected/sumNormalized;
-}
+Code128Reader.prototype._correct = function(counter, correction) {
+    this._correctBars(counter, correction.bar, this.MODULE_INDICES.bar);
+    this._correctBars(counter, correction.space, this.MODULE_INDICES.space);
+};
 
 Code128Reader.prototype._findStart = function() {
     var counter = [0, 0, 0, 0, 0, 0],
@@ -455,5 +451,17 @@ BarcodeReader.prototype._verifyTrailingWhitespace = function(endInfo) {
     }
     return null;
 };
+
+function calculateCorrection(expected, normalized, indices) {
+    var length = indices.length,
+        sumNormalized = 0,
+        sumExpected = 0;
+
+    while(length--) {
+        sumExpected += expected[indices[length]];
+        sumNormalized += normalized[indices[length]];
+    }
+    return sumExpected/sumNormalized;
+}
 
 export default Code128Reader;

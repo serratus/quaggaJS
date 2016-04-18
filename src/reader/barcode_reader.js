@@ -58,8 +58,7 @@ BarcodeReader.prototype._normalize = function(counter, correction) {
         modulo = self.MODULO;
 
     if (correction) {
-        correct(counter, correction.bar, [0, 2, 4]);
-        correct(counter, correction.space, [1, 3, 5]);
+        self._correct(counter, correction);
     }
     for (i = 0; i < counter.length; i++) {
         sum += counter[i];
@@ -72,7 +71,7 @@ BarcodeReader.prototype._normalize = function(counter, correction) {
     return normalized;
 };
 
-function correct(counter, correction, indices) {
+BarcodeReader.prototype._correctBars = function(counter, correction, indices) {
     var length = indices.length,
         tmp = 0;
     while(length--) {
