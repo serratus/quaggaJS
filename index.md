@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2016-03-31)
+- [Changelog](#changelog) (2016-04-19)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
@@ -612,6 +612,11 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2016-04-19
+- Improvements
+  - Reducing false-positives for Code 128 barcodes (
+      addresses [\#104](https://github.com/serratus/quaggaJS/issues/104))
 
 ### 2016-03-31
 Take a look at the release-notes (
