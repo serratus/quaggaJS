@@ -1,6 +1,7 @@
-function BarcodeReader(config) {
+function BarcodeReader(config, supplements) {
     this._row = [];
     this.config = config || {};
+    this.supplements = supplements;
     return this;
 }
 

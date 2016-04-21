@@ -7,12 +7,16 @@ import Code39VINReader from '../reader/code_39_vin_reader';
 import CodabarReader from '../reader/codabar_reader';
 import UPCReader from '../reader/upc_reader';
 import EAN8Reader from '../reader/ean_8_reader';
+import EAN2Reader from '../reader/ean_2_reader';
+import EAN5Reader from '../reader/ean_5_reader';
 import UPCEReader from '../reader/upc_e_reader';
 import I2of5Reader from '../reader/i2of5_reader';
 
 const READERS = {
     code_128_reader: Code128Reader,
     ean_reader: EANReader,
+    ean_5_reader: EAN5Reader,
+    ean_2_reader: EAN2Reader,
     ean_8_reader: EAN8Reader,
     code_39_reader: Code39Reader,
     code_39_vin_reader: Code39VINReader,
@@ -74,7 +78,8 @@ export default {
         function initReaders() {
             config.readers.forEach(function(readerConfig) {
                 var reader,
-                    configuration = {};
+                    configuration = {},
+                    supplements = [];
 
                 if (typeof readerConfig === 'object') {
                     reader = readerConfig.format;
@@ -85,7 +90,13 @@ export default {
                 if (ENV.development) {
                     console.log("Before registering reader: ", reader);
                 }
-                _barcodeReaders.push(new READERS[reader](configuration));
+                if (configuration.supplements) {
+                    supplements = configuration
+                        .supplements.map((supplement) => {
+                            return new READERS[supplement]();
+                        });
+                }
+                _barcodeReaders.push(new READERS[reader](configuration, supplements));
             });
             if (ENV.development) {
                 console.log("Registered Readers: " + _barcodeReaders
@@ -243,7 +254,7 @@ export default {
             line = getLine(box);
             lineLength = getLineLength(line);
             lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-            line = getExtendedLine(line, lineAngle, Math.floor(lineLength * 0.1));
+            line = getExtendedLine(line, lineAngle, Math.floor(lineLength * 0.2));
             if (line === null){
                 return null;
             }

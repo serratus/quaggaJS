@@ -1,7 +1,18 @@
 import BarcodeReader from './barcode_reader';
+import {merge} from 'lodash';
 
-function EANReader(opts) {
-    BarcodeReader.call(this, opts);
+function EANReader(opts, supplements) {
+    opts = merge(getDefaulConfig(), opts);
+    BarcodeReader.call(this, opts, supplements);
+}
+
+function getDefaulConfig() {
+    var config = {};
+
+    Object.keys(EANReader.CONFIG_KEYS).forEach(function(key) {
+        config[key] = EANReader.CONFIG_KEYS[key].default;
+    });
+    return config;
 }
 
 var properties = {
@@ -11,6 +22,7 @@ var properties = {
     START_PATTERN: {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
     STOP_PATTERN: {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
     MIDDLE_PATTERN: {value: [1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7]},
+    EXTENSION_START_PATTERN: {value: [1 / 4 * 7, 1 / 4 * 7, 2 / 4 * 7]},
     CODE_PATTERN: {value: [
         [3, 2, 1, 1],
         [2, 2, 2, 1],
@@ -301,6 +313,13 @@ EANReader.prototype._decode = function() {
         return null;
     }
 
+    if (this.supplements.length > 0) {
+        let ext = this._decodeExtensions(code.end);
+        if (!ext) {
+            return null;
+        }
+    }
+
     return {
         code: result.join(""),
         start: startInfo.start,
@@ -309,6 +328,25 @@ EANReader.prototype._decode = function() {
         startInfo: startInfo,
         decodedCodes: decodedCodes
     };
+};
+
+EANReader.prototype._decodeExtensions = function(offset) {
+    var i,
+        start = this._nextSet(this._row, offset),
+        code = this._findPattern(this.EXTENSION_START_PATTERN, start, false, false),
+        result;
+
+    if (code === null) {
+        return null;
+    }
+
+    for (i = 0; i < this.supplements.length; i++) {
+        result = this.supplements[i].decode(this._row, code.end);
+        if (result !== null) {
+            return result;
+        }
+    }
+    return null;
 };
 
 EANReader.prototype._checksum = function(result) {
@@ -322,6 +360,14 @@ EANReader.prototype._checksum = function(result) {
         sum += result[i];
     }
     return sum % 10 === 0;
+};
+
+EANReader.CONFIG_KEYS = {
+    supplements: {
+        'type': 'arrayOf(string)',
+        'default': [],
+        'description': 'Allowed extensions to be decoded (2 and/or 5)'
+    }
 };
 
 export default (EANReader);
