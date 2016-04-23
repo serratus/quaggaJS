@@ -1,7 +1,7 @@
 import EANReader from './ean_reader';
 
-function UPCEReader() {
-    EANReader.call(this);
+function UPCEReader(opts, supplements) {
+    EANReader.call(this, opts, supplements);
 }
 
 var properties = {

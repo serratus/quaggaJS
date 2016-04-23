@@ -168,7 +168,7 @@ Code128Reader.prototype._decodeCode = function(start, correction) {
                         }
                     }
                     bestMatch.end = i;
-                    if (bestMatch.code === -1) {
+                    if (bestMatch.code === -1 || bestMatch.error > self.AVG_CODE_ERROR) {
                         return null;
                     }
                     if (self.CODE_PATTERN[bestMatch.code]) {
@@ -241,9 +241,11 @@ Code128Reader.prototype._findStart = function() {
                         bestMatch.start = i - sum;
                         bestMatch.end = i;
                         bestMatch.correction.bar = calculateCorrection(
-                            self.CODE_PATTERN[code], normalized, [0, 2, 4]);
+                            self.CODE_PATTERN[bestMatch.code], normalized,
+                            this.MODULE_INDICES.bar);
                         bestMatch.correction.space = calculateCorrection(
-                            self.CODE_PATTERN[code], normalized, [1, 3, 5]);
+                            self.CODE_PATTERN[bestMatch.code], normalized,
+                            this.MODULE_INDICES.space);
                         return bestMatch;
                     }
                 }

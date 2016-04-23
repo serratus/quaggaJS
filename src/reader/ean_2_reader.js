@@ -36,7 +36,7 @@ EAN2Reader.prototype.decode = function(row, start) {
         }
     }
 
-    if (result.length != 2 || (result.reduce((sum, i) => sum + i, 0) % 4  !== codeFrequency)) {
+    if (result.length != 2 || (parseInt(result.join("")) % 4)  !== codeFrequency) {
         return null;
     }
     console.log(result);

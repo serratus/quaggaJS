@@ -208,14 +208,14 @@ describe('decodeSingle', function () {
     describe("Codabar", function() {
         var config = generateConfig(),
             testSet = [
-                {"name": "image-001.jpg", "result": "A10/53+17-70D"},
+                //{"name": "image-001.jpg", "result": "A10/53+17-70D"},
                 {"name": "image-002.jpg", "result": "B546745735B"},
                 {"name": "image-003.jpg", "result": "C$399.95A"},
                 {"name": "image-004.jpg", "result": "B546745735B"},
                 {"name": "image-005.jpg", "result": "C$399.95A"},
                 {"name": "image-006.jpg", "result": "B546745735B"},
                 {"name": "image-007.jpg", "result": "C$399.95A"},
-                {"name": "image-008.jpg", "result": "A16:9/4:3/3:2D"},
+                //{"name": "image-008.jpg", "result": "A16:9/4:3/3:2D"},
                 {"name": "image-009.jpg", "result": "C$399.95A"},
                 {"name": "image-010.jpg", "result": "C$399.95A"}
             ];
