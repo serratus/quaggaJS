@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2016-04-19)
+- [Changelog](#changelog) (2016-04-24)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
@@ -436,6 +436,35 @@ individual box.
 The remaining properties `drawBoundingBox`, `showFrequency`, `drawScanline` and
 `showPattern` are mostly of interest during debugging and visualization.
 
+#### <a name="ean_extended">Enabling extended EAN</a>
+
+The default setting for `ean_reader` is not capable of reading extensions such
+as [EAN-2](https://en.wikipedia.org/wiki/EAN_2) or
+[EAN-5](https://en.wikipedia.org/wiki/EAN_5). In order to activate those
+supplements you have to provide them in the configuration as followed:
+
+```javascript
+decoder: {
+    readers: [{
+        format: "ean_reader",
+        config: {
+            supplements: [
+                'ean_5_reader', 'ean_2_reader'
+            ]
+        }
+    }]
+}
+```
+
+Beware that the order of the `supplements` matters in such that the reader stops
+decoding when the first supplement was found. So if you are interested in EAN-2
+and EAN-5 extensions, use the order depicted above.
+
+It's important to mention that, if supplements are supplied, regular EAN-13
+codes cannot be read any more with the same reader. If you want to read EAN-13
+with and without extensions you have to add another `ean_reader` reader to the
+configuration.
+
 ### locator
 
 The `locator` config is only relevant if the `locate` flag is set to `true`.
@@ -612,6 +641,14 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2016-04-24
+- Features
+  - EAN-13 extended codes can now be decoded (See
+   [\#71](https://github.com/serratus/quaggaJS/issues/71))
+
+Take a look at the release-notes (
+ [0.11.0](https://github.com/serratus/quaggaJS/releases/tag/v0.11.0))
 
 ### 2016-04-19
 - Improvements

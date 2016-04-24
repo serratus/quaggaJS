@@ -88,7 +88,20 @@ $(function() {
             },
             decoder: {
                 readers: function(value) {
-                    return [value + "_reader"];
+                    if (value === 'ean_extended') {
+                        return [{
+                            format: "ean_reader",
+                            config: {
+                                supplements: [
+                                    'ean_5_reader', 'ean_2_reader'
+                                ]
+                            }
+                        }];
+                    }
+                    return [{
+                        format: value + "_reader",
+                        config: {}
+                    }];
                 }
             }
         },
@@ -102,13 +115,16 @@ $(function() {
             },
             numOfWorkers: 1,
             decoder: {
-                readers: ["code_128_reader"]
+                readers: [{
+                    format: "code_128_reader",
+                    config: {}
+                }]
             },
             locate: true,
             src: null
         }
     };
-    
+
     App.init();
 
     Quagga.onProcessed(function(result) {
@@ -145,4 +161,4 @@ $(function() {
         $node.find("h4.code").html(code);
         $("#result_strip ul.thumbnails").prepend($node);
     });
-}); 
+});

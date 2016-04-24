@@ -79,7 +79,20 @@ $(function() {
             },
             decoder: {
                 readers: function(value) {
-                    return [value + "_reader"];
+                    if (value === 'ean_extended') {
+                        return [{
+                            format: "ean_reader",
+                            config: {
+                                supplements: [
+                                    'ean_5_reader', 'ean_2_reader'
+                                ]
+                            }
+                        }];
+                    }
+                    return [{
+                        format: value + "_reader",
+                        config: {}
+                    }];
                 }
             }
         },
@@ -98,7 +111,10 @@ $(function() {
             },
             numOfWorkers: 4,
             decoder: {
-                readers : ["code_128_reader"]
+                readers : [{
+                    format: "code_128_reader",
+                    config: {}
+                }]
             },
             locate: true
         },
