@@ -17,7 +17,6 @@ function getDefaulConfig() {
 
 var properties = {
     CODE_L_START: {value: 0},
-    MODULO: {value: 7},
     CODE_G_START: {value: 10},
     START_PATTERN: {value: [1, 1, 1]},
     STOP_PATTERN: {value: [1, 1, 1]},

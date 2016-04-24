@@ -13,7 +13,6 @@ var properties = {
     START_CODE_B: {value: 104},
     START_CODE_C: {value: 105},
     STOP_CODE: {value: 106},
-    MODULO: {value: 11},
     CODE_PATTERN: {value: [
         [2, 1, 2, 2, 2, 2],
         [2, 2, 2, 1, 2, 2],
@@ -150,37 +149,36 @@ Code128Reader.prototype._decodeCode = function(start, correction) {
             }
         },
         code,
-        error,
-        normalized;
+        error;
 
     for ( i = offset; i < self._row.length; i++) {
         if (self._row[i] ^ isWhite) {
             counter[counterPos]++;
         } else {
             if (counterPos === counter.length - 1) {
-                normalized = self._normalize(counter, correction);
-                if (normalized) {
-                    for (code = 0; code < self.CODE_PATTERN.length; code++) {
-                        error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                        if (error < bestMatch.error) {
-                            bestMatch.code = code;
-                            bestMatch.error = error;
-                        }
-                    }
-                    bestMatch.end = i;
-                    if (bestMatch.code === -1 || bestMatch.error > self.AVG_CODE_ERROR) {
-                        return null;
-                    }
-                    if (self.CODE_PATTERN[bestMatch.code]) {
-                        bestMatch.correction.bar = calculateCorrection(
-                            self.CODE_PATTERN[bestMatch.code], normalized,
-                            this.MODULE_INDICES.bar);
-                        bestMatch.correction.space = calculateCorrection(
-                            self.CODE_PATTERN[bestMatch.code], normalized,
-                            this.MODULE_INDICES.space);
-                    }
-                    return bestMatch;
+                if (correction) {
+                    self._correct(counter, correction);
                 }
+                for (code = 0; code < self.CODE_PATTERN.length; code++) {
+                    error = self._matchPattern(counter, self.CODE_PATTERN[code]);
+                    if (error < bestMatch.error) {
+                        bestMatch.code = code;
+                        bestMatch.error = error;
+                    }
+                }
+                bestMatch.end = i;
+                if (bestMatch.code === -1 || bestMatch.error > self.AVG_CODE_ERROR) {
+                    return null;
+                }
+                if (self.CODE_PATTERN[bestMatch.code]) {
+                    bestMatch.correction.bar = calculateCorrection(
+                        self.CODE_PATTERN[bestMatch.code], counter,
+                        this.MODULE_INDICES.bar);
+                    bestMatch.correction.space = calculateCorrection(
+                        self.CODE_PATTERN[bestMatch.code], counter,
+                        this.MODULE_INDICES.space);
+                }
+                return bestMatch;
             } else {
                 counterPos++;
             }
@@ -216,8 +214,7 @@ Code128Reader.prototype._findStart = function() {
         code,
         error,
         j,
-        sum,
-        normalized;
+        sum;
 
     for ( i = offset; i < self._row.length; i++) {
         if (self._row[i] ^ isWhite) {
@@ -228,26 +225,23 @@ Code128Reader.prototype._findStart = function() {
                 for ( j = 0; j < counter.length; j++) {
                     sum += counter[j];
                 }
-                normalized = self._normalize(counter);
-                if (normalized) {
-                    for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
-                        error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                        if (error < bestMatch.error) {
-                            bestMatch.code = code;
-                            bestMatch.error = error;
-                        }
+                for (code = self.START_CODE_A; code <= self.START_CODE_C; code++) {
+                    error = self._matchPattern(counter, self.CODE_PATTERN[code]);
+                    if (error < bestMatch.error) {
+                        bestMatch.code = code;
+                        bestMatch.error = error;
                     }
-                    if (bestMatch.error < self.AVG_CODE_ERROR) {
-                        bestMatch.start = i - sum;
-                        bestMatch.end = i;
-                        bestMatch.correction.bar = calculateCorrection(
-                            self.CODE_PATTERN[bestMatch.code], normalized,
-                            this.MODULE_INDICES.bar);
-                        bestMatch.correction.space = calculateCorrection(
-                            self.CODE_PATTERN[bestMatch.code], normalized,
-                            this.MODULE_INDICES.space);
-                        return bestMatch;
-                    }
+                }
+                if (bestMatch.error < self.AVG_CODE_ERROR) {
+                    bestMatch.start = i - sum;
+                    bestMatch.end = i;
+                    bestMatch.correction.bar = calculateCorrection(
+                        self.CODE_PATTERN[bestMatch.code], counter,
+                        this.MODULE_INDICES.bar);
+                    bestMatch.correction.space = calculateCorrection(
+                        self.CODE_PATTERN[bestMatch.code], counter,
+                        this.MODULE_INDICES.space);
+                    return bestMatch;
                 }
 
                 for ( j = 0; j < 4; j++) {

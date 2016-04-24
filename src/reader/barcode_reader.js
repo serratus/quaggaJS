@@ -66,33 +66,6 @@ BarcodeReader.prototype._nextSet = function(line, offset) {
     return line.length;
 };
 
-BarcodeReader.prototype._normalize = function(counter, correction) {
-    var i,
-        self = this,
-        sum = 0,
-        ratio,
-        numOnes = 0,
-        normalized = new Array(counter.length),
-        norm = 0,
-        modulo = self.MODULO;
-
-    for (i = 0; i < normalized.length; i++) {
-        normalized[i] = counter[i] < this.minBarWidth ? counter[i] = this.minBarWidth : counter[i];
-    }
-    if (correction) {
-        self._correct(normalized, correction);
-    }
-    for (i = 0; i < normalized.length; i++) {
-        sum += normalized[i];
-    }
-    ratio = sum / (modulo - numOnes);
-    for (i = 0; i < normalized.length; i++) {
-        norm = normalized[i] === 1 ? normalized[i] : normalized[i] / ratio;
-        normalized[i] = norm;
-    }
-    return normalized;
-};
-
 BarcodeReader.prototype._correctBars = function(counter, correction, indices) {
     var length = indices.length,
         tmp = 0;

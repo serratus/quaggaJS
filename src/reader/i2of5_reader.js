@@ -23,9 +23,8 @@ function getDefaulConfig() {
 var N = 1,
     W = 3,
     properties = {
-        MODULO: {value: 10},
-        START_PATTERN: {value: [N * 2.5, N * 2.5, N * 2.5, N * 2.5]},
-        STOP_PATTERN: {value: [N * 2, N * 2, W * 2]},
+        START_PATTERN: {value: [N, N, N, N]},
+        STOP_PATTERN: {value: [N, N, W]},
         CODE_PATTERN: {value: [
             [N, N, W, W, N],
             [W, N, N, N, W],
@@ -110,16 +109,12 @@ I2of5Reader.prototype._findPattern = function(pattern, offset, isWhite, tryHarde
                 for ( j = 0; j < counter.length; j++) {
                     sum += counter[j];
                 }
-                normalized = self._normalize(counter);
-                if (normalized) {
-                    error = self._matchPattern(normalized, pattern);
-
-                    if (error < epsilon) {
-                        bestMatch.error = error;
-                        bestMatch.start = i - sum;
-                        bestMatch.end = i;
-                        return bestMatch;
-                    }
+                error = self._matchPattern(counter, pattern);
+                if (error < epsilon) {
+                    bestMatch.error = error;
+                    bestMatch.start = i - sum;
+                    bestMatch.end = i;
+                    return bestMatch;
                 }
                 if (tryHarder) {
                     for (j = 0; j < counter.length - 2; j++) {
@@ -233,20 +228,16 @@ I2of5Reader.prototype._decodeCode = function(counter) {
     for ( j = 0; j < counter.length; j++) {
         sum += counter[j];
     }
-    normalized = self._normalize(counter);
-    if (normalized) {
-        for (code = 0; code < self.CODE_PATTERN.length; code++) {
-            error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-            if (error < bestMatch.error) {
-                bestMatch.code = code;
-                bestMatch.error = error;
-            }
-        }
-        if (bestMatch.error < epsilon) {
-            return bestMatch;
+    for (code = 0; code < self.CODE_PATTERN.length; code++) {
+        error = self._matchPattern(counter, self.CODE_PATTERN[code]);
+        if (error < bestMatch.error) {
+            bestMatch.code = code;
+            bestMatch.error = error;
         }
     }
-    return null;
+    if (bestMatch.error < epsilon) {
+        return bestMatch;
+    }
 };
 
 I2of5Reader.prototype._decodePayload = function(counters, result, decodedCodes) {
