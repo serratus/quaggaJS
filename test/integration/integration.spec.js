@@ -27,15 +27,19 @@ describe('decodeSingle', function () {
     function _runTestSet(testSet, config) {
         var readers = config.decoder.readers.slice(),
             format,
-            folder;
+            folder,
+            suffix;
 
         if (typeof readers[0] === 'string'){
             format = readers[0];
         } else {
+            if (readers[0].config && readers[0].config.supplements && readers[0].config.supplements.length) {
+                suffix = "extended";
+            }
             format = readers[0].format;
         }
 
-        folder = baseFolder + format.split('_').slice(0, -1).join('_') + "/";
+        folder = baseFolder + format.split('_').slice(0, -1).concat(suffix ? [suffix] : []).join('_') + "/";
 
         it('should decode ' + folder + " correctly", function(done) {
             async.eachSeries(testSet, function (sample, callback) {
@@ -73,6 +77,49 @@ describe('decodeSingle', function () {
         });
 
         config.decoder.readers = ['ean_reader'];
+        _runTestSet(testSet, config);
+    });
+
+    describe("EAN-extended", function() {
+        var config = {
+                inputStream: {
+                    size: 800,
+                    singleChannel: false
+                },
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true
+                },
+                numOfWorkers: 0,
+                decoder: {
+                    readers: [{
+                        format: "ean_reader",
+                        config: {
+                            supplements: [
+                                'ean_5_reader', 'ean_2_reader'
+                            ]
+                        }
+                    }]
+                },
+                locate: true,
+                src: null
+            },
+            testSet = [
+                {"name": "image-001.jpg", "result": "900437801102701"},
+                {"name": "image-002.jpg", "result": "419871600890101"},
+                {"name": "image-003.jpg", "result": "419871600890101"},
+                {"name": "image-004.jpg", "result": "978054466825652495"},
+                {"name": "image-005.jpg", "result": "419664190890712"},
+                {"name": "image-006.jpg", "result": "412056690699101"},
+                {"name": "image-007.jpg", "result": "419204531290601"},
+                {"name": "image-008.jpg", "result": "419871600890101"},
+                {"name": "image-009.jpg", "result": "978054466825652495"},
+                {"name": "image-010.jpg", "result": "900437801102701"}
+            ];
+
+        testSet.forEach(function(sample) {
+            sample.format = "ean_13";
+        });
         _runTestSet(testSet, config);
     });
 

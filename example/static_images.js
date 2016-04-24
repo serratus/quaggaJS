@@ -1,7 +1,7 @@
 $(function() {
     var App = {
         init: function() {
-            var config = this.config[this.state.decoder.readers[0]] || this.config.default;
+            var config = this.config[this.state.decoder.readers[0].format] || this.config.default;
             config = $.extend(true, {}, config, this.state);
             Quagga.init(config, function() {
                 App.attachListeners();
@@ -95,7 +95,20 @@ $(function() {
         inputMapper: {
             decoder: {
                 readers: function(value) {
-                    return [value + "_reader"];
+                    if (value === 'ean_extended') {
+                        return [{
+                            format: "ean_reader",
+                            config: {
+                                supplements: [
+                                    'ean_5_reader', 'ean_2_reader'
+                                ]
+                            }
+                        }];
+                    }
+                    return [{
+                        format: value + "_reader",
+                        config: {}
+                    }];
                 }
             },
             inputStream: {
@@ -109,7 +122,10 @@ $(function() {
                 src: "../test/fixtures/code_128/"
             },
             decoder : {
-                readers : ["code_128_reader"]
+                readers : [{
+                    format: "code_128_reader",
+                    config: {}
+                }]
             }
         }
     };
