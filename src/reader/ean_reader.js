@@ -279,12 +279,10 @@ EANReader.prototype._decode = function() {
         decodedCodes = [],
         resultInfo = {};
 
-    this.minBarWidth = 1;
     startInfo = self._findStart();
     if (!startInfo) {
         return null;
     }
-    this.minBarWidth = (startInfo.end - startInfo.start) / 3;
     code = {
         code: startInfo.code,
         start: startInfo.start,

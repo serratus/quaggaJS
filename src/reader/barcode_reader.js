@@ -2,7 +2,6 @@ function BarcodeReader(config, supplements) {
     this._row = [];
     this.config = config || {};
     this.supplements = supplements;
-    this.minBarWidth = 1;
     return this;
 }
 
