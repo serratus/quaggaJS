@@ -2,6 +2,7 @@ function BarcodeReader(config, supplements) {
     this._row = [];
     this.config = config || {};
     this.supplements = supplements;
+    this.minBarWidth = 1;
     return this;
 }
 
@@ -19,15 +20,32 @@ BarcodeReader.prototype._nextUnset = function(line, start) {
     return line.length;
 };
 
-BarcodeReader.prototype._matchPattern = function(counter, code) {
+BarcodeReader.prototype._matchPattern = function(counter, code, maxSingleError) {
     var i,
         error = 0,
         singleError = 0,
-        modulo = this.MODULO,
-        maxSingleError = this.SINGLE_CODE_ERROR || 1;
+        sum = 0,
+        modulo = 0,
+        barWidth,
+        count,
+        scaled;
+
+    maxSingleError = maxSingleError || this.SINGLE_CODE_ERROR || 1;
 
     for (i = 0; i < counter.length; i++) {
-        singleError = Math.abs(code[i] - counter[i]);
+        sum += counter[i];
+        modulo += code[i];
+    }
+    if (sum < modulo) {
+        return Number.MAX_VALUE;
+    }
+    barWidth = sum / modulo;
+    maxSingleError *= barWidth;
+
+    for (i = 0; i < counter.length; i++) {
+        count = counter[i];
+        scaled = code[i] * barWidth;
+        singleError = Math.abs(count - scaled) / scaled;
         if (singleError > maxSingleError) {
             return Number.MAX_VALUE;
         }
@@ -58,15 +76,18 @@ BarcodeReader.prototype._normalize = function(counter, correction) {
         norm = 0,
         modulo = self.MODULO;
 
-    if (correction) {
-        self._correct(counter, correction);
+    for (i = 0; i < normalized.length; i++) {
+        normalized[i] = counter[i] < this.minBarWidth ? counter[i] = this.minBarWidth : counter[i];
     }
-    for (i = 0; i < counter.length; i++) {
-        sum += counter[i];
+    if (correction) {
+        self._correct(normalized, correction);
+    }
+    for (i = 0; i < normalized.length; i++) {
+        sum += normalized[i];
     }
     ratio = sum / (modulo - numOnes);
-    for (i = 0; i < counter.length; i++) {
-        norm = counter[i] === 1 ? counter[i] : counter[i] / ratio;
+    for (i = 0; i < normalized.length; i++) {
+        norm = normalized[i] === 1 ? normalized[i] : normalized[i] / ratio;
         normalized[i] = norm;
     }
     return normalized;

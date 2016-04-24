@@ -19,10 +19,10 @@ var properties = {
     CODE_L_START: {value: 0},
     MODULO: {value: 7},
     CODE_G_START: {value: 10},
-    START_PATTERN: {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
-    STOP_PATTERN: {value: [1 / 3 * 7, 1 / 3 * 7, 1 / 3 * 7]},
-    MIDDLE_PATTERN: {value: [1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7, 1 / 5 * 7]},
-    EXTENSION_START_PATTERN: {value: [1 / 4 * 7, 1 / 4 * 7, 2 / 4 * 7]},
+    START_PATTERN: {value: [1, 1, 1]},
+    STOP_PATTERN: {value: [1, 1, 1]},
+    MIDDLE_PATTERN: {value: [1, 1, 1, 1, 1]},
+    EXTENSION_START_PATTERN: {value: [1, 1, 2]},
     CODE_PATTERN: {value: [
         [3, 2, 1, 1],
         [2, 2, 2, 1],
@@ -46,8 +46,8 @@ var properties = {
         [2, 1, 1, 3]
     ]},
     CODE_FREQUENCY: {value: [0, 11, 13, 14, 19, 25, 28, 21, 22, 26]},
-    SINGLE_CODE_ERROR: {value: 0.67},
-    AVG_CODE_ERROR: {value: 0.27},
+    SINGLE_CODE_ERROR: {value: 0.70},
+    AVG_CODE_ERROR: {value: 0.48},
     FORMAT: {value: "ean_13", writeable: false}
 };
 
@@ -68,8 +68,7 @@ EANReader.prototype._decodeCode = function(start, coderange) {
             end: start
         },
         code,
-        error,
-        normalized;
+        error;
 
     if (!coderange) {
         coderange = self.CODE_PATTERN.length;
@@ -80,21 +79,18 @@ EANReader.prototype._decodeCode = function(start, coderange) {
             counter[counterPos]++;
         } else {
             if (counterPos === counter.length - 1) {
-                normalized = self._normalize(counter);
-                if (normalized) {
-                    for (code = 0; code < coderange; code++) {
-                        error = self._matchPattern(normalized, self.CODE_PATTERN[code]);
-                        if (error < bestMatch.error) {
-                            bestMatch.code = code;
-                            bestMatch.error = error;
-                        }
+                for (code = 0; code < coderange; code++) {
+                    error = self._matchPattern(counter, self.CODE_PATTERN[code]);
+                    if (error < bestMatch.error) {
+                        bestMatch.code = code;
+                        bestMatch.error = error;
                     }
-                    bestMatch.end = i;
-                    if (bestMatch.error > self.AVG_CODE_ERROR) {
-                        return null;
-                    }
-                    return bestMatch;
                 }
+                bestMatch.end = i;
+                if (bestMatch.error > self.AVG_CODE_ERROR) {
+                    return null;
+                }
+                return bestMatch;
             } else {
                 counterPos++;
             }
@@ -118,8 +114,7 @@ EANReader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder,
         },
         error,
         j,
-        sum,
-        normalized;
+        sum;
 
     if (!offset) {
         offset = self._nextSet(self._row);
@@ -150,16 +145,13 @@ EANReader.prototype._findPattern = function(pattern, offset, isWhite, tryHarder,
                 for ( j = 0; j < counter.length; j++) {
                     sum += counter[j];
                 }
-                normalized = self._normalize(counter);
-                if (normalized) {
-                    error = self._matchPattern(normalized, pattern);
+                error = self._matchPattern(counter, pattern);
 
-                    if (error < epsilon) {
-                        bestMatch.error = error;
-                        bestMatch.start = i - sum;
-                        bestMatch.end = i;
-                        return bestMatch;
-                    }
+                if (error < epsilon) {
+                    bestMatch.error = error;
+                    bestMatch.start = i - sum;
+                    bestMatch.end = i;
+                    return bestMatch;
                 }
                 if (tryHarder) {
                     for ( j = 0; j < counter.length - 2; j++) {
@@ -285,12 +277,15 @@ EANReader.prototype._decode = function() {
         self = this,
         code,
         result = [],
-        decodedCodes = [];
+        decodedCodes = [],
+        resultInfo = {};
 
+    this.minBarWidth = 1;
     startInfo = self._findStart();
     if (!startInfo) {
         return null;
     }
+    this.minBarWidth = (startInfo.end - startInfo.start) / 3;
     code = {
         code: startInfo.code,
         start: startInfo.start,
@@ -318,6 +313,18 @@ EANReader.prototype._decode = function() {
         if (!ext) {
             return null;
         }
+        let lastCode = ext.decodedCodes[ext.decodedCodes.length-1],
+            endInfo = {
+                start: lastCode.start + (((lastCode.end - lastCode.start) / 2) | 0),
+                end: lastCode.end
+            };
+        if(!self._verifyTrailingWhitespace(endInfo)) {
+            return null;
+        }
+        resultInfo = {
+            supplement: ext,
+            code: result.join("") + ext.code
+        }
     }
 
     return {
@@ -326,24 +333,32 @@ EANReader.prototype._decode = function() {
         end: code.end,
         codeset: "",
         startInfo: startInfo,
-        decodedCodes: decodedCodes
+        decodedCodes: decodedCodes,
+        ...resultInfo
     };
 };
 
 EANReader.prototype._decodeExtensions = function(offset) {
     var i,
         start = this._nextSet(this._row, offset),
-        code = this._findPattern(this.EXTENSION_START_PATTERN, start, false, false),
+        startInfo = this._findPattern(this.EXTENSION_START_PATTERN, start, false, false),
         result;
 
-    if (code === null) {
+    if (startInfo === null) {
         return null;
     }
 
     for (i = 0; i < this.supplements.length; i++) {
-        result = this.supplements[i].decode(this._row, code.end);
+        result = this.supplements[i].decode(this._row, startInfo.end);
         if (result !== null) {
-            return result;
+            return {
+                code: result.code,
+                start,
+                startInfo,
+                end: result.end,
+                codeset: "",
+                decodedCodes: result.decodedCodes
+            }
         }
     }
     return null;

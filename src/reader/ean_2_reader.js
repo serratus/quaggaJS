@@ -19,13 +19,15 @@ EAN2Reader.prototype.decode = function(row, start) {
         offset = start,
         end = this._row.length,
         code,
-        result = [];
+        result = [],
+        decodedCodes = [];
 
     for (i = 0; i < 2 && offset < end; i++) {
         code = this._decodeCode(offset);
         if (!code) {
             return null;
         }
+        decodedCodes.push(code);
         result.push(code.code % 10);
         if (code.code >= this.CODE_G_START) {
             codeFrequency |= 1 << (1 - i);
@@ -39,8 +41,11 @@ EAN2Reader.prototype.decode = function(row, start) {
     if (result.length != 2 || (parseInt(result.join("")) % 4)  !== codeFrequency) {
         return null;
     }
-    console.log(result);
-    return offset;
+    return {
+        code: result.join(""),
+        decodedCodes,
+        end: code.end
+    };
 };
 
 export default EAN2Reader;

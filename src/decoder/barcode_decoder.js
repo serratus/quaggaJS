@@ -254,7 +254,7 @@ export default {
             line = getLine(box);
             lineLength = getLineLength(line);
             lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-            line = getExtendedLine(line, lineAngle, Math.floor(lineLength * 0.2));
+            line = getExtendedLine(line, lineAngle, Math.floor(lineLength * 0.1));
             if (line === null){
                 return null;
             }

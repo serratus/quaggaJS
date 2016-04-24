@@ -21,13 +21,15 @@ EAN5Reader.prototype.decode = function(row, start) {
         offset = start,
         end = this._row.length,
         code,
-        result = [];
+        result = [],
+        decodedCodes = [];
 
     for (i = 0; i < 5 && offset < end; i++) {
         code = this._decodeCode(offset);
         if (!code) {
             return null;
         }
+        decodedCodes.push(code);
         result.push(code.code % 10);
         if (code.code >= this.CODE_G_START) {
             codeFrequency |= 1 << (4 - i);
@@ -45,8 +47,11 @@ EAN5Reader.prototype.decode = function(row, start) {
     if (extensionChecksum(result) !== determineCheckDigit(codeFrequency)) {
         return null;
     }
-    console.log(result);
-    return offset;
+    return {
+        code: result.join(""),
+        decodedCodes,
+        end: code.end
+    };
 };
 
 function determineCheckDigit(codeFrequency) {
