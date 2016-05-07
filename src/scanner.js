@@ -1,7 +1,7 @@
 import ImageWrapper from './common/image_wrapper';
-import BarcodeLocator from './locator/barcode_locator';
+import createLocator, {checkImageConstraints} from './locator/barcode_locator';
 import BarcodeDecoder from './decoder/barcode_decoder';
-import Events from './common/events';
+import createEventedElement from './common/events';
 import CameraAccess from './input/camera_access';
 import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
@@ -34,7 +34,9 @@ function createScanner() {
         _workerPool = [],
         _onUIThread = true,
         _resultCollector,
-        _config = {};
+        _config = {},
+        _events = createEventedElement(),
+        _locator;
 
     function initializeData(imageWrapper) {
         initBuffers(imageWrapper);
@@ -85,7 +87,7 @@ function createScanner() {
     }
 
     function canRecord(cb) {
-        BarcodeLocator.checkImageConstraints(_inputStream, _config.locator);
+        checkImageConstraints(_inputStream, _config.locator);
         initCanvas(_config);
         _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
 
@@ -155,12 +157,12 @@ function createScanner() {
             vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
             vec2.clone([_inputImageWrapper.size.x, 0])
         ];
-        BarcodeLocator.init(_inputImageWrapper, _config.locator);
+        _locator = createLocator(_inputImageWrapper, _config.locator);
     }
 
     function getBoundingBoxes() {
         if (_config.locate) {
-            return BarcodeLocator.locate();
+            return _locator.locate();
         } else {
             return [[
                 vec2.clone(_boxSize[0]),
@@ -245,9 +247,9 @@ function createScanner() {
             resultToPublish = result.barcodes || result;
         }
 
-        Events.publish("processed", resultToPublish);
+        _events.publish("processed", resultToPublish);
         if (hasCodeResult(result)) {
-            Events.publish("detected", resultToPublish);
+            _events.publish("detected", resultToPublish);
         }
     }
 
@@ -498,16 +500,16 @@ function createScanner() {
             _stopped = true;
         },
         onDetected: function(callback) {
-            Events.subscribe("detected", callback);
+            _events.subscribe("detected", callback);
         },
         offDetected: function(callback) {
-            Events.unsubscribe("detected", callback);
+            _events.unsubscribe("detected", callback);
         },
         onProcessed: function(callback) {
-            Events.subscribe("processed", callback);
+            _events.subscribe("processed", callback);
         },
         offProcessed: function(callback) {
-            Events.unsubscribe("processed", callback);
+            _events.unsubscribe("processed", callback);
         },
         registerResultCollector: function(resultCollector) {
             if (resultCollector && typeof resultCollector.addResult === 'function') {
@@ -516,7 +518,7 @@ function createScanner() {
         },
         decodeSingle: function(config, resultCallback) {
             this.init(config, () => {
-                Events.once("processed", (result) => {
+                _events.once("processed", (result) => {
                     this.stop();
                     resultCallback.call(null, result);
                 }, true);

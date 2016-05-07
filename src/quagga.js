@@ -2,7 +2,6 @@ import TypeDefs from './common/typedefs'; // eslint-disable-line no-unused-vars
 import WebrtcAdapter from 'webrtc-adapter'; // eslint-disable-line no-unused-vars
 import createScanner from './scanner';
 import ImageWrapper from './common/image_wrapper';
-import Events from './common/events';
 import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
@@ -31,28 +30,18 @@ function fromImage(config, imageSrc, imageConfig) {
     const scanner = createScanner(config);
     return {
         addEventListener: (eventType, cb) => {
-            scanner.init(config, () => {
-                Events.once(eventType, (result) => {
-                    scanner.stop();
-                    cb(result);
-                }, true);
-                scanner.start();
-            });
+            scanner.decodeSingle(config, cb);
         },
         removeEventListener(cb) {
             console.log("Remove listener");
         },
         toPromise() {
             return new Promise((resolve, reject) => {
-                scanner.init(config, () => {
-                    Events.once('processed', (result) => {
-                        scanner.stop();
-                        if (result.codeResult && result.codeResult.code) {
-                            return resolve(result);
-                        }
-                        return reject(result);
-                    });
-                    scanner.start();
+                scanner.decodeSingle(config, (result) => {
+                    if (result.codeResult && result.codeResult.code) {
+                        return resolve(result);
+                    }
+                    return reject(result);
                 });
             });
         }
@@ -117,9 +106,6 @@ function createApi(configuration = Config) {
         config(conf) {
             return createApi(merge({}, configuration, conf));
         },
-        init: function(config, cb, imageWrapper) {
-            defaultScanner.init(config, cb, imageWrapper);
-        },
         start: function() {
             defaultScanner.start();
         },
@@ -129,23 +115,8 @@ function createApi(configuration = Config) {
         pause: function() {
             defaultScanner.pause();
         },
-        onDetected: function(callback) {
-            defaultScanner.onDetected(callback);
-        },
-        offDetected: function(callback) {
-            defaultScanner.offDetected(callback);
-        },
-        onProcessed: function(callback) {
-            defaultScanner.onProcessed(callback);
-        },
-        offProcessed: function(callback) {
-            defaultScanner.offProcessed(callback);
-        },
         registerResultCollector: function(resultCollector) {
             defaultScanner.registerResultCollector(resultCollector);
-        },
-        decodeSingle: function(config, resultCallback) {
-            defaultScanner.decodeSingle(config, resultCallback);
         },
         ImageWrapper: ImageWrapper,
         ImageDebug: ImageDebug,
