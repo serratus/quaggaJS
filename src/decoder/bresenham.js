@@ -1,5 +1,3 @@
-import ImageWrapper from '../common/image_wrapper';
-
 var Bresenham = {};
 
 var Slope = {

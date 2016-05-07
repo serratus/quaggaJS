@@ -1,10 +1,10 @@
 import Cluster2 from './cluster';
 import ArrayHelper from './array_helper';
 const vec2 = {
-    clone: require('gl-vec2/clone'),
+    clone: require('gl-vec2/clone')
 };
 const vec3 = {
-    clone: require('gl-vec3/clone'),
+    clone: require('gl-vec3/clone')
 };
 
 /**

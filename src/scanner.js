@@ -515,18 +515,6 @@ function createScanner() {
             }
         },
         decodeSingle: function(config, resultCallback) {
-            config = merge({
-                inputStream: {
-                    type: "ImageStream",
-                    sequence: false,
-                    size: 800,
-                    src: config.src
-                },
-                numOfWorkers: (ENV.development && config.debug) ? 0 : 1,
-                locator: {
-                    halfSample: false
-                }
-            }, config);
             this.init(config, () => {
                 Events.once("processed", (result) => {
                     this.stop();

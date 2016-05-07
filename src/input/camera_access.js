@@ -1,7 +1,6 @@
 import {merge, pick} from 'lodash';
 
-var streamRef,
-    loadedDataHandler;
+var streamRef;
 
 function waitForVideo(video) {
     return new Promise((resolve, reject) => {
