@@ -8,35 +8,32 @@ import Config from './config/config';
 import {merge, pick, omitBy, isEmpty, omit} from 'lodash';
 
 
-// scanner map
-// Keep record of already created scanners for reuse?!
+// TODO: Keep record of already created scanners for reuse?!
 
-function fromImage(config, imageSrc, imageConfig) {
-    config =
-        merge({
-            inputStream: {
-                type: "ImageStream",
-                sequence: false,
-                size: 800,
-                src: imageSrc
-            },
-            numOfWorkers: (ENV.development && config.debug) ? 0 : 1,
-            locator: {
-                halfSample: false
-            }
+function fromImage(config, imageSrc, inputConfig={}) {
+    const staticImageConfig = {
+        inputStream: {
+            type: "ImageStream",
+            sequence: false,
+            size: 800,
+            src: imageSrc
         },
-        omit(config, 'inputStream'),
+        numOfWorkers: (ENV.development && config.debug) ? 0 : 1
+    };
+    config = merge(
+        config,
+        staticImageConfig,
+        {numOfWorkers: typeof config.numOfWorkers === 'number' && config.numOfWorkers > 0 ? 1 : 0},
         {inputStream: omitBy(pick(config.inputStream, ['size', 'src']), isEmpty)},
-        {inputStream: imageConfig});
+        {inputStream: inputConfig});
 
-    console.log(config);
     const scanner = createScanner();
     return {
         addEventListener: (eventType, cb) => {
             scanner.decodeSingle(config, cb);
         },
         removeEventListener(cb) {
-            console.log("Remove listener");
+            scanner.stop();
         },
         toPromise() {
             return new Promise((resolve, reject) => {
