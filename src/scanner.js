@@ -498,6 +498,12 @@ function createScanner() {
         pause: function() {
             _stopped = true;
         },
+        subscribe(eventName, callback) {
+            _events.subscribe(eventName, callback);
+        },
+        unsubscribe(eventName, callback) {
+            _events.unsubscribe(eventName, callback);
+        },
         onDetected: function(callback) {
             _events.subscribe("detected", callback);
         },

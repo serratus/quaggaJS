@@ -48,42 +48,52 @@ function fromImage(config, imageSrc, inputConfig={}) {
     };
 }
 
-/*function fromVideo(config, src) {
+function fromVideo(config, source, inputConfig = {}) {
     // remember last instance
     // check if anything but the imagesrc has changed
     //
     let sourceConfig = {
-        type : "LiveStream",
+        type: "LiveStream",
         constraints: {
             width: 640,
             height: 480,
             facingMode: "environment"
         }
     };
-    if (source instanceof Stream) {
+
+    /*if (source instanceof MediaStream) {
         // stream
-    } else if (source instanceof Element) {
+    } else*/ if (source instanceof Element) {
         // video element
     } else if (typeof source === 'string') {
         // video source
-    } else if (typeof source === 'object') {
-        // additional constraints
+    } else if (typeof source === 'object'
+            && (typeof source.constraints !== 'undefined'
+            || typeof source.area !== 'undefined')) {
+        console.log("inputConfig");
+        inputConfig = source;
     } else if (!source) {
         // LiveStream
     }
-    config = merge({inputStream: sourceConfig}, config);
+    config = merge({}, config, {inputStream: sourceConfig}, {inputStream: inputConfig});
+    console.log(config);
+    const scanner = createScanner();
     return {
-        addEventListener: (eventType, cb) => {
-            this.init(config, () => {
-                start();
+        addEventListener(eventType, cb) {
+            scanner.init(config, (error) => {
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+                scanner.start();
             });
-            Events.subscribe(eventType, cb);
+            scanner.subscribe(eventType, cb);
         },
-        removeEventListener: (cb) => {
-            Events.unsubscribe(eventType, cb);
+        removeEventListener(eventType, cb) {
+            scanner.unsubscribe(eventType, cb);
         }
-    }
-} */
+    };
+}
 
 let defaultScanner = createScanner();
 
@@ -96,6 +106,9 @@ function createApi(configuration = Config) {
     return {
         fromImage(src, conf) {
             return fromImage(configuration, src, conf);
+        },
+        fromVideo(src, inputConfig) {
+            return fromVideo(configuration, src, inputConfig);
         },
         decoder(conf) {
             return setConfig(configuration, "decoder", conf);
