@@ -395,7 +395,7 @@ function createScanner() {
                     y: e.data.size.y
                 }, new Uint8Array(e.data.imageData));
                 scanner.init(config, ready, imageWrapper);
-                scanner.onProcessed(onProcessed);
+                scanner.subscribe("processed", onProcessed);
             } else if (e.data.cmd === 'process') {
                 imageWrapper.data = new Uint8Array(e.data.imageData);
                 scanner.start();
@@ -503,18 +503,6 @@ function createScanner() {
         },
         unsubscribe(eventName, callback) {
             _events.unsubscribe(eventName, callback);
-        },
-        onDetected: function(callback) {
-            _events.subscribe("detected", callback);
-        },
-        offDetected: function(callback) {
-            _events.unsubscribe("detected", callback);
-        },
-        onProcessed: function(callback) {
-            _events.subscribe("processed", callback);
-        },
-        offProcessed: function(callback) {
-            _events.unsubscribe("processed", callback);
         },
         registerResultCollector: function(resultCollector) {
             if (resultCollector && typeof resultCollector.addResult === 'function') {
