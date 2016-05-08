@@ -18,7 +18,7 @@ module.exports = {
         singleChannel: false // true: only the red color-channel is read
     },
     locate: true,
-    numOfWorkers: 0,
+    numOfWorkers: 1,
     decoder: {
         readers: [
             'code_128_reader'

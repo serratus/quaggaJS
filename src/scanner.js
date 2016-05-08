@@ -383,7 +383,8 @@ function createScanner() {
                 return;
             }
         }
-        var imageWrapper;
+        var imageWrapper,
+            scanner = Quagga._worker.createScanner();
 
         self.onmessage = function(e) {
             if (e.data.cmd === 'init') {
@@ -393,13 +394,11 @@ function createScanner() {
                     x: e.data.size.x,
                     y: e.data.size.y
                 }, new Uint8Array(e.data.imageData));
-                Quagga.init(config, ready, imageWrapper);
-                Quagga.onProcessed(onProcessed);
+                scanner.init(config, ready, imageWrapper);
+                scanner.onProcessed(onProcessed);
             } else if (e.data.cmd === 'process') {
                 imageWrapper.data = new Uint8Array(e.data.imageData);
-                Quagga.start();
-            } else if (e.data.cmd === 'setReaders') {
-                Quagga.setReaders(e.data.readers);
+                scanner.start();
             }
         };
 

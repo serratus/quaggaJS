@@ -8,6 +8,9 @@ import Config from './config/config';
 import {merge, pick, omitBy, isEmpty, omit} from 'lodash';
 
 
+// scanner map
+// Keep record of already created scanners for reuse?!
+
 function fromImage(config, imageSrc, imageConfig) {
     config =
         merge({
@@ -27,7 +30,7 @@ function fromImage(config, imageSrc, imageConfig) {
         {inputStream: imageConfig});
 
     console.log(config);
-    const scanner = createScanner(config);
+    const scanner = createScanner();
     return {
         addEventListener: (eventType, cb) => {
             scanner.decodeSingle(config, cb);
@@ -106,22 +109,27 @@ function createApi(configuration = Config) {
         config(conf) {
             return createApi(merge({}, configuration, conf));
         },
-        start: function() {
+        start() {
             defaultScanner.start();
         },
-        stop: function() {
+        stop() {
             defaultScanner.stop();
         },
-        pause: function() {
+        pause() {
             defaultScanner.pause();
         },
-        registerResultCollector: function(resultCollector) {
+        registerResultCollector(resultCollector) {
             defaultScanner.registerResultCollector(resultCollector);
         },
-        ImageWrapper: ImageWrapper,
-        ImageDebug: ImageDebug,
-        ResultCollector: ResultCollector,
-        canvas: defaultScanner.canvas
+        getCanvas() {
+            return defaultScanner.canvas;
+        },
+        ImageWrapper,
+        ImageDebug,
+        ResultCollector,
+        _worker: {
+            createScanner
+        }
     };
 }
 export default createApi();

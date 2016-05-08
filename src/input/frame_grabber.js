@@ -4,6 +4,21 @@ import {
     computeGray
 } from '../common/cv_utils';
 
+function adjustCanvasSize(canvas, targetSize) {
+    if (canvas.width !== targetSize.x) {
+        if (ENV.development) {
+            console.log("WARNING: canvas-size needs to be adjusted");
+        }
+        canvas.width = targetSize.x;
+    }
+    if (canvas.height !== targetSize.y) {
+        if (ENV.development) {
+            console.log("WARNING: canvas-size needs to be adjusted");
+        }
+        canvas.height = targetSize.y;
+    }
+}
+
 var FrameGrabber = {};
 
 FrameGrabber.create = function(inputStream, canvas) {
@@ -56,6 +71,7 @@ FrameGrabber.create = function(inputStream, canvas) {
             frame = inputStream.getFrame(),
             ctxData;
         if (frame) {
+            adjustCanvasSize(_canvas, _canvasSize);
             _ctx.drawImage(frame, 0, 0, _canvasSize.x, _canvasSize.y);
             ctxData = _ctx.getImageData(_sx, _sy, _size.x, _size.y).data;
             if (doHalfSample){
