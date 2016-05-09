@@ -14,7 +14,7 @@ var i2of5Scanner = Quagga
     .decoder({readers: ['i2of5_reader']})
     .locator({patchSize: 'small', halfSample: false});
 
-/*eanScanner
+/* eanScanner
     .fromImage('../test/fixtures/ean/image-001.jpg', {size: 640})
     .toPromise().then((result) => {
         console.log(result.codeResult.code);
@@ -24,12 +24,13 @@ var i2of5Scanner = Quagga
 
 i2of5Scanner
     .fromImage('../test/fixtures/i2of5/image-001.jpg', {size: 800})
-    .toPromise().then((result) => {
-        console.log(result.codeResult.code);
-    }).catch(() => {
-        console.log("ITF not found!");
-    });
-*/
+    .addEventListener('detected', (result) => {
+        console.log("Detected: " + result.codeResult.code);
+    })
+    .addEventListener('processed', (result) => {
+        console.log("Image Processed");
+    })
+    .start(); */
 
 /* imageReader.addEventListener('processed', (result) => {
     console.log(result);
@@ -46,14 +47,21 @@ i2of5Scanner
     console.log(result.codeResult.code);
 });*/
 
-code128Scanner
+code128Scanner = code128Scanner
+    .config({frequency: 2})
     .fromVideo({
         constraints: {
-            width: 1280,
-            height: 720,
+            width: 800,
+            height: 600,
             facingMode: "environment"
         }
-    })
+    });
+
+code128Scanner
     .addEventListener('detected', (result) => {
         console.log(result);
-    });
+    })
+    .addEventListener('processed', result => {
+        console.log("Processed");
+    })
+    .start();

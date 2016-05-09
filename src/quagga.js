@@ -29,11 +29,23 @@ function fromImage(config, imageSrc, inputConfig={}) {
 
     const scanner = createScanner();
     return {
-        addEventListener: (eventType, cb) => {
-            scanner.decodeSingle(config, cb);
+        addEventListener(eventType, cb) {
+            scanner.subscribe(eventType, cb);
+            return this;
         },
-        removeEventListener(cb) {
+        removeEventListener(eventType, cb) {
+            scanner.unsubscribe(eventType, cb);
+            return this;
+        },
+        start() {
+            scanner.init(config, () => {
+                scanner.start();
+            });
+            return this;
+        },
+        stop() {
             scanner.stop();
+            return this;
         },
         toPromise() {
             return new Promise((resolve, reject) => {
@@ -80,17 +92,26 @@ function fromVideo(config, source, inputConfig = {}) {
     const scanner = createScanner();
     return {
         addEventListener(eventType, cb) {
-            scanner.init(config, (error) => {
-                if (error) {
-                    console.log(error);
-                    return;
-                }
-                scanner.start();
-            });
             scanner.subscribe(eventType, cb);
+            return this;
         },
         removeEventListener(eventType, cb) {
             scanner.unsubscribe(eventType, cb);
+            return this;
+        },
+        start() {
+            scanner.init(config, (error) => {
+                if (error) {
+                    console.log(error);
+                    throw error;
+                }
+                scanner.start();
+            });
+            return this;
+        },
+        stop() {
+            scanner.stop();
+            return this;
         }
     };
 }
