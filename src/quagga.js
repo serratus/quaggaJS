@@ -140,15 +140,6 @@ function createApi(configuration = Config) {
         config(conf) {
             return createApi(merge({}, configuration, conf));
         },
-        start() {
-            defaultScanner.start();
-        },
-        stop() {
-            defaultScanner.stop();
-        },
-        pause() {
-            defaultScanner.pause();
-        },
         registerResultCollector(resultCollector) {
             defaultScanner.registerResultCollector(resultCollector);
         },
