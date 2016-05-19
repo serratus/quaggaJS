@@ -1,16 +1,14 @@
-import TypeDefs from './common/typedefs'; // eslint-disable-line no-unused-vars
-import WebrtcAdapter from 'webrtc-adapter'; // eslint-disable-line no-unused-vars
+import './common/typedefs';
+import 'webrtc-adapter';
 import createScanner from './scanner';
 import ImageWrapper from './common/image_wrapper';
 import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
-import {merge, pick, omitBy, isEmpty, omit} from 'lodash';
+import {merge, pick, omitBy, isEmpty} from 'lodash';
 
 
-// TODO: Keep record of already created scanners for reuse?!
-
-function fromImage(config, imageSrc, inputConfig={}) {
+function fromImage(config, imageSrc, inputConfig = {}) {
     const staticImageConfig = {
         inputStream: {
             type: "ImageStream",
@@ -116,7 +114,7 @@ function fromVideo(config, source, inputConfig = {}) {
     };
 }
 
-let defaultScanner = createScanner();
+const defaultScanner = createScanner();
 
 function setConfig(configuration = {}, key, config = {}) {
     var mergedConfig = merge({}, configuration, {[key]: config});
