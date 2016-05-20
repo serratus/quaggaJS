@@ -1,16 +1,5 @@
-#interactive.viewport {
-  width: 640px;
-  height: 480px;
-}
-
-#interactive.viewport canvas, video {
-  float: left;
-  width: 640px;
-  height: 480px;
-}
-
-#interactive.viewport canvas.drawingBuffer, video.drawingBuffer {
-  margin-left: -640px;
+.collapsable-source pre {
+    font-size: small;
 }
 
 .input-field {

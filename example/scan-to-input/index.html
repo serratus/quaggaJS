@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width; initial-scale=1.0" />
     <link rel="stylesheet" type="text/css" href="../css/fonts.css" />
     <link rel="stylesheet" type="text/css" href="../css/styles.css" />
-    <link rel="stylesheet" type="text/css" href="../css/highlight-default.css" />
+    <link rel="stylesheet" type="text/css" href="../css/prism.css" />
   </head>
 
   <body>
@@ -28,47 +28,118 @@
         <div>
             <form>
                 <div class="input-field">
-                    <label for="isbn_input">ISBN:</label>
+                    <label for="isbn_input">EAN:</label>
                     <input id="isbn_input" class="isbn" type="text" />
                     <button type="button" class="icon-barcode button scan">&nbsp;</button>
                 </div>
             </form>
         </div>
-        <p>An overlay will pop-up showing the users's back-facing
-            camera if access is granted.</p>
-        <div className="source-code">
+        <p>This example demonstrates the following features:
+            <ul>
+                <li>Access to user's camera</li>
+                <li>Configuring EAN-Reader</li>
+                <li>Use custom mount-point (Query-Selector)</li>
+                <li>Start/Stop scanning based on certain events</li>
+            </ul>
+        </p>
+        <div class="source-code">
             <h4>Source</h4>
-            <pre>
-                <code class="javascript">
+            <div class="collapsable-source">
+                <pre>
+                    <code class="language-javascript">
+    var App = {
+        _scanner: null,
+        init: function() {
+            this.attachListeners();
+        },
+        activateScanner: function() {
+            var scanner = this.configureScanner('.overlay__content'),
+                onDetected = function (result) {
+                    document.querySelector('input.isbn').value = result.codeResult.code;
+                    stop();
+                }.bind(this),
+                stop = function() {
+                    scanner.stop();  // should also clear all event-listeners?
+                    scanner.removeEventListener('detected', onDetected);
+                    this.hideOverlay();
+                    this.attachListeners();
+                }.bind(this);
 
-var scanner = Quagga
-   .decoder({readers: ['ean_reader']})
-   .locator({patchSize: 'medium'})
-   .fromVideo({
-       target: '.overlay__content',
-       constraints: {
-           width: 800,
-           height: 600,
-           facingMode: "environment"
-       }
-   });
+            this.showOverlay(stop);
+            scanner.addEventListener('detected', onDetected).start();
+        },
+        attachListeners: function() {
+            var self = this;
 
-document.querySelector('.input-field input + button.scan')
-   .addEventListener("click", function onClick(e) {
-       e.preventDefault();
-       e.target.removeEventListener("click", onClick);
+            document.querySelector('.input-field input + button.scan')
+                .addEventListener("click", function onClick(e) {
+                    e.preventDefault();
+                    e.target.removeEventListener("click", onClick);
+                    self.activateScanner();
+                });
+        },
+        showOverlay: function(cancelCb) {
+            if (!this._overlay) {
+                var content = document.createElement('div'),
+                    closeButton = document.createElement('div');
 
-       // Start scanning
-       scanner.addEventListener('detected', function detected(result) {
-           // show result and stop scanner
-          document.querySelector('input.isbn').value = result.codeResult.code;
-          scanner.stop();
-          scanner.removeEventListener('detected', detected);
-       }).start();
-   });
-
-                </code>
-            </pre>
+                closeButton.appendChild(document.createTextNode('X'));
+                content.className = 'overlay__content';
+                closeButton.className = 'overlay__close';
+                this._overlay = document.createElement('div');
+                this._overlay.className = 'overlay';
+                this._overlay.appendChild(content);
+                content.appendChild(closeButton);
+                closeButton.addEventListener('click', function closeClick(e) {
+                    e.target.removeEventListener('click', closeClick);
+                    cancelCb();
+                });
+                document.body.appendChild(this._overlay);
+            } else {
+                var closeButton = document.querySelector('.overlay__close');
+                closeButton.addEventListener('click', cancelCb);
+            }
+            this._overlay.style.display = "block";
+        },
+        hideOverlay: function() {
+            if (this._overlay) {
+                this._overlay.style.display = "none";
+            }
+        },
+        configureScanner: function(selector) {
+            if (!this._scanner) {
+                this._scanner = Quagga
+                    .decoder({readers: ['ean_reader']})
+                    .locator({patchSize: 'medium'})
+                    .fromVideo({
+                        target: selector,
+                        constraints: {
+                            width: 800,
+                            height: 600,
+                            facingMode: "environment"
+                        }
+                    });
+            }
+            return this._scanner;
+        }
+    };
+    App.init();
+                    </code>
+                </pre>
+            </div>
+            <div class="collapsable-source">
+                <pre>
+                    <code class="language-html">
+&lt;form&gt;
+    &lt;div class="input-field"&gt;
+        &lt;label for="isbn_input"&gt;EAN:&lt;/label&gt;
+        &lt;input id="isbn_input" class="isbn" type="text" /&gt;
+        &lt;button type="button" class="icon-barcode button scan"&gt;&nbsp;&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/form&gt;
+                    </code>
+                </pre>
+            </div>
         </div>
     </section>
           <footer>
@@ -79,7 +150,6 @@ document.querySelector('.input-field input + button.scan')
 
     <script src="../../dist/quagga.js" type="text/javascript"></script>
     <script src="index.js" type="text/javascript"></script>
-    <script src="../vendor/highlight.pack.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="../vendor/prism.js"></script>
   </body>
 </html>
