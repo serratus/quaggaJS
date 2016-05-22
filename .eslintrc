@@ -3,10 +3,19 @@
     "ecmascript": 6,
     "jsx": true
     },
+    "plugins": [
+        "react"
+    ],
     "env": {
         "browser": true,
         "node": true
     },
+    "parser": "babel-eslint",
+    "parserOptions": {
+        "ecmaFeatures": {
+          "jsx": true
+        }
+      },
     "ecmaFeatures": {
         "blockBindings": true,
         "forOf": true,
@@ -75,6 +84,7 @@
         "space-infix-ops": 2,
         "max-len" : [1, 120],
         "consistent-return": 2,
-        "yoda": 2
+        "yoda": 2,
+        "react/jsx-no-undef": 1
     }
 }

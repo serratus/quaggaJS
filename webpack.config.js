@@ -6,7 +6,7 @@ module.exports = {
     entry: [
         './src/quagga.js'
     ],
-    devtool: 'inline-source-map',
+    devtool: 'source-map',
     module: {
         loaders: [{
             test: /\.jsx?$/,

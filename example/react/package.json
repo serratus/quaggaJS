@@ -1,0 +1,24 @@
+{
+  "name": "quagga-react",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Christoph Oberhofer <ch.oberhofer@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.9.0",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-transform-class-properties": "^6.9.0",
+    "babel-preset-es2015-webpack": "^6.4.1",
+    "babel-preset-react": "^6.5.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "webpack": "^2.1.0-beta.7"
+  },
+  "dependencies": {
+    "react": "^15.0.2",
+    "react-dom": "^15.0.2"
+  }
+}
