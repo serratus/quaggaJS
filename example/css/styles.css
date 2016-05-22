@@ -75,6 +75,10 @@
     top: 0;
 }
 
+input[type=file] {
+	display: none;
+}
+
 /* line 16, ../sass/_viewport.scss */
 .controls fieldset {
   border: none;
