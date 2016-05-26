@@ -48,7 +48,7 @@ function fromImage(config, imageSrc, inputConfig = {}) {
         toPromise() {
             return new Promise((resolve, reject) => {
                 scanner.decodeSingle(config, (result) => {
-                    if (result.codeResult && result.codeResult.code) {
+                    if (result && result.codeResult && result.codeResult.code) {
                         return resolve(result);
                     }
                     return reject(result);
@@ -80,7 +80,6 @@ function fromVideo(config, source, inputConfig = {}) {
     } else if (typeof source === 'object'
             && (typeof source.constraints !== 'undefined'
             || typeof source.area !== 'undefined')) {
-        console.log("inputConfig");
         inputConfig = source;
     } else if (!source) {
         // LiveStream

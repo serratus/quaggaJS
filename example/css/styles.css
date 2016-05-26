@@ -60,6 +60,7 @@
     margin: -1rem;
     border-radius: 2rem;
     z-index: 100;
+    box-sizing: content-box;
 }
 
 .overlay__content video {
@@ -223,13 +224,13 @@ header .headline {
 }
 /* line 34, ../sass/styles.scss */
 header .headline h1 {
-  color: #FFDD69;
   font-size: 3em;
   margin-bottom: 0;
 }
 /* line 39, ../sass/styles.scss */
-header .headline h2 {
+.headline h2 {
   margin-top: 0.2em;
+  color: #FFDD69;
 }
 
 /* line 45, ../sass/styles.scss */
@@ -244,8 +245,7 @@ footer {
 }
 
 /* line 51, ../sass/styles.scss */
-#container {
-  max-width: 640px;
+.container {
   margin: 20px auto;
   padding: 10px;
 }

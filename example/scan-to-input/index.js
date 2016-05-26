@@ -21,14 +21,14 @@ var App = {
         scanner.addEventListener('detected', onDetected).start();
     },
     attachListeners: function() {
-        var self = this;
+        var self = this,
+            button = document.querySelector('.input-field input + button.scan');
 
-        document.querySelector('.input-field input + button.scan')
-            .addEventListener("click", function onClick(e) {
-                e.preventDefault();
-                e.target.removeEventListener("click", onClick);
-                self.activateScanner();
-            });
+        button.addEventListener("click", function onClick(e) {
+            e.preventDefault();
+            button.removeEventListener("click", onClick);
+            self.activateScanner();
+        });
     },
     showOverlay: function(cancelCb) {
         if (!this._overlay) {
@@ -42,14 +42,17 @@ var App = {
             this._overlay.className = 'overlay';
             this._overlay.appendChild(content);
             content.appendChild(closeButton);
-            closeButton.addEventListener('click', function closeClick(e) {
-                e.target.removeEventListener('click', closeClick);
+            closeButton.addEventListener('click', function closeClick() {
+                closeButton.removeEventListener('click', closeClick);
                 cancelCb();
             });
             document.body.appendChild(this._overlay);
         } else {
             var closeButton = document.querySelector('.overlay__close');
-            closeButton.addEventListener('click', cancelCb);
+            closeButton.addEventListener('click', function closeClick() {
+                closeButton.removeEventListener('click', closeClick);
+                cancelCb();
+            });
         }
         this._overlay.style.display = "block";
     },

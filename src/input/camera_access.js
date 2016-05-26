@@ -36,11 +36,12 @@ function initCamera(video, constraints) {
     .then((stream) => {
         return new Promise((resolve, reject) => {
             streamRef = stream;
-            video.src = window.URL.createObjectURL(stream);
-            video.onloadedmetadata = (e) => {
+            video.setAttribute("autoplay", 'true');
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', (e) => {
                 video.play();
                 resolve();
-            };
+            });
         });
     })
     .then(waitForVideo.bind(null, video));

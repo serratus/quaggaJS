@@ -15,23 +15,23 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
-/******/ 			return installedModules[moduleId].e;
+/******/ 			return installedModules[moduleId].exports;
 /******/
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
-/******/ 			e: {},
 /******/ 			i: moduleId,
-/******/ 			l: false
+/******/ 			l: false,
+/******/ 			exports: {}
 /******/ 		};
 /******/
 /******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.e, module, module.e, __webpack_require__);
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.l = true;
 /******/
 /******/ 		// Return the exports of the module
-/******/ 		return module.e;
+/******/ 		return module.exports;
 /******/ 	}
 /******/
 /******/
@@ -45,13 +45,14 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 192);
+/******/ 	return __webpack_require__(__webpack_require__.s = 195);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
+	"use strict";
 	/*
 	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
 	 *
@@ -59,6 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  that can be found in the LICENSE file in the root of the source
 	 *  tree.
 	 */
+	 /* eslint-env node */
 	'use strict';
 	
 	var logDisabled_ = false;
@@ -80,12 +82,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (logDisabled_) {
 	        return;
 	      }
-	      console.log.apply(console, arguments);
+	      if (typeof console !== 'undefined' && typeof console.log === 'function') {
+	        console.log.apply(console, arguments);
+	      }
 	    }
 	  },
 	
-	   /**
+	  /**
 	   * Extract browser version out of the provided user agent string.
+	   *
 	   * @param {!string} uastring userAgent string.
 	   * @param {!string} expr Regular expression used as match criteria.
 	   * @param {!number} pos position in the version string to be returned.
@@ -98,6 +103,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  /**
 	   * Browser detector.
+	   *
 	   * @return {object} result containing browser, version and minVersion
 	   *     properties.
 	   */
@@ -108,28 +114,65 @@ return /******/ (function(modules) { // webpackBootstrap
 	    result.version = null;
 	    result.minVersion = null;
 	
+	    // Fail early if it's not a browser
 	    if (typeof window === 'undefined' || !window.navigator) {
 	      result.browser = 'Not a browser.';
 	      return result;
-	    } else if (navigator.mozGetUserMedia) {
-	      // Firefox.
+	    }
+	
+	    // Firefox.
+	    if (navigator.mozGetUserMedia) {
 	      result.browser = 'firefox';
 	      result.version = this.extractVersion(navigator.userAgent,
 	          /Firefox\/([0-9]+)\./, 1);
 	      result.minVersion = 31;
-	    } else if (navigator.webkitGetUserMedia && window.webkitRTCPeerConnection) {
-	      // Chrome, Chromium, WebView, Opera and other WebKit browsers.
-	      result.browser = 'chrome';
-	      result.version = this.extractVersion(navigator.userAgent,
+	
+	    // all webkit-based browsers
+	    } else if (navigator.webkitGetUserMedia) {
+	      // Chrome, Chromium, Webview, Opera, all use the chrome shim for now
+	      if (window.webkitRTCPeerConnection) {
+	        result.browser = 'chrome';
+	        result.version = this.extractVersion(navigator.userAgent,
 	          /Chrom(e|ium)\/([0-9]+)\./, 2);
-	      result.minVersion = 38;
-	    } else if(navigator.mediaDevices &&
+	        result.minVersion = 38;
+	
+	      // Safari or unknown webkit-based
+	      // for the time being Safari has support for MediaStreams but not webRTC
+	      } else {
+	        // Safari UA substrings of interest for reference:
+	        // - webkit version:           AppleWebKit/602.1.25 (also used in Op,Cr)
+	        // - safari UI version:        Version/9.0.3 (unique to Safari)
+	        // - safari UI webkit version: Safari/601.4.4 (also used in Op,Cr)
+	        //
+	        // if the webkit version and safari UI webkit versions are equals,
+	        // ... this is a stable version.
+	        //
+	        // only the internal webkit version is important today to know if
+	        // media streams are supported
+	        //
+	        if (navigator.userAgent.match(/Version\/(\d+).(\d+)/)) {
+	          result.browser = 'safari';
+	          result.version = this.extractVersion(navigator.userAgent,
+	            /AppleWebKit\/([0-9]+)\./, 1);
+	          result.minVersion = 602;
+	
+	        // unknown webkit-based browser
+	        } else {
+	          result.browser = 'Unsupported webkit-based browser ' +
+	              'with GUM support but no WebRTC support.';
+	          return result;
+	        }
+	      }
+	
+	    // Edge.
+	    } else if (navigator.mediaDevices &&
 	        navigator.userAgent.match(/Edge\/(\d+).(\d+)$/)) {
-	      // Edge.
 	      result.browser = 'edge';
 	      result.version = this.extractVersion(navigator.userAgent,
 	          /Edge\/(\d+).(\d+)$/, 2);
 	      result.minVersion = 10547;
+	
+	    // Default fallthrough: not supported.
 	    } else {
 	      result.browser = 'Not a supported browser.';
 	      return result;
@@ -147,7 +190,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	// Export.
-	module.e = {
+	module.exports = {
 	  log: utils.log,
 	  disableLog: utils.disableLog,
 	  browserDetails: utils.detectBrowser(),
@@ -157,7 +200,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Checks if `value` is classified as an `Array` object.
@@ -184,12 +227,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var isArray = Array.isArray;
 	
-	module.e = isArray;
+	module.exports = isArray;
 
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
@@ -219,14 +262,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return !!value && (type == 'object' || type == 'function');
 	}
 	
-	module.e = isObject;
+	module.exports = isObject;
 
 
 /***/ },
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(module, global) {var checkGlobal = __webpack_require__(131);
+	/* WEBPACK VAR INJECTION */(function(module, global) {var checkGlobal = __webpack_require__(132);
 	
 	/** Used to determine if values are of the language type `Object`. */
 	var objectTypes = {
@@ -266,13 +309,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) ||
 	    freeSelf || thisGlobal || Function('return this')();
 	
-	module.e = root;
+	module.exports = root;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(66)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), __webpack_require__(66)))
 
 /***/ },
 /* 4 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Checks if `value` is object-like. A value is object-like if it's not `null`
@@ -301,13 +344,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return !!value && typeof value == 'object';
 	}
 	
-	module.e = isObjectLike;
+	module.exports = isObjectLike;
 
 
 /***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_merge__ = __webpack_require__(12);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_merge___default = __WEBPACK_IMPORTED_MODULE_0_lodash_merge__ && __WEBPACK_IMPORTED_MODULE_0_lodash_merge__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_merge__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_merge__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_0_lodash_merge___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_0_lodash_merge___default });
@@ -691,13 +735,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* Built-in method references that are verified to be native. */
 	var Map = getNative(root, 'Map');
 	
-	module.e = Map;
+	module.exports = Map;
 
 
 /***/ },
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony default export */ exports["a"] = {
 	    drawRect: function drawRect(pos, size, ctx, style) {
 	        ctx.strokeStyle = style.color;
@@ -744,6 +789,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	function BarcodeReader(config, supplements) {
 	    this._row = [];
 	    this.config = config || {};
@@ -963,9 +1009,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	module.e = clone
+	module.exports = clone
 	
 	/**
 	 * Creates a new vec2 initialized with values from an existing vector
@@ -1026,7 +1072,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
 	}
 	
-	module.e = isArguments;
+	module.exports = isArguments;
 
 
 /***/ },
@@ -1072,15 +1118,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return tag == funcTag || tag == genTag;
 	}
 	
-	module.e = isFunction;
+	module.exports = isFunction;
 
 
 /***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseMerge = __webpack_require__(123),
-	    createAssigner = __webpack_require__(140);
+	var baseMerge = __webpack_require__(124),
+	    createAssigner = __webpack_require__(141);
 	
 	/**
 	 * This method is like `_.assign` except that it recursively merges own and
@@ -1116,13 +1162,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  baseMerge(object, source, srcIndex);
 	});
 	
-	module.e = merge;
+	module.exports = merge;
 
 
 /***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony default export */ exports["a"] = {
 	    init: function init(arr, val) {
 	        var l = arr.length;
@@ -1215,11 +1262,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var stackClear = __webpack_require__(163),
-	    stackDelete = __webpack_require__(164),
-	    stackGet = __webpack_require__(165),
-	    stackHas = __webpack_require__(166),
-	    stackSet = __webpack_require__(167);
+	var stackClear = __webpack_require__(164),
+	    stackDelete = __webpack_require__(165),
+	    stackGet = __webpack_require__(166),
+	    stackHas = __webpack_require__(167),
+	    stackSet = __webpack_require__(168);
 	
 	/**
 	 * Creates a stack cache object to store key-value pairs.
@@ -1246,7 +1293,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Stack.prototype.has = stackHas;
 	Stack.prototype.set = stackSet;
 	
-	module.e = Stack;
+	module.exports = Stack;
 
 
 /***/ },
@@ -1274,14 +1321,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return -1;
 	}
 	
-	module.e = assocIndexOf;
+	module.exports = assocIndexOf;
 
 
 /***/ },
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isNative = __webpack_require__(174);
+	var isNative = __webpack_require__(175);
 	
 	/**
 	 * Gets the native function at `key` of `object`.
@@ -1296,12 +1343,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return isNative(value) ? value : undefined;
 	}
 	
-	module.e = getNative;
+	module.exports = getNative;
 
 
 /***/ },
 /* 17 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Checks if `value` is a host object in IE < 9.
@@ -1322,12 +1369,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = isHostObject;
+	module.exports = isHostObject;
 
 
 /***/ },
 /* 18 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
 	var MAX_SAFE_INTEGER = 9007199254740991;
@@ -1349,12 +1396,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value > -1 && value % 1 == 0 && value < length;
 	}
 	
-	module.e = isIndex;
+	module.exports = isIndex;
 
 
 /***/ },
 /* 19 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Checks if `value` is suitable for use as unique object key.
@@ -1369,7 +1416,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (type == 'string' && value != '__proto__') || value == null;
 	}
 	
-	module.e = isKeyable;
+	module.exports = isKeyable;
 
 
 /***/ },
@@ -1381,12 +1428,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* Built-in method references that are verified to be native. */
 	var nativeCreate = getNative(Object, 'create');
 	
-	module.e = nativeCreate;
+	module.exports = nativeCreate;
 
 
 /***/ },
 /* 21 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Performs a [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
@@ -1422,14 +1469,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value === other || (value !== value && other !== other);
 	}
 	
-	module.e = eq;
+	module.exports = eq;
 
 
 /***/ },
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getLength = __webpack_require__(144),
+	var getLength = __webpack_require__(145),
 	    isFunction = __webpack_require__(11),
 	    isLength = __webpack_require__(23);
 	
@@ -1461,12 +1508,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value != null && isLength(getLength(value)) && !isFunction(value);
 	}
 	
-	module.e = isArrayLike;
+	module.exports = isArrayLike;
 
 
 /***/ },
 /* 23 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
 	var MAX_SAFE_INTEGER = 9007199254740991;
@@ -1500,7 +1547,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
 	}
 	
-	module.e = isLength;
+	module.exports = isLength;
 
 
 /***/ },
@@ -1508,7 +1555,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseHas = __webpack_require__(52),
-	    baseKeys = __webpack_require__(119),
+	    baseKeys = __webpack_require__(120),
 	    indexKeys = __webpack_require__(60),
 	    isArrayLike = __webpack_require__(22),
 	    isIndex = __webpack_require__(18),
@@ -1561,14 +1608,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = keys;
+	module.exports = keys;
 
 
 /***/ },
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__cluster__ = __webpack_require__(68);
+	"use strict";
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__cluster__ = __webpack_require__(69);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__array_helper__ = __webpack_require__(13);
 	/* harmony export */ exports["f"] = imageRef;/* unused harmony export computeIntegralImage2 *//* unused harmony export computeIntegralImage *//* unused harmony export thresholdImage *//* unused harmony export computeHistogram *//* unused harmony export sharpenLine *//* unused harmony export determineOtsuThreshold *//* harmony export */ exports["c"] = otsuThreshold;/* unused harmony export computeBinaryImage *//* harmony export */ exports["d"] = cluster;/* unused harmony export dilate *//* unused harmony export erode *//* unused harmony export subtract *//* unused harmony export bitwiseOr *//* unused harmony export countNonZero *//* harmony export */ exports["e"] = topGeneric;/* unused harmony export grayArrayFromImage *//* unused harmony export grayArrayFromContext *//* harmony export */ exports["i"] = grayAndHalfSampleFromCanvasData;/* harmony export */ exports["j"] = computeGray;/* unused harmony export loadImageArray *//* harmony export */ exports["g"] = halfSample;/* harmony export */ exports["a"] = hsv2rgb;/* unused harmony export _computeDivisors *//* harmony export */ exports["b"] = calculatePatchSize;/* unused harmony export _parseCSSDimensionValues *//* harmony export */ exports["h"] = computeImageArea;
 	
@@ -1576,7 +1624,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    clone: __webpack_require__(9)
 	};
 	var vec3 = {
-	    clone: __webpack_require__(97)
+	    clone: __webpack_require__(98)
 	};
 	
 	/**
@@ -2352,7 +2400,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__subImage__ = __webpack_require__(70);
+	"use strict";
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__subImage__ = __webpack_require__(71);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_cv_utils__ = __webpack_require__(25);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__common_array_helper__ = __webpack_require__(13);
 	
@@ -2717,12 +2766,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** Built-in value references. */
 	var Symbol = root.Symbol;
 	
-	module.e = Symbol;
+	module.exports = Symbol;
 
 
 /***/ },
 /* 28 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * A specialized version of `_.reduce` for arrays without support for
@@ -2748,14 +2797,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return accumulator;
 	}
 	
-	module.e = arrayReduce;
+	module.exports = arrayReduce;
 
 
 /***/ },
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObjectWith = __webpack_require__(138);
+	var copyObjectWith = __webpack_require__(139);
 	
 	/**
 	 * Copies properties of `source` to `object`.
@@ -2770,7 +2819,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return copyObjectWith(source, props, object);
 	}
 	
-	module.e = copyObject;
+	module.exports = copyObject;
 
 
 /***/ },
@@ -2800,12 +2849,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      (object != null && value in Object(object)));
 	}
 	
-	module.e = isKey;
+	module.exports = isKey;
 
 
 /***/ },
 /* 31 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -2824,7 +2873,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value === proto;
 	}
 	
-	module.e = isPrototype;
+	module.exports = isPrototype;
 
 
 /***/ },
@@ -2861,7 +2910,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return isObjectLike(value) && isArrayLike(value);
 	}
 	
-	module.e = isArrayLikeObject;
+	module.exports = isArrayLikeObject;
 
 
 /***/ },
@@ -2904,7 +2953,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (!isArray(value) && isObjectLike(value) && objectToString.call(value) == stringTag);
 	}
 	
-	module.e = isString;
+	module.exports = isString;
 
 
 /***/ },
@@ -2985,14 +3034,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    isLength(value.length) && !!typedArrayTags[objectToString.call(value)];
 	}
 	
-	module.e = isTypedArray;
+	module.exports = isTypedArray;
 
 
 /***/ },
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseKeysIn = __webpack_require__(120),
+	var baseKeysIn = __webpack_require__(121),
 	    indexKeys = __webpack_require__(60),
 	    isIndex = __webpack_require__(18),
 	    isPrototype = __webpack_require__(31);
@@ -3045,13 +3094,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = keysIn;
+	module.exports = keysIn;
 
 
 /***/ },
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_image_debug__ = __webpack_require__(7);
 	
 	
@@ -3112,10 +3162,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	var config = void 0;
 	
 	if (true) {
-	    config = __webpack_require__(72);
+	    config = __webpack_require__(73);
 	} else if (ENV.node) {
 	    config = require('./config.node.js');
 	} else {
@@ -3128,6 +3179,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/**
 	 * http://www.codeproject.com/Tips/407172/Connected-Component-Labeling-and-Vectorization
 	 */
@@ -3232,6 +3284,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__barcode_reader__ = __webpack_require__(8);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_array_helper__ = __webpack_require__(13);
 	
@@ -3448,9 +3501,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 40 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	module.e = dot
+	module.exports = dot
 	
 	/**
 	 * Calculates the dot product of two vec2's
@@ -3472,12 +3525,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** Built-in value references. */
 	var Uint8Array = root.Uint8Array;
 	
-	module.e = Uint8Array;
+	module.exports = Uint8Array;
 
 
 /***/ },
 /* 42 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * A specialized version of `_.forEach` for arrays without support for
@@ -3500,7 +3553,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return array;
 	}
 	
-	module.e = arrayEach;
+	module.exports = arrayEach;
 
 
 /***/ },
@@ -3525,7 +3578,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 	
-	module.e = assignMergeValue;
+	module.exports = assignMergeValue;
 
 
 /***/ },
@@ -3558,7 +3611,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 	
-	module.e = assignValue;
+	module.exports = assignValue;
 
 
 /***/ },
@@ -3595,7 +3648,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return true;
 	}
 	
-	module.e = assocDelete;
+	module.exports = assocDelete;
 
 
 /***/ },
@@ -3617,7 +3670,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return index < 0 ? undefined : array[index][1];
 	}
 	
-	module.e = assocGet;
+	module.exports = assocGet;
 
 
 /***/ },
@@ -3638,7 +3691,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return assocIndexOf(array, key) > -1;
 	}
 	
-	module.e = assocHas;
+	module.exports = assocHas;
 
 
 /***/ },
@@ -3664,7 +3717,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 	
-	module.e = assocSet;
+	module.exports = assocSet;
 
 
 /***/ },
@@ -3672,7 +3725,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(1),
-	    stringToPath = __webpack_require__(168);
+	    stringToPath = __webpack_require__(169);
 	
 	/**
 	 * Casts `value` to a path array if it's not one.
@@ -3685,14 +3738,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return isArray(value) ? value : stringToPath(value);
 	}
 	
-	module.e = baseCastPath;
+	module.exports = baseCastPath;
 
 
 /***/ },
 /* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var createBaseFor = __webpack_require__(141);
+	var createBaseFor = __webpack_require__(142);
 	
 	/**
 	 * The base implementation of `baseForIn` and `baseForOwn` which iterates
@@ -3708,7 +3761,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var baseFor = createBaseFor();
 	
-	module.e = baseFor;
+	module.exports = baseFor;
 
 
 /***/ },
@@ -3738,12 +3791,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return (index && index == length) ? object : undefined;
 	}
 	
-	module.e = baseGet;
+	module.exports = baseGet;
 
 
 /***/ },
 /* 52 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -3770,14 +3823,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (typeof object == 'object' && key in object && getPrototypeOf(object) === null);
 	}
 	
-	module.e = baseHas;
+	module.exports = baseHas;
 
 
 /***/ },
 /* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsEqualDeep = __webpack_require__(116),
+	var baseIsEqualDeep = __webpack_require__(117),
 	    isObject = __webpack_require__(2),
 	    isObjectLike = __webpack_require__(4);
 	
@@ -3806,12 +3859,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return baseIsEqualDeep(value, other, baseIsEqual, customizer, bitmask, stack);
 	}
 	
-	module.e = baseIsEqual;
+	module.exports = baseIsEqual;
 
 
 /***/ },
 /* 54 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * The base implementation of `_.property` without support for deep paths.
@@ -3826,7 +3879,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = baseProperty;
+	module.exports = baseProperty;
 
 
 /***/ },
@@ -3848,12 +3901,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = cloneArrayBuffer;
+	module.exports = cloneArrayBuffer;
 
 
 /***/ },
 /* 56 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Copies the values of `source` to `array`.
@@ -3874,14 +3927,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return array;
 	}
 	
-	module.e = copyArray;
+	module.exports = copyArray;
 
 
 /***/ },
 /* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arraySome = __webpack_require__(108);
+	var arraySome = __webpack_require__(109);
 	
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -3952,7 +4005,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = equalArrays;
+	module.exports = equalArrays;
 
 
 /***/ },
@@ -3960,8 +4013,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
-	    Set = __webpack_require__(101),
-	    WeakMap = __webpack_require__(102);
+	    Set = __webpack_require__(102),
+	    WeakMap = __webpack_require__(103);
 	
 	/** `Object#toString` result references. */
 	var mapTag = '[object Map]',
@@ -4017,7 +4070,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = getTag;
+	module.exports = getTag;
 
 
 /***/ },
@@ -4044,14 +4097,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return nativeCreate ? hash[key] !== undefined : hasOwnProperty.call(hash, key);
 	}
 	
-	module.e = hashHas;
+	module.exports = hashHas;
 
 
 /***/ },
 /* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseTimes = __webpack_require__(129),
+	var baseTimes = __webpack_require__(130),
 	    isArguments = __webpack_require__(10),
 	    isArray = __webpack_require__(1),
 	    isLength = __webpack_require__(23),
@@ -4074,12 +4127,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return null;
 	}
 	
-	module.e = indexKeys;
+	module.exports = indexKeys;
 
 
 /***/ },
 /* 61 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Converts `map` to an array.
@@ -4098,12 +4151,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = mapToArray;
+	module.exports = mapToArray;
 
 
 /***/ },
 /* 62 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * Converts `set` to an array.
@@ -4122,7 +4175,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = setToArray;
+	module.exports = setToArray;
 
 
 /***/ },
@@ -4160,15 +4213,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result === undefined ? defaultValue : result;
 	}
 	
-	module.e = get;
+	module.exports = get;
 
 
 /***/ },
 /* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFlatten = __webpack_require__(112),
-	    basePick = __webpack_require__(125),
+	var baseFlatten = __webpack_require__(113),
+	    basePick = __webpack_require__(126),
 	    rest = __webpack_require__(65);
 	
 	/**
@@ -4192,15 +4245,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return object == null ? {} : basePick(object, baseFlatten(props, 1));
 	});
 	
-	module.e = pick;
+	module.exports = pick;
 
 
 /***/ },
 /* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var apply = __webpack_require__(105),
-	    toInteger = __webpack_require__(180);
+	var apply = __webpack_require__(106),
+	    toInteger = __webpack_require__(181);
 	
 	/** Used as the `TypeError` message for "Functions" methods. */
 	var FUNC_ERROR_TEXT = 'Expected a function';
@@ -4259,25 +4312,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = rest;
+	module.exports = rest;
 
 
 /***/ },
 /* 66 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	module.e = function(module) {
+	var g;
+	
+	// This works in non-strict mode
+	g = (function() { return this; })();
+	
+	try {
+		// This works if eval is allowed (see CSP)
+		g = g || Function("return this")() || (1,eval)("this");
+	} catch(e) {
+		// This works if the window reference is available
+		if(typeof window === "object")
+			g = window;
+	}
+	
+	// g can still be undefined, but nothing to do about it...
+	// We return undefined, instead of nothing here, so it's
+	// easier to handle this case. if(!global) { ...}
+	
+	module.exports = g;
+
+
+/***/ },
+/* 67 */
+/***/ function(module, exports) {
+
+	module.exports = function(module) {
 		if(!module.webpackPolyfill) {
 			module.deprecate = function() {};
 			module.paths = [];
 			// module.parent = undefined by default
 			module.children = [];
-			Object.defineProperty(module, "exports", {
-				enumerable: true,
-				configurable: false,
-				get: function() { return module.e; },
-				set: function(v) { return module.e = v; }
-			});
 			Object.defineProperty(module, "loaded", {
 				enumerable: true,
 				configurable: false,
@@ -4295,13 +4367,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 67 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty__ = __webpack_require__(173);
+	"use strict";
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty__ = __webpack_require__(174);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty___default = __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty__ && __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_0_lodash_isEmpty___default });
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy__ = __webpack_require__(178);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy__ = __webpack_require__(179);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy___default = __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy__ && __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_1_lodash_omitBy___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_1_lodash_omitBy___default });
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_lodash_pick__ = __webpack_require__(64);
@@ -4310,13 +4383,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_lodash_merge__ = __webpack_require__(12);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_lodash_merge___default = __WEBPACK_IMPORTED_MODULE_3_lodash_merge__ && __WEBPACK_IMPORTED_MODULE_3_lodash_merge__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_3_lodash_merge__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_3_lodash_merge__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_3_lodash_merge___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_3_lodash_merge___default });
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_typedefs__ = __webpack_require__(71);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_typedefs__ = __webpack_require__(72);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_typedefs___default = __WEBPACK_IMPORTED_MODULE_4__common_typedefs__ && __WEBPACK_IMPORTED_MODULE_4__common_typedefs__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_4__common_typedefs__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_4__common_typedefs__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_4__common_typedefs___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_4__common_typedefs___default });
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter__ = __webpack_require__(185);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter__ = __webpack_require__(187);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter___default = __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter__ && __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_5_webrtc_adapter___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_5_webrtc_adapter___default });
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__scanner__ = __webpack_require__(91);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__scanner__ = __webpack_require__(92);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__common_image_wrapper__ = __webpack_require__(26);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__common_image_debug__ = __webpack_require__(7);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__analytics_result_collector__ = __webpack_require__(36);
@@ -4374,7 +4447,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        toPromise: function toPromise() {
 	            return new Promise(function (resolve, reject) {
 	                scanner.decodeSingle(config, function (result) {
-	                    if (result.codeResult && result.codeResult.code) {
+	                    if (result && result.codeResult && result.codeResult.code) {
 	                        return resolve(result);
 	                    }
 	                    return reject(result);
@@ -4406,7 +4479,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (typeof source === 'string') {
 	            // video source
 	        } else if ((typeof source === 'undefined' ? 'undefined' : _typeof(source)) === 'object' && (typeof source.constraints !== 'undefined' || typeof source.area !== 'undefined')) {
-	                console.log("inputConfig");
 	                inputConfig = source;
 	            } else if (!source) {
 	                // LiveStream
@@ -4491,9 +4563,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["default"] = createApi();
 
 /***/ },
-/* 68 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	var vec2 = {
 	    clone: __webpack_require__(9),
 	    dot: __webpack_require__(40)
@@ -4566,9 +4639,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 69 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony export */ exports["a"] = createEventedElement;function createEventedElement() {
 	    var events = {};
 	
@@ -4621,9 +4695,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var event = getEvent(eventName),
 	                subscribers = event.subscribers;
 	
-	            event.subscribers = subscribers.filter(function (subscriber) {
+	            subscribers.filter(function (subscriber) {
+	                return !!subscriber.once;
+	            }).forEach(function (subscriber) {
 	                publishSubscription(subscriber, data);
+	            });
+	            event.subscribers = subscribers.filter(function (subscriber) {
 	                return !subscriber.once;
+	            });
+	            event.subscribers.forEach(function (subscriber) {
+	                publishSubscription(subscriber, data);
 	            });
 	        },
 	        once: function once(event, callback, async) {
@@ -4653,9 +4734,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 70 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/**
 	 * Construct representing a part of another {ImageWrapper}. Shares data
 	 * between the parent and the child.
@@ -4742,7 +4824,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = SubImage;
 
 /***/ },
-/* 71 */
+/* 72 */
 /***/ function(module, exports) {
 
 	/*
@@ -4768,10 +4850,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 72 */
-/***/ function(module, exports, __webpack_require__) {
+/* 73 */
+/***/ function(module, exports) {
 
-	module.e = {
+	module.exports = {
 	    inputStream: {
 	        name: "Live",
 	        type: "LiveStream",
@@ -4822,22 +4904,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 73 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__bresenham__ = __webpack_require__(74);
+	"use strict";
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__bresenham__ = __webpack_require__(75);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_image_debug__ = __webpack_require__(7);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__reader_code_128_reader__ = __webpack_require__(83);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__reader_code_128_reader__ = __webpack_require__(84);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__reader_ean_reader__ = __webpack_require__(5);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__reader_code_39_reader__ = __webpack_require__(39);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__reader_code_39_vin_reader__ = __webpack_require__(84);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__reader_codabar_reader__ = __webpack_require__(82);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__reader_upc_reader__ = __webpack_require__(90);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__reader_ean_8_reader__ = __webpack_require__(87);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__reader_ean_2_reader__ = __webpack_require__(85);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__reader_ean_5_reader__ = __webpack_require__(86);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__reader_upc_e_reader__ = __webpack_require__(89);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__reader_i2of5_reader__ = __webpack_require__(88);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__reader_code_39_vin_reader__ = __webpack_require__(85);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__reader_codabar_reader__ = __webpack_require__(83);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__reader_upc_reader__ = __webpack_require__(91);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__reader_ean_8_reader__ = __webpack_require__(88);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__reader_ean_2_reader__ = __webpack_require__(86);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__reader_ean_5_reader__ = __webpack_require__(87);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__reader_upc_e_reader__ = __webpack_require__(90);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__reader_i2of5_reader__ = __webpack_require__(89);
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 	
 	
@@ -5157,9 +5240,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 74 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	var Bresenham = {};
 	
 	var Slope = {
@@ -5359,9 +5443,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = Bresenham;
 
 /***/ },
-/* 75 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_pick__ = __webpack_require__(64);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_pick___default = __WEBPACK_IMPORTED_MODULE_0_lodash_pick__ && __WEBPACK_IMPORTED_MODULE_0_lodash_pick__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_pick__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_pick__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_0_lodash_pick___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_0_lodash_pick___default });
@@ -5407,11 +5492,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
 	        return new Promise(function (resolve, reject) {
 	            streamRef = stream;
-	            video.src = window.URL.createObjectURL(stream);
-	            video.onloadedmetadata = function (e) {
+	            video.setAttribute("autoplay", 'true');
+	            video.srcObject = stream;
+	            video.addEventListener('loadedmetadata', function (e) {
 	                video.play();
 	                resolve();
-	            };
+	            });
 	        });
 	    }).then(waitForVideo.bind(null, video));
 	}
@@ -5472,9 +5558,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 76 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_cv_utils__ = __webpack_require__(25);
 	
 	
@@ -5569,9 +5656,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = FrameGrabber;
 
 /***/ },
-/* 77 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	var ImageLoader = {};
 	ImageLoader.load = function (directory, callback, offset, size, sequence) {
 	    var htmlImagesSrcArray = new Array(size),
@@ -5632,10 +5720,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = ImageLoader;
 
 /***/ },
-/* 78 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__image_loader__ = __webpack_require__(77);
+	"use strict";
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__image_loader__ = __webpack_require__(78);
 	
 	
 	var InputStream = {};
@@ -5950,16 +6039,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = InputStream;
 
 /***/ },
-/* 79 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_image_wrapper__ = __webpack_require__(26);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_cv_utils__ = __webpack_require__(25);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__common_array_helper__ = __webpack_require__(13);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__common_image_debug__ = __webpack_require__(7);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__rasterizer__ = __webpack_require__(80);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__rasterizer__ = __webpack_require__(81);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__tracer__ = __webpack_require__(38);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__skeletonizer__ = __webpack_require__(81);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__skeletonizer__ = __webpack_require__(82);
 	/* harmony export */ exports["b"] = createLocator;/* harmony export */ exports["a"] = checkImageConstraints;
 	
 	
@@ -5970,13 +6060,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	var vec2 = {
 	    clone: __webpack_require__(9),
 	    dot: __webpack_require__(40),
-	    scale: __webpack_require__(95),
-	    transformMat2: __webpack_require__(96)
+	    scale: __webpack_require__(96),
+	    transformMat2: __webpack_require__(97)
 	};
 	var mat2 = {
-	    copy: __webpack_require__(92),
-	    create: __webpack_require__(93),
-	    invert: __webpack_require__(94)
+	    copy: __webpack_require__(93),
+	    create: __webpack_require__(94),
+	    invert: __webpack_require__(95)
 	};
 	
 	function createLocator(inputImageWrapper, config) {
@@ -6536,12 +6626,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	    throw new Error("Image dimensions do not comply with the current settings: Width (" + width + " )and height (" + height + ") must a multiple of " + patchSize.x);
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(66)))
 
 /***/ },
-/* 80 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__tracer__ = __webpack_require__(38);
 	
 	
@@ -6738,9 +6829,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = Rasterizer;
 
 /***/ },
-/* 81 */
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* @preserve ASM BEGIN */
 	/* eslint-disable eqeqeq*/
 	function Skeletonizer(stdlib, foreign, buffer) {
@@ -6940,9 +7032,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* eslint-enable eqeqeq*/
 
 /***/ },
-/* 82 */
+/* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__barcode_reader__ = __webpack_require__(8);
 	
 	
@@ -7230,9 +7323,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = CodabarReader;
 
 /***/ },
-/* 83 */
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__barcode_reader__ = __webpack_require__(8);
 	
 	
@@ -7581,9 +7675,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = Code128Reader;
 
 /***/ },
-/* 84 */
+/* 85 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__code_39_reader__ = __webpack_require__(39);
 	
 	
@@ -7638,9 +7733,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = Code39VINReader;
 
 /***/ },
-/* 85 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ean_reader__ = __webpack_require__(5);
 	
 	
@@ -7695,9 +7791,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = EAN2Reader;
 
 /***/ },
-/* 86 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ean_reader__ = __webpack_require__(5);
 	
 	
@@ -7784,9 +7881,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = EAN5Reader;
 
 /***/ },
-/* 87 */
+/* 88 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ean_reader__ = __webpack_require__(5);
 	
 	
@@ -7835,9 +7933,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = EAN8Reader;
 
 /***/ },
-/* 88 */
+/* 89 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_merge__ = __webpack_require__(12);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_merge___default = __WEBPACK_IMPORTED_MODULE_0_lodash_merge__ && __WEBPACK_IMPORTED_MODULE_0_lodash_merge__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_merge__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_merge__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_0_lodash_merge___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_0_lodash_merge___default });
@@ -8157,9 +8256,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = I2of5Reader;
 
 /***/ },
-/* 89 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ean_reader__ = __webpack_require__(5);
 	
 	
@@ -8257,9 +8357,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = UPCEReader;
 
 /***/ },
-/* 90 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ean_reader__ = __webpack_require__(5);
 	
 	
@@ -8287,22 +8388,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = UPCReader;
 
 /***/ },
-/* 91 */
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_frame_grabber__ = __webpack_require__(77);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_input_stream__ = __webpack_require__(79);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__config_config__ = __webpack_require__(37);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__analytics_result_collector__ = __webpack_require__(36);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__common_image_debug__ = __webpack_require__(7);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__input_camera_access__ = __webpack_require__(76);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_events__ = __webpack_require__(70);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__decoder_barcode_decoder__ = __webpack_require__(74);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locator_barcode_locator__ = __webpack_require__(80);
+	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_image_wrapper__ = __webpack_require__(26);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_merge__ = __webpack_require__(12);
 	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_merge___default = __WEBPACK_IMPORTED_MODULE_0_lodash_merge__ && __WEBPACK_IMPORTED_MODULE_0_lodash_merge__.__esModule ? function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_merge__['default'] } : function() { return __WEBPACK_IMPORTED_MODULE_0_lodash_merge__; }
 	/* harmony import */ Object.defineProperty(__WEBPACK_IMPORTED_MODULE_0_lodash_merge___default, 'a', { get: __WEBPACK_IMPORTED_MODULE_0_lodash_merge___default });
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_image_wrapper__ = __webpack_require__(26);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locator_barcode_locator__ = __webpack_require__(79);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__decoder_barcode_decoder__ = __webpack_require__(73);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_events__ = __webpack_require__(69);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__input_camera_access__ = __webpack_require__(75);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__common_image_debug__ = __webpack_require__(7);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__analytics_result_collector__ = __webpack_require__(36);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__config_config__ = __webpack_require__(37);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_input_stream__ = __webpack_require__(78);
-	/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_frame_grabber__ = __webpack_require__(76);
 	
 	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -8376,7 +8478,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	
 	        _inputStream.setAttribute("preload", "auto");
-	        _inputStream.setAttribute("autoplay", true);
 	        _inputStream.setInputStream(_config.inputStream);
 	        _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
 	    }
@@ -8820,10 +8921,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* harmony default export */ exports["a"] = createScanner;
 
 /***/ },
-/* 92 */
-/***/ function(module, exports, __webpack_require__) {
+/* 93 */
+/***/ function(module, exports) {
 
-	module.e = copy
+	module.exports = copy
 	
 	/**
 	 * Copy the values from one mat2 to another
@@ -8843,10 +8944,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 93 */
-/***/ function(module, exports, __webpack_require__) {
+/* 94 */
+/***/ function(module, exports) {
 
-	module.e = create
+	module.exports = create
 	
 	/**
 	 * Creates a new identity mat2
@@ -8865,10 +8966,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 94 */
-/***/ function(module, exports, __webpack_require__) {
+/* 95 */
+/***/ function(module, exports) {
 
-	module.e = invert
+	module.exports = invert
 	
 	/**
 	 * Inverts a mat2
@@ -8898,10 +8999,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 95 */
-/***/ function(module, exports, __webpack_require__) {
+/* 96 */
+/***/ function(module, exports) {
 
-	module.e = scale
+	module.exports = scale
 	
 	/**
 	 * Scales a vec2 by a scalar number
@@ -8918,10 +9019,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 96 */
-/***/ function(module, exports, __webpack_require__) {
+/* 97 */
+/***/ function(module, exports) {
 
-	module.e = transformMat2
+	module.exports = transformMat2
 	
 	/**
 	 * Transforms the vec2 with a mat2
@@ -8940,10 +9041,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 97 */
-/***/ function(module, exports, __webpack_require__) {
+/* 98 */
+/***/ function(module, exports) {
 
-	module.e = clone;
+	module.exports = clone;
 	
 	/**
 	 * Creates a new vec3 initialized with values from an existing vector
@@ -8960,7 +9061,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 98 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var nativeCreate = __webpack_require__(20);
@@ -8980,18 +9081,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	// Avoid inheriting from `Object.prototype` when possible.
 	Hash.prototype = nativeCreate ? nativeCreate(null) : objectProto;
 	
-	module.e = Hash;
+	module.exports = Hash;
 
 
 /***/ },
-/* 99 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mapClear = __webpack_require__(157),
-	    mapDelete = __webpack_require__(158),
-	    mapGet = __webpack_require__(159),
-	    mapHas = __webpack_require__(160),
-	    mapSet = __webpack_require__(161);
+	var mapClear = __webpack_require__(158),
+	    mapDelete = __webpack_require__(159),
+	    mapGet = __webpack_require__(160),
+	    mapHas = __webpack_require__(161),
+	    mapSet = __webpack_require__(162);
 	
 	/**
 	 * Creates a map cache object to store key-value pairs.
@@ -9018,11 +9119,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	MapCache.prototype.has = mapHas;
 	MapCache.prototype.set = mapSet;
 	
-	module.e = MapCache;
+	module.exports = MapCache;
 
 
 /***/ },
-/* 100 */
+/* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var root = __webpack_require__(3);
@@ -9030,20 +9131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** Built-in value references. */
 	var Reflect = root.Reflect;
 	
-	module.e = Reflect;
-
-
-/***/ },
-/* 101 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var getNative = __webpack_require__(16),
-	    root = __webpack_require__(3);
-	
-	/* Built-in method references that are verified to be native. */
-	var Set = getNative(root, 'Set');
-	
-	module.e = Set;
+	module.exports = Reflect;
 
 
 /***/ },
@@ -9054,14 +9142,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	    root = __webpack_require__(3);
 	
 	/* Built-in method references that are verified to be native. */
-	var WeakMap = getNative(root, 'WeakMap');
+	var Set = getNative(root, 'Set');
 	
-	module.e = WeakMap;
+	module.exports = Set;
 
 
 /***/ },
 /* 103 */
 /***/ function(module, exports, __webpack_require__) {
+
+	var getNative = __webpack_require__(16),
+	    root = __webpack_require__(3);
+	
+	/* Built-in method references that are verified to be native. */
+	var WeakMap = getNative(root, 'WeakMap');
+	
+	module.exports = WeakMap;
+
+
+/***/ },
+/* 104 */
+/***/ function(module, exports) {
 
 	/**
 	 * Adds the key-value `pair` to `map`.
@@ -9077,12 +9178,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return map;
 	}
 	
-	module.e = addMapEntry;
+	module.exports = addMapEntry;
 
 
 /***/ },
-/* 104 */
-/***/ function(module, exports, __webpack_require__) {
+/* 105 */
+/***/ function(module, exports) {
 
 	/**
 	 * Adds `value` to `set`.
@@ -9097,12 +9198,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return set;
 	}
 	
-	module.e = addSetEntry;
+	module.exports = addSetEntry;
 
 
 /***/ },
-/* 105 */
-/***/ function(module, exports, __webpack_require__) {
+/* 106 */
+/***/ function(module, exports) {
 
 	/**
 	 * A faster alternative to `Function#apply`, this function invokes `func`
@@ -9125,12 +9226,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return func.apply(thisArg, args);
 	}
 	
-	module.e = apply;
+	module.exports = apply;
 
 
 /***/ },
-/* 106 */
-/***/ function(module, exports, __webpack_require__) {
+/* 107 */
+/***/ function(module, exports) {
 
 	/**
 	 * A specialized version of `_.map` for arrays without support for iteratee
@@ -9152,12 +9253,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = arrayMap;
+	module.exports = arrayMap;
 
 
 /***/ },
-/* 107 */
-/***/ function(module, exports, __webpack_require__) {
+/* 108 */
+/***/ function(module, exports) {
 
 	/**
 	 * Appends the elements of `values` to `array`.
@@ -9178,12 +9279,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return array;
 	}
 	
-	module.e = arrayPush;
+	module.exports = arrayPush;
 
 
 /***/ },
-/* 108 */
-/***/ function(module, exports, __webpack_require__) {
+/* 109 */
+/***/ function(module, exports) {
 
 	/**
 	 * A specialized version of `_.some` for arrays without support for iteratee
@@ -9206,11 +9307,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return false;
 	}
 	
-	module.e = arraySome;
+	module.exports = arraySome;
 
 
 /***/ },
-/* 109 */
+/* 110 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var copyObject = __webpack_require__(29),
@@ -9229,27 +9330,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return object && copyObject(source, keys(source), object);
 	}
 	
-	module.e = baseAssign;
+	module.exports = baseAssign;
 
 
 /***/ },
-/* 110 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(14),
 	    arrayEach = __webpack_require__(42),
 	    assignValue = __webpack_require__(44),
-	    baseAssign = __webpack_require__(109),
-	    baseForOwn = __webpack_require__(114),
-	    cloneBuffer = __webpack_require__(132),
+	    baseAssign = __webpack_require__(110),
+	    baseForOwn = __webpack_require__(115),
+	    cloneBuffer = __webpack_require__(133),
 	    copyArray = __webpack_require__(56),
-	    copySymbols = __webpack_require__(139),
+	    copySymbols = __webpack_require__(140),
 	    getTag = __webpack_require__(58),
-	    initCloneArray = __webpack_require__(151),
-	    initCloneByTag = __webpack_require__(152),
-	    initCloneObject = __webpack_require__(153),
+	    initCloneArray = __webpack_require__(152),
+	    initCloneByTag = __webpack_require__(153),
+	    initCloneObject = __webpack_require__(154),
 	    isArray = __webpack_require__(1),
-	    isBuffer = __webpack_require__(172),
+	    isBuffer = __webpack_require__(173),
 	    isHostObject = __webpack_require__(17),
 	    isObject = __webpack_require__(2);
 	
@@ -9366,11 +9467,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return (isFull && !isArr) ? copySymbols(value, result) : result;
 	}
 	
-	module.e = baseClone;
+	module.exports = baseClone;
 
 
 /***/ },
-/* 111 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(2);
@@ -9390,14 +9491,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return isObject(proto) ? objectCreate(proto) : {};
 	}
 	
-	module.e = baseCreate;
+	module.exports = baseCreate;
 
 
 /***/ },
-/* 112 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayPush = __webpack_require__(107),
+	var arrayPush = __webpack_require__(108),
 	    isArguments = __webpack_require__(10),
 	    isArray = __webpack_require__(1),
 	    isArrayLikeObject = __webpack_require__(32);
@@ -9435,11 +9536,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = baseFlatten;
+	module.exports = baseFlatten;
 
 
 /***/ },
-/* 113 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseFor = __webpack_require__(50),
@@ -9457,11 +9558,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return object == null ? object : baseFor(object, iteratee, keysIn);
 	}
 	
-	module.e = baseForIn;
+	module.exports = baseForIn;
 
 
 /***/ },
-/* 114 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseFor = __webpack_require__(50),
@@ -9479,12 +9580,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return object && baseFor(object, iteratee, keys);
 	}
 	
-	module.e = baseForOwn;
+	module.exports = baseForOwn;
 
 
 /***/ },
-/* 115 */
-/***/ function(module, exports, __webpack_require__) {
+/* 116 */
+/***/ function(module, exports) {
 
 	/**
 	 * The base implementation of `_.hasIn` without support for deep paths.
@@ -9498,17 +9599,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return key in Object(object);
 	}
 	
-	module.e = baseHasIn;
+	module.exports = baseHasIn;
 
 
 /***/ },
-/* 116 */
+/* 117 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(14),
 	    equalArrays = __webpack_require__(57),
-	    equalByTag = __webpack_require__(142),
-	    equalObjects = __webpack_require__(143),
+	    equalByTag = __webpack_require__(143),
+	    equalObjects = __webpack_require__(144),
 	    getTag = __webpack_require__(58),
 	    isArray = __webpack_require__(1),
 	    isHostObject = __webpack_require__(17),
@@ -9582,11 +9683,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return equalObjects(object, other, equalFunc, customizer, bitmask, stack);
 	}
 	
-	module.e = baseIsEqualDeep;
+	module.exports = baseIsEqualDeep;
 
 
 /***/ },
-/* 117 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(14),
@@ -9649,18 +9750,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return true;
 	}
 	
-	module.e = baseIsMatch;
+	module.exports = baseIsMatch;
 
 
 /***/ },
-/* 118 */
+/* 119 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseMatches = __webpack_require__(121),
-	    baseMatchesProperty = __webpack_require__(122),
-	    identity = __webpack_require__(171),
+	var baseMatches = __webpack_require__(122),
+	    baseMatchesProperty = __webpack_require__(123),
+	    identity = __webpack_require__(172),
 	    isArray = __webpack_require__(1),
-	    property = __webpack_require__(179);
+	    property = __webpack_require__(180);
 	
 	/**
 	 * The base implementation of `_.iteratee`.
@@ -9685,12 +9786,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return property(value);
 	}
 	
-	module.e = baseIteratee;
+	module.exports = baseIteratee;
 
 
 /***/ },
-/* 119 */
-/***/ function(module, exports, __webpack_require__) {
+/* 120 */
+/***/ function(module, exports) {
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeKeys = Object.keys;
@@ -9707,15 +9808,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return nativeKeys(Object(object));
 	}
 	
-	module.e = baseKeys;
+	module.exports = baseKeys;
 
 
 /***/ },
-/* 120 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Reflect = __webpack_require__(100),
-	    iteratorToArray = __webpack_require__(156);
+	var Reflect = __webpack_require__(101),
+	    iteratorToArray = __webpack_require__(157);
 	
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -9749,15 +9850,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = baseKeysIn;
+	module.exports = baseKeysIn;
 
 
 /***/ },
-/* 121 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsMatch = __webpack_require__(117),
-	    getMatchData = __webpack_require__(145);
+	var baseIsMatch = __webpack_require__(118),
+	    getMatchData = __webpack_require__(146);
 	
 	/**
 	 * The base implementation of `_.matches` which doesn't clone `source`.
@@ -9785,16 +9886,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = baseMatches;
+	module.exports = baseMatches;
 
 
 /***/ },
-/* 122 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseIsEqual = __webpack_require__(53),
 	    get = __webpack_require__(63),
-	    hasIn = __webpack_require__(170);
+	    hasIn = __webpack_require__(171);
 	
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -9817,17 +9918,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = baseMatchesProperty;
+	module.exports = baseMatchesProperty;
 
 
 /***/ },
-/* 123 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(14),
 	    arrayEach = __webpack_require__(42),
 	    assignMergeValue = __webpack_require__(43),
-	    baseMergeDeep = __webpack_require__(124),
+	    baseMergeDeep = __webpack_require__(125),
 	    isArray = __webpack_require__(1),
 	    isObject = __webpack_require__(2),
 	    isTypedArray = __webpack_require__(34),
@@ -9873,24 +9974,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 	
-	module.e = baseMerge;
+	module.exports = baseMerge;
 
 
 /***/ },
-/* 124 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assignMergeValue = __webpack_require__(43),
-	    baseClone = __webpack_require__(110),
+	    baseClone = __webpack_require__(111),
 	    copyArray = __webpack_require__(56),
 	    isArguments = __webpack_require__(10),
 	    isArray = __webpack_require__(1),
 	    isArrayLikeObject = __webpack_require__(32),
 	    isFunction = __webpack_require__(11),
 	    isObject = __webpack_require__(2),
-	    isPlainObject = __webpack_require__(175),
+	    isPlainObject = __webpack_require__(176),
 	    isTypedArray = __webpack_require__(34),
-	    toPlainObject = __webpack_require__(183);
+	    toPlainObject = __webpack_require__(184);
 	
 	/**
 	 * A specialized version of `baseMerge` for arrays and objects which performs
@@ -9961,11 +10062,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  assignMergeValue(object, key, newValue);
 	}
 	
-	module.e = baseMergeDeep;
+	module.exports = baseMergeDeep;
 
 
 /***/ },
-/* 125 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayReduce = __webpack_require__(28);
@@ -9989,14 +10090,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {});
 	}
 	
-	module.e = basePick;
+	module.exports = basePick;
 
 
 /***/ },
-/* 126 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseForIn = __webpack_require__(113);
+	var baseForIn = __webpack_require__(114);
 	
 	/**
 	 * The base implementation of  `_.pickBy` without support for iteratee shorthands.
@@ -10016,11 +10117,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = basePickBy;
+	module.exports = basePickBy;
 
 
 /***/ },
-/* 127 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseGet = __webpack_require__(51);
@@ -10038,12 +10139,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = basePropertyDeep;
+	module.exports = basePropertyDeep;
 
 
 /***/ },
-/* 128 */
-/***/ function(module, exports, __webpack_require__) {
+/* 129 */
+/***/ function(module, exports) {
 
 	/**
 	 * The base implementation of `_.slice` without an iteratee call guard.
@@ -10075,12 +10176,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = baseSlice;
+	module.exports = baseSlice;
 
 
 /***/ },
-/* 129 */
-/***/ function(module, exports, __webpack_require__) {
+/* 130 */
+/***/ function(module, exports) {
 
 	/**
 	 * The base implementation of `_.times` without support for iteratee shorthands
@@ -10101,14 +10202,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = baseTimes;
+	module.exports = baseTimes;
 
 
 /***/ },
-/* 130 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(106);
+	var arrayMap = __webpack_require__(107);
 	
 	/**
 	 * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
@@ -10125,12 +10226,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 	
-	module.e = baseToPairs;
+	module.exports = baseToPairs;
 
 
 /***/ },
-/* 131 */
-/***/ function(module, exports, __webpack_require__) {
+/* 132 */
+/***/ function(module, exports) {
 
 	/**
 	 * Checks if `value` is a global object.
@@ -10143,12 +10244,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return (value && value.Object === Object) ? value : null;
 	}
 	
-	module.e = checkGlobal;
+	module.exports = checkGlobal;
 
 
 /***/ },
-/* 132 */
-/***/ function(module, exports, __webpack_require__) {
+/* 133 */
+/***/ function(module, exports) {
 
 	/**
 	 * Creates a clone of  `buffer`.
@@ -10167,14 +10268,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = cloneBuffer;
+	module.exports = cloneBuffer;
 
 
 /***/ },
-/* 133 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addMapEntry = __webpack_require__(103),
+	var addMapEntry = __webpack_require__(104),
 	    arrayReduce = __webpack_require__(28),
 	    mapToArray = __webpack_require__(61);
 	
@@ -10189,12 +10290,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return arrayReduce(mapToArray(map), addMapEntry, new map.constructor);
 	}
 	
-	module.e = cloneMap;
+	module.exports = cloneMap;
 
 
 /***/ },
-/* 134 */
-/***/ function(module, exports, __webpack_require__) {
+/* 135 */
+/***/ function(module, exports) {
 
 	/** Used to match `RegExp` flags from their coerced string values. */
 	var reFlags = /\w*$/;
@@ -10212,14 +10313,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = cloneRegExp;
+	module.exports = cloneRegExp;
 
 
 /***/ },
-/* 135 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addSetEntry = __webpack_require__(104),
+	var addSetEntry = __webpack_require__(105),
 	    arrayReduce = __webpack_require__(28),
 	    setToArray = __webpack_require__(62);
 	
@@ -10234,11 +10335,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return arrayReduce(setToArray(set), addSetEntry, new set.constructor);
 	}
 	
-	module.e = cloneSet;
+	module.exports = cloneSet;
 
 
 /***/ },
-/* 136 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(27);
@@ -10258,11 +10359,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {};
 	}
 	
-	module.e = cloneSymbol;
+	module.exports = cloneSymbol;
 
 
 /***/ },
-/* 137 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var cloneArrayBuffer = __webpack_require__(55);
@@ -10280,11 +10381,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
 	}
 	
-	module.e = cloneTypedArray;
+	module.exports = cloneTypedArray;
 
 
 /***/ },
-/* 138 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assignValue = __webpack_require__(44);
@@ -10318,15 +10419,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return object;
 	}
 	
-	module.e = copyObjectWith;
+	module.exports = copyObjectWith;
 
 
 /***/ },
-/* 139 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var copyObject = __webpack_require__(29),
-	    getSymbols = __webpack_require__(146);
+	    getSymbols = __webpack_require__(147);
 	
 	/**
 	 * Copies own symbol properties of `source` to `object`.
@@ -10340,14 +10441,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return copyObject(source, getSymbols(source), object);
 	}
 	
-	module.e = copySymbols;
+	module.exports = copySymbols;
 
 
 /***/ },
-/* 140 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isIterateeCall = __webpack_require__(154),
+	var isIterateeCall = __webpack_require__(155),
 	    rest = __webpack_require__(65);
 	
 	/**
@@ -10383,12 +10484,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 	
-	module.e = createAssigner;
+	module.exports = createAssigner;
 
 
 /***/ },
-/* 141 */
-/***/ function(module, exports, __webpack_require__) {
+/* 142 */
+/***/ function(module, exports) {
 
 	/**
 	 * Creates a base function for methods like `_.forIn`.
@@ -10414,11 +10515,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = createBaseFor;
+	module.exports = createBaseFor;
 
 
 /***/ },
-/* 142 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(27),
@@ -10519,11 +10620,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return false;
 	}
 	
-	module.e = equalByTag;
+	module.exports = equalByTag;
 
 
 /***/ },
-/* 143 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseHas = __webpack_require__(52),
@@ -10607,11 +10708,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = equalObjects;
+	module.exports = equalObjects;
 
 
 /***/ },
-/* 144 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseProperty = __webpack_require__(54);
@@ -10628,15 +10729,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var getLength = baseProperty('length');
 	
-	module.e = getLength;
+	module.exports = getLength;
 
 
 /***/ },
-/* 145 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isStrictComparable = __webpack_require__(155),
-	    toPairs = __webpack_require__(182);
+	var isStrictComparable = __webpack_require__(156),
+	    toPairs = __webpack_require__(183);
 	
 	/**
 	 * Gets the property names, values, and compare flags of `object`.
@@ -10655,12 +10756,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = getMatchData;
+	module.exports = getMatchData;
 
 
 /***/ },
-/* 146 */
-/***/ function(module, exports, __webpack_require__) {
+/* 147 */
+/***/ function(module, exports) {
 
 	/** Built-in value references. */
 	var getOwnPropertySymbols = Object.getOwnPropertySymbols;
@@ -10676,11 +10777,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return [];
 	};
 	
-	module.e = getSymbols;
+	module.exports = getSymbols;
 
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseCastPath = __webpack_require__(49),
@@ -10690,8 +10791,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    isKey = __webpack_require__(30),
 	    isLength = __webpack_require__(23),
 	    isString = __webpack_require__(33),
-	    last = __webpack_require__(177),
-	    parent = __webpack_require__(162);
+	    last = __webpack_require__(178),
+	    parent = __webpack_require__(163);
 	
 	/**
 	 * Checks if `path` exists on `object`.
@@ -10722,11 +10823,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  );
 	}
 	
-	module.e = hasPath;
+	module.exports = hasPath;
 
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var hashHas = __webpack_require__(59);
@@ -10743,11 +10844,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return hashHas(hash, key) && delete hash[key];
 	}
 	
-	module.e = hashDelete;
+	module.exports = hashDelete;
 
 
 /***/ },
-/* 149 */
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var nativeCreate = __webpack_require__(20);
@@ -10777,11 +10878,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return hasOwnProperty.call(hash, key) ? hash[key] : undefined;
 	}
 	
-	module.e = hashGet;
+	module.exports = hashGet;
 
 
 /***/ },
-/* 150 */
+/* 151 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var nativeCreate = __webpack_require__(20);
@@ -10801,12 +10902,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  hash[key] = (nativeCreate && value === undefined) ? HASH_UNDEFINED : value;
 	}
 	
-	module.e = hashSet;
+	module.exports = hashSet;
 
 
 /***/ },
-/* 151 */
-/***/ function(module, exports, __webpack_require__) {
+/* 152 */
+/***/ function(module, exports) {
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -10833,19 +10934,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = initCloneArray;
+	module.exports = initCloneArray;
 
 
 /***/ },
-/* 152 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var cloneArrayBuffer = __webpack_require__(55),
-	    cloneMap = __webpack_require__(133),
-	    cloneRegExp = __webpack_require__(134),
-	    cloneSet = __webpack_require__(135),
-	    cloneSymbol = __webpack_require__(136),
-	    cloneTypedArray = __webpack_require__(137);
+	    cloneMap = __webpack_require__(134),
+	    cloneRegExp = __webpack_require__(135),
+	    cloneSet = __webpack_require__(136),
+	    cloneSymbol = __webpack_require__(137),
+	    cloneTypedArray = __webpack_require__(138);
 	
 	/** `Object#toString` result references. */
 	var boolTag = '[object Boolean]',
@@ -10913,14 +11014,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 	
-	module.e = initCloneByTag;
+	module.exports = initCloneByTag;
 
 
 /***/ },
-/* 153 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseCreate = __webpack_require__(111),
+	var baseCreate = __webpack_require__(112),
 	    isPrototype = __webpack_require__(31);
 	
 	/** Built-in value references. */
@@ -10939,11 +11040,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    : {};
 	}
 	
-	module.e = initCloneObject;
+	module.exports = initCloneObject;
 
 
 /***/ },
-/* 154 */
+/* 155 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var eq = __webpack_require__(21),
@@ -10973,11 +11074,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return false;
 	}
 	
-	module.e = isIterateeCall;
+	module.exports = isIterateeCall;
 
 
 /***/ },
-/* 155 */
+/* 156 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(2);
@@ -10994,12 +11095,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value === value && !isObject(value);
 	}
 	
-	module.e = isStrictComparable;
+	module.exports = isStrictComparable;
 
 
 /***/ },
-/* 156 */
-/***/ function(module, exports, __webpack_require__) {
+/* 157 */
+/***/ function(module, exports) {
 
 	/**
 	 * Converts `iterator` to an array.
@@ -11018,14 +11119,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = iteratorToArray;
+	module.exports = iteratorToArray;
 
 
 /***/ },
-/* 157 */
+/* 158 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Hash = __webpack_require__(98),
+	var Hash = __webpack_require__(99),
 	    Map = __webpack_require__(6);
 	
 	/**
@@ -11043,16 +11144,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = mapClear;
+	module.exports = mapClear;
 
 
 /***/ },
-/* 158 */
+/* 159 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
 	    assocDelete = __webpack_require__(45),
-	    hashDelete = __webpack_require__(148),
+	    hashDelete = __webpack_require__(149),
 	    isKeyable = __webpack_require__(19);
 	
 	/**
@@ -11072,16 +11173,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return Map ? data.map['delete'](key) : assocDelete(data.map, key);
 	}
 	
-	module.e = mapDelete;
+	module.exports = mapDelete;
 
 
 /***/ },
-/* 159 */
+/* 160 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
 	    assocGet = __webpack_require__(46),
-	    hashGet = __webpack_require__(149),
+	    hashGet = __webpack_require__(150),
 	    isKeyable = __webpack_require__(19);
 	
 	/**
@@ -11101,11 +11202,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return Map ? data.map.get(key) : assocGet(data.map, key);
 	}
 	
-	module.e = mapGet;
+	module.exports = mapGet;
 
 
 /***/ },
-/* 160 */
+/* 161 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
@@ -11130,16 +11231,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return Map ? data.map.has(key) : assocHas(data.map, key);
 	}
 	
-	module.e = mapHas;
+	module.exports = mapHas;
 
 
 /***/ },
-/* 161 */
+/* 162 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
 	    assocSet = __webpack_require__(48),
-	    hashSet = __webpack_require__(150),
+	    hashSet = __webpack_require__(151),
 	    isKeyable = __webpack_require__(19);
 	
 	/**
@@ -11164,14 +11265,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this;
 	}
 	
-	module.e = mapSet;
+	module.exports = mapSet;
 
 
 /***/ },
-/* 162 */
+/* 163 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseSlice = __webpack_require__(128),
+	var baseSlice = __webpack_require__(129),
 	    get = __webpack_require__(63);
 	
 	/**
@@ -11186,12 +11287,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return path.length == 1 ? object : get(object, baseSlice(path, 0, -1));
 	}
 	
-	module.e = parent;
+	module.exports = parent;
 
 
 /***/ },
-/* 163 */
-/***/ function(module, exports, __webpack_require__) {
+/* 164 */
+/***/ function(module, exports) {
 
 	/**
 	 * Removes all key-value entries from the stack.
@@ -11204,11 +11305,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.__data__ = { 'array': [], 'map': null };
 	}
 	
-	module.e = stackClear;
+	module.exports = stackClear;
 
 
 /***/ },
-/* 164 */
+/* 165 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assocDelete = __webpack_require__(45);
@@ -11229,11 +11330,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return array ? assocDelete(array, key) : data.map['delete'](key);
 	}
 	
-	module.e = stackDelete;
+	module.exports = stackDelete;
 
 
 /***/ },
-/* 165 */
+/* 166 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assocGet = __webpack_require__(46);
@@ -11254,11 +11355,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return array ? assocGet(array, key) : data.map.get(key);
 	}
 	
-	module.e = stackGet;
+	module.exports = stackGet;
 
 
 /***/ },
-/* 166 */
+/* 167 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assocHas = __webpack_require__(47);
@@ -11279,14 +11380,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return array ? assocHas(array, key) : data.map.has(key);
 	}
 	
-	module.e = stackHas;
+	module.exports = stackHas;
 
 
 /***/ },
-/* 167 */
+/* 168 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var MapCache = __webpack_require__(99),
+	var MapCache = __webpack_require__(100),
 	    assocSet = __webpack_require__(48);
 	
 	/** Used as the size to enable large array optimizations. */
@@ -11321,14 +11422,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return this;
 	}
 	
-	module.e = stackSet;
+	module.exports = stackSet;
 
 
 /***/ },
-/* 168 */
+/* 169 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toString = __webpack_require__(184);
+	var toString = __webpack_require__(185);
 	
 	/** Used to match property names within property paths. */
 	var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]/g;
@@ -11351,12 +11452,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return result;
 	}
 	
-	module.e = stringToPath;
+	module.exports = stringToPath;
 
 
 /***/ },
-/* 169 */
-/***/ function(module, exports, __webpack_require__) {
+/* 170 */
+/***/ function(module, exports) {
 
 	/**
 	 * Creates a function that returns `value`.
@@ -11380,15 +11481,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	module.e = constant;
+	module.exports = constant;
 
 
 /***/ },
-/* 170 */
+/* 171 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHasIn = __webpack_require__(115),
-	    hasPath = __webpack_require__(147);
+	var baseHasIn = __webpack_require__(116),
+	    hasPath = __webpack_require__(148);
 	
 	/**
 	 * Checks if `path` is a direct or inherited property of `object`.
@@ -11419,12 +11520,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return hasPath(object, path, baseHasIn);
 	}
 	
-	module.e = hasIn;
+	module.exports = hasIn;
 
 
 /***/ },
-/* 171 */
-/***/ function(module, exports, __webpack_require__) {
+/* 172 */
+/***/ function(module, exports) {
 
 	/**
 	 * This method returns the first argument given to it.
@@ -11445,14 +11546,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value;
 	}
 	
-	module.e = identity;
+	module.exports = identity;
 
 
 /***/ },
-/* 172 */
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(module) {var constant = __webpack_require__(169),
+	/* WEBPACK VAR INJECTION */(function(module) {var constant = __webpack_require__(170),
 	    root = __webpack_require__(3);
 	
 	/** Used to determine if values are of the language type `Object`. */
@@ -11499,12 +11600,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value instanceof Buffer;
 	};
 	
-	module.e = isBuffer;
+	module.exports = isBuffer;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(66)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module)))
 
 /***/ },
-/* 173 */
+/* 174 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArguments = __webpack_require__(10),
@@ -11560,11 +11661,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return true;
 	}
 	
-	module.e = isEmpty;
+	module.exports = isEmpty;
 
 
 /***/ },
-/* 174 */
+/* 175 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isFunction = __webpack_require__(11),
@@ -11619,11 +11720,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (isHostObject(value) ? reIsNative : reIsHostCtor).test(value);
 	}
 	
-	module.e = isNative;
+	module.exports = isNative;
 
 
 /***/ },
-/* 175 */
+/* 176 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isHostObject = __webpack_require__(17),
@@ -11691,11 +11792,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    Ctor instanceof Ctor && funcToString.call(Ctor) == objectCtorString);
 	}
 	
-	module.e = isPlainObject;
+	module.exports = isPlainObject;
 
 
 /***/ },
-/* 176 */
+/* 177 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObjectLike = __webpack_require__(4);
@@ -11733,12 +11834,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (isObjectLike(value) && objectToString.call(value) == symbolTag);
 	}
 	
-	module.e = isSymbol;
+	module.exports = isSymbol;
 
 
 /***/ },
-/* 177 */
-/***/ function(module, exports, __webpack_require__) {
+/* 178 */
+/***/ function(module, exports) {
 
 	/**
 	 * Gets the last element of `array`.
@@ -11758,15 +11859,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return length ? array[length - 1] : undefined;
 	}
 	
-	module.e = last;
+	module.exports = last;
 
 
 /***/ },
-/* 178 */
+/* 179 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIteratee = __webpack_require__(118),
-	    basePickBy = __webpack_require__(126);
+	var baseIteratee = __webpack_require__(119),
+	    basePickBy = __webpack_require__(127);
 	
 	/**
 	 * The opposite of `_.pickBy`; this method creates an object composed of
@@ -11794,15 +11895,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 	
-	module.e = omitBy;
+	module.exports = omitBy;
 
 
 /***/ },
-/* 179 */
+/* 180 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseProperty = __webpack_require__(54),
-	    basePropertyDeep = __webpack_require__(127),
+	    basePropertyDeep = __webpack_require__(128),
 	    isKey = __webpack_require__(30);
 	
 	/**
@@ -11830,14 +11931,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return isKey(path) ? baseProperty(path) : basePropertyDeep(path);
 	}
 	
-	module.e = property;
+	module.exports = property;
 
 
 /***/ },
-/* 180 */
+/* 181 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toNumber = __webpack_require__(181);
+	var toNumber = __webpack_require__(182);
 	
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0,
@@ -11880,11 +11981,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value === value ? (remainder ? value - remainder : value) : 0;
 	}
 	
-	module.e = toInteger;
+	module.exports = toInteger;
 
 
 /***/ },
-/* 181 */
+/* 182 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isFunction = __webpack_require__(11),
@@ -11945,14 +12046,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    : (reIsBadHex.test(value) ? NAN : +value);
 	}
 	
-	module.e = toNumber;
+	module.exports = toNumber;
 
 
 /***/ },
-/* 182 */
+/* 183 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPairs = __webpack_require__(130),
+	var baseToPairs = __webpack_require__(131),
 	    keys = __webpack_require__(24);
 	
 	/**
@@ -11980,11 +12081,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return baseToPairs(object, keys(object));
 	}
 	
-	module.e = toPairs;
+	module.exports = toPairs;
 
 
 /***/ },
-/* 183 */
+/* 184 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var copyObject = __webpack_require__(29),
@@ -12017,15 +12118,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return copyObject(value, keysIn(value));
 	}
 	
-	module.e = toPlainObject;
+	module.exports = toPlainObject;
 
 
 /***/ },
-/* 184 */
+/* 185 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(27),
-	    isSymbol = __webpack_require__(176);
+	    isSymbol = __webpack_require__(177);
 	
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -12069,491 +12170,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
 	}
 	
-	module.e = toString;
-
-
-/***/ },
-/* 185 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
-	 *
-	 *  Use of this source code is governed by a BSD-style license
-	 *  that can be found in the LICENSE file in the root of the source
-	 *  tree.
-	 */
-	'use strict';
-	
-	// Shimming starts here.
-	(function() {
-	  // Utils.
-	  var logging = __webpack_require__(0).log;
-	  var browserDetails = __webpack_require__(0).browserDetails;
-	  // Export to the adapter global object visible in the browser.
-	  module.e.browserDetails = browserDetails;
-	  module.e.extractVersion = __webpack_require__(0).extractVersion;
-	  module.e.disableLog = __webpack_require__(0).disableLog;
-	
-	  // Uncomment if you do not want any logging at all including the switch
-	  // statement below. Can also be turned off in the browser via
-	  // adapter.disableLog(true) but then logging from the switch statement below
-	  // will still appear.
-	  //require('./utils').disableLog(true);
-	
-	  // Browser shims.
-	  var chromeShim = __webpack_require__(186) || null;
-	  var edgeShim = __webpack_require__(189) || null;
-	  var firefoxShim = __webpack_require__(190) || null;
-	
-	  // Shim browser if found.
-	  switch (browserDetails.browser) {
-	    case 'chrome':
-	      if (!chromeShim || !chromeShim.shimPeerConnection) {
-	        logging('Chrome shim is not included in this adapter release.');
-	        return;
-	      }
-	      logging('adapter.js shimming chrome!');
-	      // Export to the adapter global object visible in the browser.
-	      module.e.browserShim = chromeShim;
-	
-	      chromeShim.shimGetUserMedia();
-	      chromeShim.shimSourceObject();
-	      chromeShim.shimPeerConnection();
-	      chromeShim.shimOnTrack();
-	      break;
-	    case 'edge':
-	      if (!edgeShim || !edgeShim.shimPeerConnection) {
-	        logging('MS edge shim is not included in this adapter release.');
-	        return;
-	      }
-	      logging('adapter.js shimming edge!');
-	      // Export to the adapter global object visible in the browser.
-	      module.e.browserShim = edgeShim;
-	
-	      edgeShim.shimPeerConnection();
-	      break;
-	    case 'firefox':
-	      if (!firefoxShim || !firefoxShim.shimPeerConnection) {
-	        logging('Firefox shim is not included in this adapter release.');
-	        return;
-	      }
-	      logging('adapter.js shimming firefox!');
-	      // Export to the adapter global object visible in the browser.
-	      module.e.browserShim = firefoxShim;
-	
-	      firefoxShim.shimGetUserMedia();
-	      firefoxShim.shimSourceObject();
-	      firefoxShim.shimPeerConnection();
-	      firefoxShim.shimOnTrack();
-	      break;
-	    default:
-	      logging('Unsupported browser!');
-	  }
-	})();
+	module.exports = toString;
 
 
 /***/ },
 /* 186 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	/*
-	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
-	 *
-	 *  Use of this source code is governed by a BSD-style license
-	 *  that can be found in the LICENSE file in the root of the source
-	 *  tree.
-	 */
-	'use strict';
-	var logging = __webpack_require__(0).log;
-	var browserDetails = __webpack_require__(0).browserDetails;
-	
-	var chromeShim = {
-	  shimOnTrack: function() {
-	    if (typeof window === 'object' && window.RTCPeerConnection && !('ontrack' in
-	        window.RTCPeerConnection.prototype)) {
-	      Object.defineProperty(window.RTCPeerConnection.prototype, 'ontrack', {
-	        get: function() { return this._ontrack; },
-	        set: function(f) {
-	          var self = this;
-	          if (this._ontrack) {
-	            this.removeEventListener('track', this._ontrack);
-	            this.removeEventListener('addstream', this._ontrackpoly);
-	          }
-	          this.addEventListener('track', this._ontrack = f);
-	          this.addEventListener('addstream', this._ontrackpoly = function(e) {
-	            // onaddstream does not fire when a track is added to an existing stream.
-	            // but stream.onaddtrack is implemented so we use that
-	            e.stream.addEventListener('addtrack', function(te) {
-	              var event = new Event('track');
-	              event.track = te.track;
-	              event.receiver = {track: te.track};
-	              event.streams = [e.stream];
-	              self.dispatchEvent(event);
-	            });
-	            e.stream.getTracks().forEach(function(track) {
-	              var event = new Event('track');
-	              event.track = track;
-	              event.receiver = {track: track};
-	              event.streams = [e.stream];
-	              this.dispatchEvent(event);
-	            }.bind(this));
-	          }.bind(this));
-	        }
-	      });
-	    }
-	  },
-	
-	  shimSourceObject: function() {
-	    if (typeof window === 'object') {
-	      if (window.HTMLMediaElement &&
-	        !('srcObject' in window.HTMLMediaElement.prototype)) {
-	        // Shim the srcObject property, once, when HTMLMediaElement is found.
-	        Object.defineProperty(window.HTMLMediaElement.prototype, 'srcObject', {
-	          get: function() {
-	            return this._srcObject;
-	          },
-	          set: function(stream) {
-	            var self = this;
-	            // Use _srcObject as a private property for this shim
-	            this._srcObject = stream;
-	            if (this.src) {
-	              URL.revokeObjectURL(this.src);
-	            }
-	
-	            if (!stream) {
-	              this.src = '';
-	              return;
-	            }
-	            this.src = URL.createObjectURL(stream);
-	            // We need to recreate the blob url when a track is added or removed.
-	            // Doing it manually since we want to avoid a recursion.
-	            stream.addEventListener('addtrack', function() {
-	              if (self.src) {
-	                URL.revokeObjectURL(self.src);
-	              }
-	              self.src = URL.createObjectURL(stream);
-	            });
-	            stream.addEventListener('removetrack', function() {
-	              if (self.src) {
-	                URL.revokeObjectURL(self.src);
-	              }
-	              self.src = URL.createObjectURL(stream);
-	            });
-	          }
-	        });
-	      }
-	    }
-	  },
-	
-	  shimPeerConnection: function() {
-	    // The RTCPeerConnection object.
-	    window.RTCPeerConnection = function(pcConfig, pcConstraints) {
-	      // Translate iceTransportPolicy to iceTransports,
-	      // see https://code.google.com/p/webrtc/issues/detail?id=4869
-	      logging('PeerConnection');
-	      if (pcConfig && pcConfig.iceTransportPolicy) {
-	        pcConfig.iceTransports = pcConfig.iceTransportPolicy;
-	      }
-	
-	      var pc = new webkitRTCPeerConnection(pcConfig, pcConstraints); // jscs:ignore requireCapitalizedConstructors
-	      var origGetStats = pc.getStats.bind(pc);
-	      pc.getStats = function(selector, successCallback, errorCallback) { // jshint ignore: line
-	        var self = this;
-	        var args = arguments;
-	
-	        // If selector is a function then we are in the old style stats so just
-	        // pass back the original getStats format to avoid breaking old users.
-	        if (arguments.length > 0 && typeof selector === 'function') {
-	          return origGetStats(selector, successCallback);
-	        }
-	
-	        var fixChromeStats_ = function(response) {
-	          var standardReport = {};
-	          var reports = response.result();
-	          reports.forEach(function(report) {
-	            var standardStats = {
-	              id: report.id,
-	              timestamp: report.timestamp,
-	              type: report.type
-	            };
-	            report.names().forEach(function(name) {
-	              standardStats[name] = report.stat(name);
-	            });
-	            standardReport[standardStats.id] = standardStats;
-	          });
-	
-	          return standardReport;
-	        };
-	
-	        if (arguments.length >= 2) {
-	          var successCallbackWrapper_ = function(response) {
-	            args[1](fixChromeStats_(response));
-	          };
-	
-	          return origGetStats.apply(this, [successCallbackWrapper_, arguments[0]]);
-	        }
-	
-	        // promise-support
-	        return new Promise(function(resolve, reject) {
-	          if (args.length === 1 && selector === null) {
-	            origGetStats.apply(self, [
-	                function(response) {
-	                  resolve.apply(null, [fixChromeStats_(response)]);
-	                }, reject]);
-	          } else {
-	            origGetStats.apply(self, [resolve, reject]);
-	          }
-	        });
-	      };
-	
-	      return pc;
-	    };
-	    window.RTCPeerConnection.prototype = webkitRTCPeerConnection.prototype;
-	
-	    // wrap static methods. Currently just generateCertificate.
-	    if (webkitRTCPeerConnection.generateCertificate) {
-	      Object.defineProperty(window.RTCPeerConnection, 'generateCertificate', {
-	        get: function() {
-	          if (arguments.length) {
-	            return webkitRTCPeerConnection.generateCertificate.apply(null,
-	                arguments);
-	          } else {
-	            return webkitRTCPeerConnection.generateCertificate;
-	          }
-	        }
-	      });
-	    }
-	
-	    // add promise support
-	    ['createOffer', 'createAnswer'].forEach(function(method) {
-	      var nativeMethod = webkitRTCPeerConnection.prototype[method];
-	      webkitRTCPeerConnection.prototype[method] = function() {
-	        var self = this;
-	        if (arguments.length < 1 || (arguments.length === 1 &&
-	            typeof(arguments[0]) === 'object')) {
-	          var opts = arguments.length === 1 ? arguments[0] : undefined;
-	          return new Promise(function(resolve, reject) {
-	            nativeMethod.apply(self, [resolve, reject, opts]);
-	          });
-	        } else {
-	          return nativeMethod.apply(this, arguments);
-	        }
-	      };
-	    });
-	
-	    ['setLocalDescription', 'setRemoteDescription',
-	        'addIceCandidate'].forEach(function(method) {
-	      var nativeMethod = webkitRTCPeerConnection.prototype[method];
-	      webkitRTCPeerConnection.prototype[method] = function() {
-	        var args = arguments;
-	        var self = this;
-	        return new Promise(function(resolve, reject) {
-	          nativeMethod.apply(self, [args[0],
-	              function() {
-	                resolve();
-	                if (args.length >= 2) {
-	                  args[1].apply(null, []);
-	                }
-	              },
-	              function(err) {
-	                reject(err);
-	                if (args.length >= 3) {
-	                  args[2].apply(null, [err]);
-	                }
-	              }]
-	            );
-	        });
-	      };
-	    });
-	  },
-	
-	  // Attach a media stream to an element.
-	  attachMediaStream: function(element, stream) {
-	    logging('DEPRECATED, attachMediaStream will soon be removed.');
-	    if (browserDetails.version >= 43) {
-	      element.srcObject = stream;
-	    } else if (typeof element.src !== 'undefined') {
-	      element.src = URL.createObjectURL(stream);
-	    } else {
-	      logging('Error attaching stream to element.');
-	    }
-	  },
-	
-	  reattachMediaStream: function(to, from) {
-	    logging('DEPRECATED, reattachMediaStream will soon be removed.');
-	    if (browserDetails.version >= 43) {
-	      to.srcObject = from.srcObject;
-	    } else {
-	      to.src = from.src;
-	    }
-	  }
-	}
-	
-	
-	// Expose public methods.
-	module.e = {
-	  shimOnTrack: chromeShim.shimOnTrack,
-	  shimSourceObject: chromeShim.shimSourceObject,
-	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(187),
-	  attachMediaStream: chromeShim.attachMediaStream,
-	  reattachMediaStream: chromeShim.reattachMediaStream
-	};
-
-
-/***/ },
-/* 187 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
-	 *
-	 *  Use of this source code is governed by a BSD-style license
-	 *  that can be found in the LICENSE file in the root of the source
-	 *  tree.
-	 */
-	'use strict';
-	var logging = __webpack_require__(0).log;
-	
-	// Expose public methods.
-	module.e = function() {
-	  var constraintsToChrome_ = function(c) {
-	    if (typeof c !== 'object' || c.mandatory || c.optional) {
-	      return c;
-	    }
-	    var cc = {};
-	    Object.keys(c).forEach(function(key) {
-	      if (key === 'require' || key === 'advanced' || key === 'mediaSource') {
-	        return;
-	      }
-	      var r = (typeof c[key] === 'object') ? c[key] : {ideal: c[key]};
-	      if (r.exact !== undefined && typeof r.exact === 'number') {
-	        r.min = r.max = r.exact;
-	      }
-	      var oldname_ = function(prefix, name) {
-	        if (prefix) {
-	          return prefix + name.charAt(0).toUpperCase() + name.slice(1);
-	        }
-	        return (name === 'deviceId') ? 'sourceId' : name;
-	      };
-	      if (r.ideal !== undefined) {
-	        cc.optional = cc.optional || [];
-	        var oc = {};
-	        if (typeof r.ideal === 'number') {
-	          oc[oldname_('min', key)] = r.ideal;
-	          cc.optional.push(oc);
-	          oc = {};
-	          oc[oldname_('max', key)] = r.ideal;
-	          cc.optional.push(oc);
-	        } else {
-	          oc[oldname_('', key)] = r.ideal;
-	          cc.optional.push(oc);
-	        }
-	      }
-	      if (r.exact !== undefined && typeof r.exact !== 'number') {
-	        cc.mandatory = cc.mandatory || {};
-	        cc.mandatory[oldname_('', key)] = r.exact;
-	      } else {
-	        ['min', 'max'].forEach(function(mix) {
-	          if (r[mix] !== undefined) {
-	            cc.mandatory = cc.mandatory || {};
-	            cc.mandatory[oldname_(mix, key)] = r[mix];
-	          }
-	        });
-	      }
-	    });
-	    if (c.advanced) {
-	      cc.optional = (cc.optional || []).concat(c.advanced);
-	    }
-	    return cc;
-	  };
-	
-	  var getUserMedia_ = function(constraints, onSuccess, onError) {
-	    if (constraints.audio) {
-	      constraints.audio = constraintsToChrome_(constraints.audio);
-	    }
-	    if (constraints.video) {
-	      constraints.video = constraintsToChrome_(constraints.video);
-	    }
-	    logging('chrome: ' + JSON.stringify(constraints));
-	    return navigator.webkitGetUserMedia(constraints, onSuccess, onError);
-	  };
-	  navigator.getUserMedia = getUserMedia_;
-	
-	  // Returns the result of getUserMedia as a Promise.
-	  var getUserMediaPromise_ = function(constraints) {
-	    return new Promise(function(resolve, reject) {
-	      navigator.getUserMedia(constraints, resolve, reject);
-	    });
-	  }
-	
-	  if (!navigator.mediaDevices) {
-	    navigator.mediaDevices = {getUserMedia: getUserMediaPromise_,
-	                             enumerateDevices: function() {
-	      return new Promise(function(resolve) {
-	        var kinds = {audio: 'audioinput', video: 'videoinput'};
-	        return MediaStreamTrack.getSources(function(devices) {
-	          resolve(devices.map(function(device) {
-	            return {label: device.label,
-	                    kind: kinds[device.kind],
-	                    deviceId: device.id,
-	                    groupId: ''};
-	          }));
-	        });
-	      });
-	    }};
-	  }
-	
-	  // A shim for getUserMedia method on the mediaDevices object.
-	  // TODO(KaptenJansson) remove once implemented in Chrome stable.
-	  if (!navigator.mediaDevices.getUserMedia) {
-	    navigator.mediaDevices.getUserMedia = function(constraints) {
-	      return getUserMediaPromise_(constraints);
-	    };
-	  } else {
-	    // Even though Chrome 45 has navigator.mediaDevices and a getUserMedia
-	    // function which returns a Promise, it does not accept spec-style
-	    // constraints.
-	    var origGetUserMedia = navigator.mediaDevices.getUserMedia.
-	        bind(navigator.mediaDevices);
-	    navigator.mediaDevices.getUserMedia = function(c) {
-	      if (c) {
-	        logging('spec:   ' + JSON.stringify(c)); // whitespace for alignment
-	        c.audio = constraintsToChrome_(c.audio);
-	        c.video = constraintsToChrome_(c.video);
-	        logging('chrome: ' + JSON.stringify(c));
-	      }
-	      return origGetUserMedia(c);
-	    }.bind(this);
-	  }
-	
-	  // Dummy devicechange event methods.
-	  // TODO(KaptenJansson) remove once implemented in Chrome stable.
-	  if (typeof navigator.mediaDevices.addEventListener === 'undefined') {
-	    navigator.mediaDevices.addEventListener = function() {
-	      logging('Dummy mediaDevices.addEventListener called.');
-	    };
-	  }
-	  if (typeof navigator.mediaDevices.removeEventListener === 'undefined') {
-	    navigator.mediaDevices.removeEventListener = function() {
-	      logging('Dummy mediaDevices.removeEventListener called.');
-	    };
-	  }
-	};
-
-
-/***/ },
-/* 188 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
-	 *
-	 *  Use of this source code is governed by a BSD-style license
-	 *  that can be found in the LICENSE file in the root of the source
-	 *  tree.
-	 */
+	"use strict";
+	 /* eslint-env node */
 	'use strict';
 	
 	// SDP helpers.
@@ -12568,7 +12193,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	// The RTCP CNAME used by all peerconnections from the same JS.
 	SDPUtils.localCName = SDPUtils.generateIdentifier();
 	
-	
 	// Splits SDP into lines, dealing with both CRLF and LF.
 	SDPUtils.splitLines = function(blob) {
 	  return blob.trim().split('\n').map(function(line) {
@@ -12577,7 +12201,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	// Splits SDP into sessionpart and mediasections. Ensures CRLF.
 	SDPUtils.splitSections = function(blob) {
-	  var parts = blob.split('\r\nm=');
+	  var parts = blob.split('\nm=');
 	  return parts.map(function(part, index) {
 	    return (index > 0 ? 'm=' + part : part).trim() + '\r\n';
 	  });
@@ -12591,7 +12215,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	// Parses an ICE candidate line. Sample input:
-	// candidate:702786350 2 udp 41819902 8.8.8.8 60769 typ relay raddr 8.8.8.8 rport 55996"
+	// candidate:702786350 2 udp 41819902 8.8.8.8 60769 typ relay raddr 8.8.8.8
+	// rport 55996"
 	SDPUtils.parseCandidate = function(line) {
 	  var parts;
 	  // Parse both variants.
@@ -12669,11 +12294,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  parsed.name = parts[0];
 	  parsed.clockRate = parseInt(parts[1], 10); // was: clockrate
-	  parsed.numChannels = parts.length === 3 ? parseInt(parts[2], 10) : 1; // was: channels
+	  // was: channels
+	  parsed.numChannels = parts.length === 3 ? parseInt(parts[2], 10) : 1;
 	  return parsed;
 	};
 	
-	// Generate an a=rtpmap line from RTCRtpCodecCapability or RTCRtpCodecParameters.
+	// Generate an a=rtpmap line from RTCRtpCodecCapability or
+	// RTCRtpCodecParameters.
 	SDPUtils.writeRtpMap = function(codec) {
 	  var pt = codec.payloadType;
 	  if (codec.preferredPayloadType !== undefined) {
@@ -12681,6 +12308,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  return 'a=rtpmap:' + pt + ' ' + codec.name + '/' + codec.clockRate +
 	      (codec.numChannels !== 1 ? '/' + codec.numChannels : '') + '\r\n';
+	};
+	
+	// Parses an a=extmap line (headerextension from RFC 5285). Sample input:
+	// a=extmap:2 urn:ietf:params:rtp-hdrext:toffset
+	SDPUtils.parseExtmap = function(line) {
+	  var parts = line.substr(9).split(' ');
+	  return {
+	    id: parseInt(parts[0], 10),
+	    uri: parts[1]
+	  };
+	};
+	
+	// Generates a=extmap line from RTCRtpHeaderExtensionParameters or
+	// RTCRtpHeaderExtension.
+	SDPUtils.writeExtmap = function(headerExtension) {
+	  return 'a=extmap:' + (headerExtension.id || headerExtension.preferredId) +
+	       ' ' + headerExtension.uri + '\r\n';
 	};
 	
 	// Parses an ftmp line, returns dictionary. Sample input:
@@ -12698,13 +12342,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	// Generates an a=ftmp line from RTCRtpCodecCapability or RTCRtpCodecParameters.
-	SDPUtils.writeFtmp = function(codec) {
+	SDPUtils.writeFmtp = function(codec) {
 	  var line = '';
 	  var pt = codec.payloadType;
 	  if (codec.preferredPayloadType !== undefined) {
 	    pt = codec.preferredPayloadType;
 	  }
-	  if (codec.parameters && codec.parameters.length) {
+	  if (codec.parameters && Object.keys(codec.parameters).length) {
 	    var params = [];
 	    Object.keys(codec.parameters).forEach(function(param) {
 	      params.push(param + '=' + codec.parameters[param]);
@@ -12745,7 +12389,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	SDPUtils.parseSsrcMedia = function(line) {
 	  var sp = line.indexOf(' ');
 	  var parts = {
-	    ssrc: line.substr(7, sp - 7),
+	    ssrc: parseInt(line.substr(7, sp - 7), 10)
 	  };
 	  var colon = line.indexOf(':', sp);
 	  if (colon > -1) {
@@ -12762,7 +12406,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	//   get the fingerprint line as input. See also getIceParameters.
 	SDPUtils.getDtlsParameters = function(mediaSection, sessionpart) {
 	  var lines = SDPUtils.splitLines(mediaSection);
-	  lines = lines.concat(SDPUtils.splitLines(sessionpart)); // Search in session part, too.
+	  // Search in session part, too.
+	  lines = lines.concat(SDPUtils.splitLines(sessionpart));
 	  var fpLine = lines.filter(function(line) {
 	    return line.indexOf('a=fingerprint:') === 0;
 	  })[0].substr(14);
@@ -12790,7 +12435,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	//   get the ice-ufrag and ice-pwd lines as input.
 	SDPUtils.getIceParameters = function(mediaSection, sessionpart) {
 	  var lines = SDPUtils.splitLines(mediaSection);
-	  lines = lines.concat(SDPUtils.splitLines(sessionpart)); // Search in session part, too.
+	  // Search in session part, too.
+	  lines = lines.concat(SDPUtils.splitLines(sessionpart));
 	  var iceParameters = {
 	    usernameFragment: lines.filter(function(line) {
 	      return line.indexOf('a=ice-ufrag:') === 0;
@@ -12832,13 +12478,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	          mediaSection, 'a=rtcp-fb:' + pt + ' ')
 	        .map(SDPUtils.parseRtcpFb);
 	      description.codecs.push(codec);
+	      // parse FEC mechanisms from rtpmap lines.
+	      switch (codec.name.toUpperCase()) {
+	        case 'RED':
+	        case 'ULPFEC':
+	          description.fecMechanisms.push(codec.name.toUpperCase());
+	          break;
+	        default: // only RED and ULPFEC are recognized as FEC mechanisms.
+	          break;
+	      }
 	    }
 	  }
-	  // FIXME: parse headerExtensions, fecMechanisms and rtcp.
+	  SDPUtils.matchPrefix(mediaSection, 'a=extmap:').forEach(function(line) {
+	    description.headerExtensions.push(SDPUtils.parseExtmap(line));
+	  });
+	  // FIXME: parse rtcp.
 	  return description;
 	};
 	
-	// Generates parts of the SDP media section describing the capabilities / parameters.
+	// Generates parts of the SDP media section describing the capabilities /
+	// parameters.
 	SDPUtils.writeRtpDescription = function(kind, caps) {
 	  var sdp = '';
 	
@@ -12859,12 +12518,85 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Add a=rtpmap lines for each codec. Also fmtp and rtcp-fb.
 	  caps.codecs.forEach(function(codec) {
 	    sdp += SDPUtils.writeRtpMap(codec);
-	    sdp += SDPUtils.writeFtmp(codec);
+	    sdp += SDPUtils.writeFmtp(codec);
 	    sdp += SDPUtils.writeRtcpFb(codec);
 	  });
 	  // FIXME: add headerExtensions, fecMechanismş and rtcp.
 	  sdp += 'a=rtcp-mux\r\n';
 	  return sdp;
+	};
+	
+	// Parses the SDP media section and returns an array of
+	// RTCRtpEncodingParameters.
+	SDPUtils.parseRtpEncodingParameters = function(mediaSection) {
+	  var encodingParameters = [];
+	  var description = SDPUtils.parseRtpParameters(mediaSection);
+	  var hasRed = description.fecMechanisms.indexOf('RED') !== -1;
+	  var hasUlpfec = description.fecMechanisms.indexOf('ULPFEC') !== -1;
+	
+	  // filter a=ssrc:... cname:, ignore PlanB-msid
+	  var ssrcs = SDPUtils.matchPrefix(mediaSection, 'a=ssrc:')
+	  .map(function(line) {
+	    return SDPUtils.parseSsrcMedia(line);
+	  })
+	  .filter(function(parts) {
+	    return parts.attribute === 'cname';
+	  });
+	  var primarySsrc = ssrcs.length > 0 && ssrcs[0].ssrc;
+	  var secondarySsrc;
+	
+	  var flows = SDPUtils.matchPrefix(mediaSection, 'a=ssrc-group:FID')
+	  .map(function(line) {
+	    var parts = line.split(' ');
+	    parts.shift();
+	    return parts.map(function(part) {
+	      return parseInt(part, 10);
+	    });
+	  });
+	  if (flows.length > 0 && flows[0].length > 1 && flows[0][0] === primarySsrc) {
+	    secondarySsrc = flows[0][1];
+	  }
+	
+	  description.codecs.forEach(function(codec) {
+	    if (codec.name.toUpperCase() === 'RTX' && codec.parameters.apt) {
+	      var encParam = {
+	        ssrc: primarySsrc,
+	        codecPayloadType: parseInt(codec.parameters.apt, 10),
+	        rtx: {
+	          payloadType: codec.payloadType,
+	          ssrc: secondarySsrc
+	        }
+	      };
+	      encodingParameters.push(encParam);
+	      if (hasRed) {
+	        encParam = JSON.parse(JSON.stringify(encParam));
+	        encParam.fec = {
+	          ssrc: secondarySsrc,
+	          mechanism: hasUlpfec ? 'red+ulpfec' : 'red'
+	        };
+	        encodingParameters.push(encParam);
+	      }
+	    }
+	  });
+	  if (encodingParameters.length === 0 && primarySsrc) {
+	    encodingParameters.push({
+	      ssrc: primarySsrc
+	    });
+	  }
+	
+	  // we support both b=AS and b=TIAS but interpret AS as TIAS.
+	  var bandwidth = SDPUtils.matchPrefix(mediaSection, 'b=');
+	  if (bandwidth.length) {
+	    if (bandwidth[0].indexOf('b=TIAS:') === 0) {
+	      bandwidth = parseInt(bandwidth[0].substr(7), 10);
+	    } else if (bandwidth[0].indexOf('b=AS:') === 0) {
+	      bandwidth = parseInt(bandwidth[0].substr(5), 10);
+	    }
+	    encodingParameters.forEach(function(params) {
+	      params.maxBitrate = bandwidth;
+	    });
+	  }
+	  return encodingParameters;
 	};
 	
 	SDPUtils.writeSessionBoilerplate = function() {
@@ -12904,11 +12636,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var msid = 'msid:' + stream.id + ' ' +
 	        transceiver.rtpSender.track.id + '\r\n';
 	    sdp += 'a=' + msid;
-	    sdp += 'a=ssrc:' + transceiver.sendSsrc + ' ' + msid;
+	    sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].ssrc +
+	        ' ' + msid;
 	  }
 	  // FIXME: this should be written by writeRtpDescription.
-	  sdp += 'a=ssrc:' + transceiver.sendSsrc + ' cname:' +
-	      SDPUtils.localCName + '\r\n';
+	  sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].ssrc +
+	      ' cname:' + SDPUtils.localCName + '\r\n';
 	  return sdp;
 	};
 	
@@ -12923,6 +12656,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      case 'a=recvonly':
 	      case 'a=inactive':
 	        return lines[i].substr(2);
+	      default:
+	        // FIXME: What should happen here?
 	    }
 	  }
 	  if (sessionpart) {
@@ -12932,13 +12667,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	// Expose public methods.
-	module.e = SDPUtils;
+	module.exports = SDPUtils;
 
 
 /***/ },
-/* 189 */
+/* 187 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/*
 	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
 	 *
@@ -12946,11 +12682,588 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  that can be found in the LICENSE file in the root of the source
 	 *  tree.
 	 */
+	 /* eslint-env node */
+	
 	'use strict';
 	
-	var SDPUtils = __webpack_require__(188);
+	// Shimming starts here.
+	(function() {
+	  // Utils.
+	  var logging = __webpack_require__(0).log;
+	  var browserDetails = __webpack_require__(0).browserDetails;
+	  // Export to the adapter global object visible in the browser.
+	  module.exports.browserDetails = browserDetails;
+	  module.exports.extractVersion = __webpack_require__(0).extractVersion;
+	  module.exports.disableLog = __webpack_require__(0).disableLog;
+	
+	  // Comment out the line below if you want logging to occur, including logging
+	  // for the switch statement below. Can also be turned on in the browser via
+	  // adapter.disableLog(false), but then logging from the switch statement below
+	  // will not appear.
+	  __webpack_require__(0).disableLog(true);
+	
+	  // Browser shims.
+	  var chromeShim = __webpack_require__(188) || null;
+	  var edgeShim = __webpack_require__(190) || null;
+	  var firefoxShim = __webpack_require__(192) || null;
+	  var safariShim = __webpack_require__(194) || null;
+	
+	  // Shim browser if found.
+	  switch (browserDetails.browser) {
+	    case 'opera': // fallthrough as it uses chrome shims
+	    case 'chrome':
+	      if (!chromeShim || !chromeShim.shimPeerConnection) {
+	        logging('Chrome shim is not included in this adapter release.');
+	        return;
+	      }
+	      logging('adapter.js shimming chrome.');
+	      // Export to the adapter global object visible in the browser.
+	      module.exports.browserShim = chromeShim;
+	
+	      chromeShim.shimGetUserMedia();
+	      chromeShim.shimMediaStream();
+	      chromeShim.shimSourceObject();
+	      chromeShim.shimPeerConnection();
+	      chromeShim.shimOnTrack();
+	      break;
+	    case 'firefox':
+	      if (!firefoxShim || !firefoxShim.shimPeerConnection) {
+	        logging('Firefox shim is not included in this adapter release.');
+	        return;
+	      }
+	      logging('adapter.js shimming firefox.');
+	      // Export to the adapter global object visible in the browser.
+	      module.exports.browserShim = firefoxShim;
+	
+	      firefoxShim.shimGetUserMedia();
+	      firefoxShim.shimSourceObject();
+	      firefoxShim.shimPeerConnection();
+	      firefoxShim.shimOnTrack();
+	      break;
+	    case 'edge':
+	      if (!edgeShim || !edgeShim.shimPeerConnection) {
+	        logging('MS edge shim is not included in this adapter release.');
+	        return;
+	      }
+	      logging('adapter.js shimming edge.');
+	      // Export to the adapter global object visible in the browser.
+	      module.exports.browserShim = edgeShim;
+	
+	      edgeShim.shimGetUserMedia();
+	      edgeShim.shimPeerConnection();
+	      break;
+	    case 'safari':
+	      if (!safariShim) {
+	        logging('Safari shim is not included in this adapter release.');
+	        return;
+	      }
+	      logging('adapter.js shimming safari.');
+	      // Export to the adapter global object visible in the browser.
+	      module.exports.browserShim = safariShim;
+	
+	      safariShim.shimGetUserMedia();
+	      break;
+	    default:
+	      logging('Unsupported browser!');
+	  }
+	})();
+
+
+/***/ },
+/* 188 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	/*
+	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+	 *
+	 *  Use of this source code is governed by a BSD-style license
+	 *  that can be found in the LICENSE file in the root of the source
+	 *  tree.
+	 */
+	 /* eslint-env node */
+	'use strict';
 	var logging = __webpack_require__(0).log;
 	var browserDetails = __webpack_require__(0).browserDetails;
+	
+	var chromeShim = {
+	  shimMediaStream: function() {
+	    window.MediaStream = window.MediaStream || window.webkitMediaStream;
+	  },
+	
+	  shimOnTrack: function() {
+	    if (typeof window === 'object' && window.RTCPeerConnection && !('ontrack' in
+	        window.RTCPeerConnection.prototype)) {
+	      Object.defineProperty(window.RTCPeerConnection.prototype, 'ontrack', {
+	        get: function() {
+	          return this._ontrack;
+	        },
+	        set: function(f) {
+	          var self = this;
+	          if (this._ontrack) {
+	            this.removeEventListener('track', this._ontrack);
+	            this.removeEventListener('addstream', this._ontrackpoly);
+	          }
+	          this.addEventListener('track', this._ontrack = f);
+	          this.addEventListener('addstream', this._ontrackpoly = function(e) {
+	            // onaddstream does not fire when a track is added to an existing
+	            // stream. But stream.onaddtrack is implemented so we use that.
+	            e.stream.addEventListener('addtrack', function(te) {
+	              var event = new Event('track');
+	              event.track = te.track;
+	              event.receiver = {track: te.track};
+	              event.streams = [e.stream];
+	              self.dispatchEvent(event);
+	            });
+	            e.stream.getTracks().forEach(function(track) {
+	              var event = new Event('track');
+	              event.track = track;
+	              event.receiver = {track: track};
+	              event.streams = [e.stream];
+	              this.dispatchEvent(event);
+	            }.bind(this));
+	          }.bind(this));
+	        }
+	      });
+	    }
+	  },
+	
+	  shimSourceObject: function() {
+	    if (typeof window === 'object') {
+	      if (window.HTMLMediaElement &&
+	        !('srcObject' in window.HTMLMediaElement.prototype)) {
+	        // Shim the srcObject property, once, when HTMLMediaElement is found.
+	        Object.defineProperty(window.HTMLMediaElement.prototype, 'srcObject', {
+	          get: function() {
+	            return this._srcObject;
+	          },
+	          set: function(stream) {
+	            var self = this;
+	            // Use _srcObject as a private property for this shim
+	            this._srcObject = stream;
+	            if (this.src) {
+	              URL.revokeObjectURL(this.src);
+	            }
+	
+	            if (!stream) {
+	              this.src = '';
+	              return;
+	            }
+	            this.src = URL.createObjectURL(stream);
+	            // We need to recreate the blob url when a track is added or
+	            // removed. Doing it manually since we want to avoid a recursion.
+	            stream.addEventListener('addtrack', function() {
+	              if (self.src) {
+	                URL.revokeObjectURL(self.src);
+	              }
+	              self.src = URL.createObjectURL(stream);
+	            });
+	            stream.addEventListener('removetrack', function() {
+	              if (self.src) {
+	                URL.revokeObjectURL(self.src);
+	              }
+	              self.src = URL.createObjectURL(stream);
+	            });
+	          }
+	        });
+	      }
+	    }
+	  },
+	
+	  shimPeerConnection: function() {
+	    // The RTCPeerConnection object.
+	    window.RTCPeerConnection = function(pcConfig, pcConstraints) {
+	      // Translate iceTransportPolicy to iceTransports,
+	      // see https://code.google.com/p/webrtc/issues/detail?id=4869
+	      logging('PeerConnection');
+	      if (pcConfig && pcConfig.iceTransportPolicy) {
+	        pcConfig.iceTransports = pcConfig.iceTransportPolicy;
+	      }
+	
+	      var pc = new webkitRTCPeerConnection(pcConfig, pcConstraints);
+	      var origGetStats = pc.getStats.bind(pc);
+	      pc.getStats = function(selector, successCallback, errorCallback) {
+	        var self = this;
+	        var args = arguments;
+	
+	        // If selector is a function then we are in the old style stats so just
+	        // pass back the original getStats format to avoid breaking old users.
+	        if (arguments.length > 0 && typeof selector === 'function') {
+	          return origGetStats(selector, successCallback);
+	        }
+	
+	        var fixChromeStats_ = function(response) {
+	          var standardReport = {};
+	          var reports = response.result();
+	          reports.forEach(function(report) {
+	            var standardStats = {
+	              id: report.id,
+	              timestamp: report.timestamp,
+	              type: report.type
+	            };
+	            report.names().forEach(function(name) {
+	              standardStats[name] = report.stat(name);
+	            });
+	            standardReport[standardStats.id] = standardStats;
+	          });
+	
+	          return standardReport;
+	        };
+	
+	        // shim getStats with maplike support
+	        var makeMapStats = function(stats, legacyStats) {
+	          var map = new Map(Object.keys(stats).map(function(key) {
+	            return[key, stats[key]];
+	          }));
+	          legacyStats = legacyStats || stats;
+	          Object.keys(legacyStats).forEach(function(key) {
+	            map[key] = legacyStats[key];
+	          });
+	          return map;
+	        };
+	
+	        if (arguments.length >= 2) {
+	          var successCallbackWrapper_ = function(response) {
+	            args[1](makeMapStats(fixChromeStats_(response)));
+	          };
+	
+	          return origGetStats.apply(this, [successCallbackWrapper_,
+	              arguments[0]]);
+	        }
+	
+	        // promise-support
+	        return new Promise(function(resolve, reject) {
+	          if (args.length === 1 && typeof selector === 'object') {
+	            origGetStats.apply(self, [
+	              function(response) {
+	                resolve(makeMapStats(fixChromeStats_(response)));
+	              }, reject]);
+	          } else {
+	            // Preserve legacy chrome stats only on legacy access of stats obj
+	            origGetStats.apply(self, [
+	              function(response) {
+	                resolve(makeMapStats(fixChromeStats_(response),
+	                    response.result()));
+	              }, reject]);
+	          }
+	        }).then(successCallback, errorCallback);
+	      };
+	
+	      return pc;
+	    };
+	    window.RTCPeerConnection.prototype = webkitRTCPeerConnection.prototype;
+	
+	    // wrap static methods. Currently just generateCertificate.
+	    if (webkitRTCPeerConnection.generateCertificate) {
+	      Object.defineProperty(window.RTCPeerConnection, 'generateCertificate', {
+	        get: function() {
+	          return webkitRTCPeerConnection.generateCertificate;
+	        }
+	      });
+	    }
+	
+	    // add promise support -- natively available in Chrome 51
+	    if (browserDetails.version < 51) {
+	      ['createOffer', 'createAnswer'].forEach(function(method) {
+	        var nativeMethod = webkitRTCPeerConnection.prototype[method];
+	        webkitRTCPeerConnection.prototype[method] = function() {
+	          var self = this;
+	          if (arguments.length < 1 || (arguments.length === 1 &&
+	              typeof arguments[0] === 'object')) {
+	            var opts = arguments.length === 1 ? arguments[0] : undefined;
+	            return new Promise(function(resolve, reject) {
+	              nativeMethod.apply(self, [resolve, reject, opts]);
+	            });
+	          }
+	          return nativeMethod.apply(this, arguments);
+	        };
+	      });
+	
+	      ['setLocalDescription', 'setRemoteDescription', 'addIceCandidate']
+	          .forEach(function(method) {
+	            var nativeMethod = webkitRTCPeerConnection.prototype[method];
+	            webkitRTCPeerConnection.prototype[method] = function() {
+	              var args = arguments;
+	              var self = this;
+	              var promise = new Promise(function(resolve, reject) {
+	                nativeMethod.apply(self, [args[0], resolve, reject]);
+	              });
+	              if (args.length < 2) {
+	                return promise;
+	              }
+	              return promise.then(function() {
+	                args[1].apply(null, []);
+	              },
+	              function(err) {
+	                if (args.length >= 3) {
+	                  args[2].apply(null, [err]);
+	                }
+	              });
+	            };
+	          });
+	    }
+	
+	    // shim implicit creation of RTCSessionDescription/RTCIceCandidate
+	    ['setLocalDescription', 'setRemoteDescription', 'addIceCandidate']
+	        .forEach(function(method) {
+	          var nativeMethod = webkitRTCPeerConnection.prototype[method];
+	          webkitRTCPeerConnection.prototype[method] = function() {
+	            arguments[0] = new ((method === 'addIceCandidate') ?
+	                RTCIceCandidate : RTCSessionDescription)(arguments[0]);
+	            return nativeMethod.apply(this, arguments);
+	          };
+	        });
+	  },
+	
+	  // Attach a media stream to an element.
+	  attachMediaStream: function(element, stream) {
+	    logging('DEPRECATED, attachMediaStream will soon be removed.');
+	    if (browserDetails.version >= 43) {
+	      element.srcObject = stream;
+	    } else if (typeof element.src !== 'undefined') {
+	      element.src = URL.createObjectURL(stream);
+	    } else {
+	      logging('Error attaching stream to element.');
+	    }
+	  },
+	
+	  reattachMediaStream: function(to, from) {
+	    logging('DEPRECATED, reattachMediaStream will soon be removed.');
+	    if (browserDetails.version >= 43) {
+	      to.srcObject = from.srcObject;
+	    } else {
+	      to.src = from.src;
+	    }
+	  }
+	};
+	
+	
+	// Expose public methods.
+	module.exports = {
+	  shimMediaStream: chromeShim.shimMediaStream,
+	  shimOnTrack: chromeShim.shimOnTrack,
+	  shimSourceObject: chromeShim.shimSourceObject,
+	  shimPeerConnection: chromeShim.shimPeerConnection,
+	  shimGetUserMedia: __webpack_require__(189),
+	  attachMediaStream: chromeShim.attachMediaStream,
+	  reattachMediaStream: chromeShim.reattachMediaStream
+	};
+
+
+/***/ },
+/* 189 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	/*
+	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+	 *
+	 *  Use of this source code is governed by a BSD-style license
+	 *  that can be found in the LICENSE file in the root of the source
+	 *  tree.
+	 */
+	 /* eslint-env node */
+	'use strict';
+	var logging = __webpack_require__(0).log;
+	
+	// Expose public methods.
+	module.exports = function() {
+	  var constraintsToChrome_ = function(c) {
+	    if (typeof c !== 'object' || c.mandatory || c.optional) {
+	      return c;
+	    }
+	    var cc = {};
+	    Object.keys(c).forEach(function(key) {
+	      if (key === 'require' || key === 'advanced' || key === 'mediaSource') {
+	        return;
+	      }
+	      var r = (typeof c[key] === 'object') ? c[key] : {ideal: c[key]};
+	      if (r.exact !== undefined && typeof r.exact === 'number') {
+	        r.min = r.max = r.exact;
+	      }
+	      var oldname_ = function(prefix, name) {
+	        if (prefix) {
+	          return prefix + name.charAt(0).toUpperCase() + name.slice(1);
+	        }
+	        return (name === 'deviceId') ? 'sourceId' : name;
+	      };
+	      if (r.ideal !== undefined) {
+	        cc.optional = cc.optional || [];
+	        var oc = {};
+	        if (typeof r.ideal === 'number') {
+	          oc[oldname_('min', key)] = r.ideal;
+	          cc.optional.push(oc);
+	          oc = {};
+	          oc[oldname_('max', key)] = r.ideal;
+	          cc.optional.push(oc);
+	        } else {
+	          oc[oldname_('', key)] = r.ideal;
+	          cc.optional.push(oc);
+	        }
+	      }
+	      if (r.exact !== undefined && typeof r.exact !== 'number') {
+	        cc.mandatory = cc.mandatory || {};
+	        cc.mandatory[oldname_('', key)] = r.exact;
+	      } else {
+	        ['min', 'max'].forEach(function(mix) {
+	          if (r[mix] !== undefined) {
+	            cc.mandatory = cc.mandatory || {};
+	            cc.mandatory[oldname_(mix, key)] = r[mix];
+	          }
+	        });
+	      }
+	    });
+	    if (c.advanced) {
+	      cc.optional = (cc.optional || []).concat(c.advanced);
+	    }
+	    return cc;
+	  };
+	
+	  var shimConstraints_ = function(constraints, func) {
+	    constraints = JSON.parse(JSON.stringify(constraints));
+	    if (constraints && constraints.audio) {
+	      constraints.audio = constraintsToChrome_(constraints.audio);
+	    }
+	    if (constraints && typeof constraints.video === 'object') {
+	      // Shim facingMode for mobile, where it defaults to "user".
+	      var face = constraints.video.facingMode;
+	      face = face && ((typeof face === 'object') ? face : {ideal: face});
+	
+	      if ((face && (face.exact === 'user' || face.exact === 'environment' ||
+	                    face.ideal === 'user' || face.ideal === 'environment')) &&
+	          !(navigator.mediaDevices.getSupportedConstraints &&
+	            navigator.mediaDevices.getSupportedConstraints().facingMode)) {
+	        delete constraints.video.facingMode;
+	        if (face.exact === 'environment' || face.ideal === 'environment') {
+	          // Look for "back" in label, or use last cam (typically back cam).
+	          return navigator.mediaDevices.enumerateDevices()
+	          .then(function(devices) {
+	            devices = devices.filter(function(d) {
+	              return d.kind === 'videoinput';
+	            });
+	            var back = devices.find(function(d) {
+	              return d.label.toLowerCase().indexOf('back') !== -1;
+	            }) || (devices.length && devices[devices.length - 1]);
+	            if (back) {
+	              constraints.video.deviceId = face.exact ? {exact: back.deviceId} :
+	                                                        {ideal: back.deviceId};
+	            }
+	            constraints.video = constraintsToChrome_(constraints.video);
+	            logging('chrome: ' + JSON.stringify(constraints));
+	            return func(constraints);
+	          });
+	        }
+	      }
+	      constraints.video = constraintsToChrome_(constraints.video);
+	    }
+	    logging('chrome: ' + JSON.stringify(constraints));
+	    return func(constraints);
+	  };
+	
+	  var shimError_ = function(e) {
+	    return {
+	      name: {
+	        PermissionDeniedError: 'NotAllowedError',
+	        ConstraintNotSatisfiedError: 'OverconstrainedError'
+	      }[e.name] || e.name,
+	      message: e.message,
+	      constraint: e.constraintName,
+	      toString: function() {
+	        return this.name + (this.message && ': ') + this.message;
+	      }
+	    };
+	  };
+	
+	  var getUserMedia_ = function(constraints, onSuccess, onError) {
+	    shimConstraints_(constraints, function(c) {
+	      navigator.webkitGetUserMedia(c, onSuccess, function(e) {
+	        onError(shimError_(e));
+	      });
+	    });
+	  };
+	
+	  navigator.getUserMedia = getUserMedia_;
+	
+	  // Returns the result of getUserMedia as a Promise.
+	  var getUserMediaPromise_ = function(constraints) {
+	    return new Promise(function(resolve, reject) {
+	      navigator.getUserMedia(constraints, resolve, reject);
+	    });
+	  };
+	
+	  if (!navigator.mediaDevices) {
+	    navigator.mediaDevices = {
+	      getUserMedia: getUserMediaPromise_,
+	      enumerateDevices: function() {
+	        return new Promise(function(resolve) {
+	          var kinds = {audio: 'audioinput', video: 'videoinput'};
+	          return MediaStreamTrack.getSources(function(devices) {
+	            resolve(devices.map(function(device) {
+	              return {label: device.label,
+	                      kind: kinds[device.kind],
+	                      deviceId: device.id,
+	                      groupId: ''};
+	            }));
+	          });
+	        });
+	      }
+	    };
+	  }
+	
+	  // A shim for getUserMedia method on the mediaDevices object.
+	  // TODO(KaptenJansson) remove once implemented in Chrome stable.
+	  if (!navigator.mediaDevices.getUserMedia) {
+	    navigator.mediaDevices.getUserMedia = function(constraints) {
+	      return getUserMediaPromise_(constraints);
+	    };
+	  } else {
+	    // Even though Chrome 45 has navigator.mediaDevices and a getUserMedia
+	    // function which returns a Promise, it does not accept spec-style
+	    // constraints.
+	    var origGetUserMedia = navigator.mediaDevices.getUserMedia.
+	        bind(navigator.mediaDevices);
+	    navigator.mediaDevices.getUserMedia = function(cs) {
+	      return shimConstraints_(cs, function(c) {
+	        return origGetUserMedia(c).catch(function(e) {
+	          return Promise.reject(shimError_(e));
+	        });
+	      });
+	    };
+	  }
+	
+	  // Dummy devicechange event methods.
+	  // TODO(KaptenJansson) remove once implemented in Chrome stable.
+	  if (typeof navigator.mediaDevices.addEventListener === 'undefined') {
+	    navigator.mediaDevices.addEventListener = function() {
+	      logging('Dummy mediaDevices.addEventListener called.');
+	    };
+	  }
+	  if (typeof navigator.mediaDevices.removeEventListener === 'undefined') {
+	    navigator.mediaDevices.removeEventListener = function() {
+	      logging('Dummy mediaDevices.removeEventListener called.');
+	    };
+	  }
+	};
+
+
+/***/ },
+/* 190 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	/*
+	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+	 *
+	 *  Use of this source code is governed by a BSD-style license
+	 *  that can be found in the LICENSE file in the root of the source
+	 *  tree.
+	 */
+	 /* eslint-env node */
+	'use strict';
+	
+	var SDPUtils = __webpack_require__(186);
+	var logging = __webpack_require__(0).log;
 	
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12976,10 +13289,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var self = this;
 	
 	      var _eventTarget = document.createDocumentFragment();
-	      ['addEventListener', 'removeEventListener', 'dispatchEvent'].forEach(
-	          function(method) {
-	        self[method] = _eventTarget[method].bind(_eventTarget);
-	      });
+	      ['addEventListener', 'removeEventListener', 'dispatchEvent']
+	          .forEach(function(method) {
+	            self[method] = _eventTarget[method].bind(_eventTarget);
+	          });
 	
 	      this.onicecandidate = null;
 	      this.onaddstream = null;
@@ -12992,8 +13305,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	      this.localStreams = [];
 	      this.remoteStreams = [];
-	      this.getLocalStreams = function() { return self.localStreams; };
-	      this.getRemoteStreams = function() { return self.remoteStreams; };
+	      this.getLocalStreams = function() {
+	        return self.localStreams;
+	      };
+	      this.getRemoteStreams = function() {
+	        return self.remoteStreams;
+	      };
 	
 	      this.localDescription = new RTCSessionDescription({
 	        type: '',
@@ -13020,6 +13337,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	          case 'none':
 	            // FIXME: remove once implementation and spec have added this.
 	            throw new TypeError('iceTransportPolicy "none" not supported');
+	          default:
+	            // don't set iceTransportPolicy.
+	            break;
 	        }
 	      }
 	      if (config && config.iceServers) {
@@ -13029,9 +13349,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.iceOptions.iceServers = config.iceServers.filter(function(server) {
 	          if (server && server.urls) {
 	            server.urls = server.urls.filter(function(url) {
-	              return url.indexOf('transport=udp') !== -1;
+	              return url.indexOf('turn:') === 0 &&
+	                  url.indexOf('transport=udp') !== -1;
 	            })[0];
-	            return true;
+	            return !!server.urls;
 	          }
 	          return false;
 	        });
@@ -13050,27 +13371,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	    window.RTCPeerConnection.prototype._emitBufferedCandidates = function() {
 	      var self = this;
 	      var sections = SDPUtils.splitSections(self.localDescription.sdp);
-	      // FIXME: need to apply ice candidates in a way which is async but in-order
+	      // FIXME: need to apply ice candidates in a way which is async but
+	      // in-order
 	      this._localIceCandidatesBuffer.forEach(function(event) {
-	        var end = !event.candidate || Object.keys(event.candidate).length == 0;
+	        var end = !event.candidate || Object.keys(event.candidate).length === 0;
 	        if (end) {
 	          for (var j = 1; j < sections.length; j++) {
-	            sections[j] += 'a=end-of-candidates\r\n';
+	            if (sections[j].indexOf('\r\na=end-of-candidates\r\n') === -1) {
+	              sections[j] += 'a=end-of-candidates\r\n';
+	            }
 	          }
-	        } else {
+	        } else if (event.candidate.candidate.indexOf('typ endOfCandidates')
+	            === -1) {
 	          sections[event.candidate.sdpMLineIndex + 1] +=
 	              'a=' + event.candidate.candidate + '\r\n';
 	        }
+	        self.localDescription.sdp = sections.join('');
 	        self.dispatchEvent(event);
 	        if (self.onicecandidate !== null) {
 	          self.onicecandidate(event);
 	        }
-	        if (!event.candidate) {
-	          self.iceGatheringState = 'complete';
+	        if (!event.candidate && self.iceGatheringState !== 'complete') {
+	          var complete = self.transceivers.every(function(transceiver) {
+	            return transceiver.iceGatherer &&
+	                transceiver.iceGatherer.state === 'completed';
+	          });
+	          if (complete) {
+	            self.iceGatheringState = 'complete';
+	          }
 	        }
 	      });
 	      this._localIceCandidatesBuffer = [];
-	      this.localDescription.sdp = sections.join('');
 	    };
 	
 	    window.RTCPeerConnection.prototype.addStream = function(stream) {
@@ -13088,138 +13419,153 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    };
 	
+	    window.RTCPeerConnection.prototype.getSenders = function() {
+	      return this.transceivers.filter(function(transceiver) {
+	        return !!transceiver.rtpSender;
+	      })
+	      .map(function(transceiver) {
+	        return transceiver.rtpSender;
+	      });
+	    };
+	
+	    window.RTCPeerConnection.prototype.getReceivers = function() {
+	      return this.transceivers.filter(function(transceiver) {
+	        return !!transceiver.rtpReceiver;
+	      })
+	      .map(function(transceiver) {
+	        return transceiver.rtpReceiver;
+	      });
+	    };
+	
 	    // Determines the intersection of local and remote capabilities.
 	    window.RTCPeerConnection.prototype._getCommonCapabilities =
 	        function(localCapabilities, remoteCapabilities) {
-	      var commonCapabilities = {
-	        codecs: [],
-	        headerExtensions: [],
-	        fecMechanisms: []
-	      };
-	      localCapabilities.codecs.forEach(function(lCodec) {
-	        for (var i = 0; i < remoteCapabilities.codecs.length; i++) {
-	          var rCodec = remoteCapabilities.codecs[i];
-	          if (lCodec.name.toLowerCase() === rCodec.name.toLowerCase() &&
-	              lCodec.clockRate === rCodec.clockRate &&
-	              lCodec.numChannels === rCodec.numChannels) {
-	            // push rCodec so we reply with offerer payload type
-	            commonCapabilities.codecs.push(rCodec);
+	          var commonCapabilities = {
+	            codecs: [],
+	            headerExtensions: [],
+	            fecMechanisms: []
+	          };
+	          localCapabilities.codecs.forEach(function(lCodec) {
+	            for (var i = 0; i < remoteCapabilities.codecs.length; i++) {
+	              var rCodec = remoteCapabilities.codecs[i];
+	              if (lCodec.name.toLowerCase() === rCodec.name.toLowerCase() &&
+	                  lCodec.clockRate === rCodec.clockRate &&
+	                  lCodec.numChannels === rCodec.numChannels) {
+	                // push rCodec so we reply with offerer payload type
+	                commonCapabilities.codecs.push(rCodec);
 	
-	            // FIXME: also need to determine intersection between
-	            // .rtcpFeedback and .parameters
-	            break;
-	          }
-	        }
-	      });
+	                // FIXME: also need to determine intersection between
+	                // .rtcpFeedback and .parameters
+	                break;
+	              }
+	            }
+	          });
 	
-	      localCapabilities.headerExtensions.forEach(function(lHeaderExtension) {
-	        for (var i = 0; i < remoteCapabilities.headerExtensions.length; i++) {
-	          var rHeaderExtension = remoteCapabilities.headerExtensions[i];
-	          if (lHeaderExtension.uri === rHeaderExtension.uri) {
-	            commonCapabilities.headerExtensions.push(rHeaderExtension);
-	            break;
-	          }
-	        }
-	      });
+	          localCapabilities.headerExtensions
+	              .forEach(function(lHeaderExtension) {
+	                for (var i = 0; i < remoteCapabilities.headerExtensions.length;
+	                     i++) {
+	                  var rHeaderExtension = remoteCapabilities.headerExtensions[i];
+	                  if (lHeaderExtension.uri === rHeaderExtension.uri) {
+	                    commonCapabilities.headerExtensions.push(rHeaderExtension);
+	                    break;
+	                  }
+	                }
+	              });
 	
-	      // FIXME: fecMechanisms
-	      return commonCapabilities;
-	    };
+	          // FIXME: fecMechanisms
+	          return commonCapabilities;
+	        };
 	
 	    // Create ICE gatherer, ICE transport and DTLS transport.
 	    window.RTCPeerConnection.prototype._createIceAndDtlsTransports =
 	        function(mid, sdpMLineIndex) {
-	      var self = this;
-	      var iceGatherer = new RTCIceGatherer(self.iceOptions);
-	      var iceTransport = new RTCIceTransport(iceGatherer);
-	      iceGatherer.onlocalcandidate = function(evt) {
-	        var event = new Event('icecandidate');
-	        event.candidate = {sdpMid: mid, sdpMLineIndex: sdpMLineIndex};
+	          var self = this;
+	          var iceGatherer = new RTCIceGatherer(self.iceOptions);
+	          var iceTransport = new RTCIceTransport(iceGatherer);
+	          iceGatherer.onlocalcandidate = function(evt) {
+	            var event = new Event('icecandidate');
+	            event.candidate = {sdpMid: mid, sdpMLineIndex: sdpMLineIndex};
 	
-	        var cand = evt.candidate;
-	        var end = !cand || Object.keys(cand).length === 0;
-	        // Edge emits an empty object for RTCIceCandidateComplete‥
-	        if (end) {
-	          // polyfill since RTCIceGatherer.state is not implemented in Edge 10547 yet.
-	          if (iceGatherer.state === undefined) {
-	            iceGatherer.state = 'completed';
-	          }
+	            var cand = evt.candidate;
+	            var end = !cand || Object.keys(cand).length === 0;
+	            // Edge emits an empty object for RTCIceCandidateComplete‥
+	            if (end) {
+	              // polyfill since RTCIceGatherer.state is not implemented in
+	              // Edge 10547 yet.
+	              if (iceGatherer.state === undefined) {
+	                iceGatherer.state = 'completed';
+	              }
 	
-	          // Emit a candidate with type endOfCandidates to make the samples work.
-	          // Edge requires addIceCandidate with this empty candidate to start checking.
-	          // The real solution is to signal end-of-candidates to the other side when
-	          // getting the null candidate but some apps (like the samples) don't do that.
-	          event.candidate.candidate =
-	              'candidate:1 1 udp 1 0.0.0.0 9 typ endOfCandidates';
-	        } else {
-	          // RTCIceCandidate doesn't have a component, needs to be added
-	          cand.component = iceTransport.component === 'RTCP' ? 2 : 1;
-	          event.candidate.candidate = SDPUtils.writeCandidate(cand);
-	        }
-	
-	        var complete = self.transceivers.every(function(transceiver) {
-	          return transceiver.iceGatherer &&
-	              transceiver.iceGatherer.state === 'completed';
-	        });
-	        // update .localDescription with candidate and (potentially) end-of-candidates.
-	        //     To make this harder, the gatherer might emit candidates before localdescription
-	        //     is set. To make things worse, gather.getLocalCandidates still errors in
-	        //     Edge 10547 when no candidates have been gathered yet.
-	        if (self.localDescription && self.localDescription.type !== '') {
-	          var sections = SDPUtils.splitSections(self.localDescription.sdp);
-	          sections[sdpMLineIndex + 1] += (!end ? 'a=' + event.candidate.candidate :
-	              'a=end-of-candidates') + '\r\n';
-	          self.localDescription.sdp = sections.join('');
-	        }
-	
-	        // Emit candidate if localDescription is set.
-	        // Also emits null candidate when all gatherers are complete.
-	        switch(self.iceGatheringState) {
-	        case 'new':
-	          self._localIceCandidatesBuffer.push(event);
-	          if (complete) {
-	            self._localIceCandidatesBuffer.push(new Event('icecandidate'));
-	          }
-	          break;
-	        case 'gathering':
-	          self._emitBufferedCandidates();
-	          self.dispatchEvent(event);
-	          if (self.onicecandidate !== null) {
-	            self.onicecandidate(event);
-	          }
-	          if (complete) {
-	            self.dispatchEvent(new Event('icecandidate'));
-	            if (self.onicecandidate !== null) {
-	              self.onicecandidate(new Event('icecandidate'));
+	              // Emit a candidate with type endOfCandidates to make the samples
+	              // work. Edge requires addIceCandidate with this empty candidate
+	              // to start checking. The real solution is to signal
+	              // end-of-candidates to the other side when getting the null
+	              // candidate but some apps (like the samples) don't do that.
+	              event.candidate.candidate =
+	                  'candidate:1 1 udp 1 0.0.0.0 9 typ endOfCandidates';
+	            } else {
+	              // RTCIceCandidate doesn't have a component, needs to be added
+	              cand.component = iceTransport.component === 'RTCP' ? 2 : 1;
+	              event.candidate.candidate = SDPUtils.writeCandidate(cand);
 	            }
-	            self.iceGatheringState = 'complete';
-	          }
-	          break;
-	        case 'complete':
-	          // should not happen... currently!
-	          break;
-	        }
-	      };
-	      iceTransport.onicestatechange = function() {
-	        self._updateConnectionState();
-	      };
 	
-	      var dtlsTransport = new RTCDtlsTransport(iceTransport);
-	      dtlsTransport.ondtlsstatechange = function() {
-	        self._updateConnectionState();
-	      };
-	      dtlsTransport.onerror = function() {
-	        // onerror does not set state to failed by itself.
-	        dtlsTransport.state = 'failed';
-	        self._updateConnectionState();
-	      };
+	            var complete = self.transceivers.every(function(transceiver) {
+	              return transceiver.iceGatherer &&
+	                  transceiver.iceGatherer.state === 'completed';
+	            });
 	
-	      return {
-	        iceGatherer: iceGatherer,
-	        iceTransport: iceTransport,
-	        dtlsTransport: dtlsTransport
-	      };
-	    };
+	            // Emit candidate if localDescription is set.
+	            // Also emits null candidate when all gatherers are complete.
+	            switch (self.iceGatheringState) {
+	              case 'new':
+	                self._localIceCandidatesBuffer.push(event);
+	                if (end && complete) {
+	                  self._localIceCandidatesBuffer.push(
+	                      new Event('icecandidate'));
+	                }
+	                break;
+	              case 'gathering':
+	                self._emitBufferedCandidates();
+	                self.dispatchEvent(event);
+	                if (self.onicecandidate !== null) {
+	                  self.onicecandidate(event);
+	                }
+	                if (complete) {
+	                  self.dispatchEvent(new Event('icecandidate'));
+	                  if (self.onicecandidate !== null) {
+	                    self.onicecandidate(new Event('icecandidate'));
+	                  }
+	                  self.iceGatheringState = 'complete';
+	                }
+	                break;
+	              case 'complete':
+	                // should not happen... currently!
+	                break;
+	              default: // no-op.
+	                break;
+	            }
+	          };
+	          iceTransport.onicestatechange = function() {
+	            self._updateConnectionState();
+	          };
+	
+	          var dtlsTransport = new RTCDtlsTransport(iceTransport);
+	          dtlsTransport.ondtlsstatechange = function() {
+	            self._updateConnectionState();
+	          };
+	          dtlsTransport.onerror = function() {
+	            // onerror does not set state to failed by itself.
+	            dtlsTransport.state = 'failed';
+	            self._updateConnectionState();
+	          };
+	
+	          return {
+	            iceGatherer: iceGatherer,
+	            iceTransport: iceTransport,
+	            dtlsTransport: dtlsTransport
+	          };
+	        };
 	
 	    // Start the RTP Sender and Receiver for a transceiver.
 	    window.RTCPeerConnection.prototype._transceive = function(transceiver,
@@ -13227,286 +13573,353 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var params = this._getCommonCapabilities(transceiver.localCapabilities,
 	          transceiver.remoteCapabilities);
 	      if (send && transceiver.rtpSender) {
-	        params.encodings = [{
-	          ssrc: transceiver.sendSsrc
-	        }];
+	        params.encodings = transceiver.sendEncodingParameters;
 	        params.rtcp = {
-	          cname: SDPUtils.localCName,
-	          ssrc: transceiver.recvSsrc
+	          cname: SDPUtils.localCName
 	        };
+	        if (transceiver.recvEncodingParameters.length) {
+	          params.rtcp.ssrc = transceiver.recvEncodingParameters[0].ssrc;
+	        }
 	        transceiver.rtpSender.send(params);
 	      }
 	      if (recv && transceiver.rtpReceiver) {
-	        params.encodings = [{
-	          ssrc: transceiver.recvSsrc
-	        }];
+	        params.encodings = transceiver.recvEncodingParameters;
 	        params.rtcp = {
-	          cname: transceiver.cname,
-	          ssrc: transceiver.sendSsrc
+	          cname: transceiver.cname
 	        };
+	        if (transceiver.sendEncodingParameters.length) {
+	          params.rtcp.ssrc = transceiver.sendEncodingParameters[0].ssrc;
+	        }
 	        transceiver.rtpReceiver.receive(params);
 	      }
 	    };
 	
 	    window.RTCPeerConnection.prototype.setLocalDescription =
 	        function(description) {
-	      var self = this;
-	      if (description.type === 'offer') {
-	        if (!this._pendingOffer) {
-	        } else {
-	          this.transceivers = this._pendingOffer;
-	          delete this._pendingOffer;
-	        }
-	      } else if (description.type === 'answer') {
-	        var sections = SDPUtils.splitSections(self.remoteDescription.sdp);
-	        var sessionpart = sections.shift();
-	        sections.forEach(function(mediaSection, sdpMLineIndex) {
-	          var transceiver = self.transceivers[sdpMLineIndex];
-	          var iceGatherer = transceiver.iceGatherer;
-	          var iceTransport = transceiver.iceTransport;
-	          var dtlsTransport = transceiver.dtlsTransport;
-	          var localCapabilities = transceiver.localCapabilities;
-	          var remoteCapabilities = transceiver.remoteCapabilities;
-	          var rejected = mediaSection.split('\n', 1)[0]
-	              .split(' ', 2)[1] === '0';
+	          var self = this;
+	          var sections;
+	          var sessionpart;
+	          if (description.type === 'offer') {
+	            // FIXME: What was the purpose of this empty if statement?
+	            // if (!this._pendingOffer) {
+	            // } else {
+	            if (this._pendingOffer) {
+	              // VERY limited support for SDP munging. Limited to:
+	              // * changing the order of codecs
+	              sections = SDPUtils.splitSections(description.sdp);
+	              sessionpart = sections.shift();
+	              sections.forEach(function(mediaSection, sdpMLineIndex) {
+	                var caps = SDPUtils.parseRtpParameters(mediaSection);
+	                self._pendingOffer[sdpMLineIndex].localCapabilities = caps;
+	              });
+	              this.transceivers = this._pendingOffer;
+	              delete this._pendingOffer;
+	            }
+	          } else if (description.type === 'answer') {
+	            sections = SDPUtils.splitSections(self.remoteDescription.sdp);
+	            sessionpart = sections.shift();
+	            var isIceLite = SDPUtils.matchPrefix(sessionpart,
+	                'a=ice-lite').length > 0;
+	            sections.forEach(function(mediaSection, sdpMLineIndex) {
+	              var transceiver = self.transceivers[sdpMLineIndex];
+	              var iceGatherer = transceiver.iceGatherer;
+	              var iceTransport = transceiver.iceTransport;
+	              var dtlsTransport = transceiver.dtlsTransport;
+	              var localCapabilities = transceiver.localCapabilities;
+	              var remoteCapabilities = transceiver.remoteCapabilities;
+	              var rejected = mediaSection.split('\n', 1)[0]
+	                  .split(' ', 2)[1] === '0';
 	
-	          if (!rejected) {
-	            var remoteIceParameters = SDPUtils.getIceParameters(mediaSection,
-	                sessionpart);
-	            iceTransport.start(iceGatherer, remoteIceParameters, 'controlled');
+	              if (!rejected) {
+	                var remoteIceParameters = SDPUtils.getIceParameters(
+	                    mediaSection, sessionpart);
+	                if (isIceLite) {
+	                  var cands = SDPUtils.matchPrefix(mediaSection, 'a=candidate:')
+	                  .map(function(cand) {
+	                    return SDPUtils.parseCandidate(cand);
+	                  })
+	                  .filter(function(cand) {
+	                    return cand.component === '1';
+	                  });
+	                  // ice-lite only includes host candidates in the SDP so we can
+	                  // use setRemoteCandidates (which implies an
+	                  // RTCIceCandidateComplete)
+	                  iceTransport.setRemoteCandidates(cands);
+	                }
+	                iceTransport.start(iceGatherer, remoteIceParameters,
+	                    isIceLite ? 'controlling' : 'controlled');
 	
-	            var remoteDtlsParameters = SDPUtils.getDtlsParameters(mediaSection,
-	              sessionpart);
-	            dtlsTransport.start(remoteDtlsParameters);
+	                var remoteDtlsParameters = SDPUtils.getDtlsParameters(
+	                    mediaSection, sessionpart);
+	                if (isIceLite) {
+	                  remoteDtlsParameters.role = 'server';
+	                }
+	                dtlsTransport.start(remoteDtlsParameters);
 	
-	            // Calculate intersection of capabilities.
-	            var params = self._getCommonCapabilities(localCapabilities,
-	                remoteCapabilities);
+	                // Calculate intersection of capabilities.
+	                var params = self._getCommonCapabilities(localCapabilities,
+	                    remoteCapabilities);
 	
-	            // Start the RTCRtpSender. The RTCRtpReceiver for this transceiver
-	            // has already been started in setRemoteDescription.
-	            self._transceive(transceiver,
-	                params.codecs.length > 0,
-	                false);
+	                // Start the RTCRtpSender. The RTCRtpReceiver for this
+	                // transceiver has already been started in setRemoteDescription.
+	                self._transceive(transceiver,
+	                    params.codecs.length > 0,
+	                    false);
+	              }
+	            });
 	          }
-	        });
-	      }
 	
-	      this.localDescription = {
-	        type: description.type,
-	        sdp: description.sdp
-	      };
-	      switch (description.type) {
-	        case 'offer':
-	          this._updateSignalingState('have-local-offer');
-	          break;
-	        case 'answer':
-	          this._updateSignalingState('stable');
-	          break;
-	        default:
-	          throw new TypeError('unsupported type "' + description.type + '"');
-	      }
+	          this.localDescription = {
+	            type: description.type,
+	            sdp: description.sdp
+	          };
+	          switch (description.type) {
+	            case 'offer':
+	              this._updateSignalingState('have-local-offer');
+	              break;
+	            case 'answer':
+	              this._updateSignalingState('stable');
+	              break;
+	            default:
+	              throw new TypeError('unsupported type "' + description.type +
+	                  '"');
+	          }
 	
-	      // If a success callback was provided, emit ICE candidates after it has been
-	      // executed. Otherwise, emit callback after the Promise is resolved.
-	      var hasCallback = arguments.length > 1 &&
-	        typeof arguments[1] === 'function';
-	      if (hasCallback) {
-	        var cb = arguments[1];
-	        window.setTimeout(function() {
-	          cb();
-	          if (self.iceGatheringState === 'new') {
-	            self.iceGatheringState = 'gathering';
+	          // If a success callback was provided, emit ICE candidates after it
+	          // has been executed. Otherwise, emit callback after the Promise is
+	          // resolved.
+	          var hasCallback = arguments.length > 1 &&
+	            typeof arguments[1] === 'function';
+	          if (hasCallback) {
+	            var cb = arguments[1];
+	            window.setTimeout(function() {
+	              cb();
+	              if (self.iceGatheringState === 'new') {
+	                self.iceGatheringState = 'gathering';
+	              }
+	              self._emitBufferedCandidates();
+	            }, 0);
 	          }
-	          self._emitBufferedCandidates();
-	        }, 0);
-	      }
-	      var p = Promise.resolve();
-	      p.then(function() {
-	        if (!hasCallback) {
-	          if (self.iceGatheringState === 'new') {
-	            self.iceGatheringState = 'gathering';
-	          }
-	          // Usually candidates will be emitted earlier.
-	          window.setTimeout(self._emitBufferedCandidates.bind(self), 500);
-	        }
-	      });
-	      return p;
-	    };
+	          var p = Promise.resolve();
+	          p.then(function() {
+	            if (!hasCallback) {
+	              if (self.iceGatheringState === 'new') {
+	                self.iceGatheringState = 'gathering';
+	              }
+	              // Usually candidates will be emitted earlier.
+	              window.setTimeout(self._emitBufferedCandidates.bind(self), 500);
+	            }
+	          });
+	          return p;
+	        };
 	
 	    window.RTCPeerConnection.prototype.setRemoteDescription =
 	        function(description) {
-	      var self = this;
-	      var stream = new MediaStream();
-	      var receiverList = [];
-	      var sections = SDPUtils.splitSections(description.sdp);
-	      var sessionpart = sections.shift();
-	      sections.forEach(function(mediaSection, sdpMLineIndex) {
-	        var lines = SDPUtils.splitLines(mediaSection);
-	        var mline = lines[0].substr(2).split(' ');
-	        var kind = mline[0];
-	        var rejected = mline[1] === '0';
-	        var direction = SDPUtils.getDirection(mediaSection, sessionpart);
+	          var self = this;
+	          var stream = new MediaStream();
+	          var receiverList = [];
+	          var sections = SDPUtils.splitSections(description.sdp);
+	          var sessionpart = sections.shift();
+	          var isIceLite = SDPUtils.matchPrefix(sessionpart,
+	              'a=ice-lite').length > 0;
+	          sections.forEach(function(mediaSection, sdpMLineIndex) {
+	            var lines = SDPUtils.splitLines(mediaSection);
+	            var mline = lines[0].substr(2).split(' ');
+	            var kind = mline[0];
+	            var rejected = mline[1] === '0';
+	            var direction = SDPUtils.getDirection(mediaSection, sessionpart);
 	
-	        var transceiver;
-	        var iceGatherer;
-	        var iceTransport;
-	        var dtlsTransport;
-	        var rtpSender;
-	        var rtpReceiver;
-	        var sendSsrc;
-	        var recvSsrc;
-	        var localCapabilities;
+	            var transceiver;
+	            var iceGatherer;
+	            var iceTransport;
+	            var dtlsTransport;
+	            var rtpSender;
+	            var rtpReceiver;
+	            var sendEncodingParameters;
+	            var recvEncodingParameters;
+	            var localCapabilities;
 	
-	        var track;
-	        // FIXME: ensure the mediaSection has rtcp-mux set.
-	        var remoteCapabilities = SDPUtils.parseRtpParameters(mediaSection);
-	        var remoteIceParameters;
-	        var remoteDtlsParameters;
-	        if (!rejected) {
-	          remoteIceParameters = SDPUtils.getIceParameters(mediaSection,
-	              sessionpart);
-	          remoteDtlsParameters = SDPUtils.getDtlsParameters(mediaSection,
-	              sessionpart);
-	        }
-	        var mid = SDPUtils.matchPrefix(mediaSection, 'a=mid:')[0].substr(6);
+	            var track;
+	            // FIXME: ensure the mediaSection has rtcp-mux set.
+	            var remoteCapabilities = SDPUtils.parseRtpParameters(mediaSection);
+	            var remoteIceParameters;
+	            var remoteDtlsParameters;
+	            if (!rejected) {
+	              remoteIceParameters = SDPUtils.getIceParameters(mediaSection,
+	                  sessionpart);
+	              remoteDtlsParameters = SDPUtils.getDtlsParameters(mediaSection,
+	                  sessionpart);
+	              remoteDtlsParameters.role = 'client';
+	            }
+	            recvEncodingParameters =
+	                SDPUtils.parseRtpEncodingParameters(mediaSection);
 	
-	        var cname;
-	        // Gets the first SSRC. Note that with RTX there might be multiple SSRCs.
-	        var remoteSsrc = SDPUtils.matchPrefix(mediaSection, 'a=ssrc:')
-	            .map(function(line) {
-	              return SDPUtils.parseSsrcMedia(line);
-	            })
-	            .filter(function(obj) {
-	              return obj.attribute === 'cname';
-	            })[0];
-	        if (remoteSsrc) {
-	          recvSsrc = parseInt(remoteSsrc.ssrc, 10);
-	          cname = remoteSsrc.value;
-	        }
+	            var mid = SDPUtils.matchPrefix(mediaSection, 'a=mid:');
+	            if (mid.length) {
+	              mid = mid[0].substr(6);
+	            } else {
+	              mid = SDPUtils.generateIdentifier();
+	            }
 	
-	        if (description.type === 'offer') {
-	          var transports = self._createIceAndDtlsTransports(mid, sdpMLineIndex);
+	            var cname;
+	            // Gets the first SSRC. Note that with RTX there might be multiple
+	            // SSRCs.
+	            var remoteSsrc = SDPUtils.matchPrefix(mediaSection, 'a=ssrc:')
+	                .map(function(line) {
+	                  return SDPUtils.parseSsrcMedia(line);
+	                })
+	                .filter(function(obj) {
+	                  return obj.attribute === 'cname';
+	                })[0];
+	            if (remoteSsrc) {
+	              cname = remoteSsrc.value;
+	            }
 	
-	          localCapabilities = RTCRtpReceiver.getCapabilities(kind);
-	          sendSsrc = (2 * sdpMLineIndex + 2) * 1001;
+	            var isComplete = SDPUtils.matchPrefix(mediaSection,
+	                'a=end-of-candidates').length > 0;
+	            var cands = SDPUtils.matchPrefix(mediaSection, 'a=candidate:')
+	                .map(function(cand) {
+	                  return SDPUtils.parseCandidate(cand);
+	                })
+	                .filter(function(cand) {
+	                  return cand.component === '1';
+	                });
+	            if (description.type === 'offer' && !rejected) {
+	              var transports = self._createIceAndDtlsTransports(mid,
+	                  sdpMLineIndex);
+	              if (isComplete) {
+	                transports.iceTransport.setRemoteCandidates(cands);
+	              }
 	
-	          rtpReceiver = new RTCRtpReceiver(transports.dtlsTransport, kind);
+	              localCapabilities = RTCRtpReceiver.getCapabilities(kind);
+	              sendEncodingParameters = [{
+	                ssrc: (2 * sdpMLineIndex + 2) * 1001
+	              }];
 	
-	          track = rtpReceiver.track;
-	          receiverList.push([track, rtpReceiver]);
-	          // FIXME: not correct when there are multiple streams but that is
-	          // not currently supported in this shim.
-	          stream.addTrack(track);
+	              rtpReceiver = new RTCRtpReceiver(transports.dtlsTransport, kind);
 	
-	          // FIXME: look at direction.
-	          if (self.localStreams.length > 0 &&
-	              self.localStreams[0].getTracks().length >= sdpMLineIndex) {
-	            // FIXME: actually more complicated, needs to match types etc
-	            var localtrack = self.localStreams[0].getTracks()[sdpMLineIndex];
-	            rtpSender = new RTCRtpSender(localtrack, transports.dtlsTransport);
-	          }
+	              track = rtpReceiver.track;
+	              receiverList.push([track, rtpReceiver]);
+	              // FIXME: not correct when there are multiple streams but that is
+	              // not currently supported in this shim.
+	              stream.addTrack(track);
 	
-	          self.transceivers[sdpMLineIndex] = {
-	            iceGatherer: transports.iceGatherer,
-	            iceTransport: transports.iceTransport,
-	            dtlsTransport: transports.dtlsTransport,
-	            localCapabilities: localCapabilities,
-	            remoteCapabilities: remoteCapabilities,
-	            rtpSender: rtpSender,
-	            rtpReceiver: rtpReceiver,
-	            kind: kind,
-	            mid: mid,
-	            cname: cname,
-	            sendSsrc: sendSsrc,
-	            recvSsrc: recvSsrc
-	          };
-	          // Start the RTCRtpReceiver now. The RTPSender is started in setLocalDescription.
-	          self._transceive(self.transceivers[sdpMLineIndex],
-	              false,
-	              direction === 'sendrecv' || direction === 'sendonly');
-	        } else if (description.type === 'answer' && !rejected) {
-	          transceiver = self.transceivers[sdpMLineIndex];
-	          iceGatherer = transceiver.iceGatherer;
-	          iceTransport = transceiver.iceTransport;
-	          dtlsTransport = transceiver.dtlsTransport;
-	          rtpSender = transceiver.rtpSender;
-	          rtpReceiver = transceiver.rtpReceiver;
-	          sendSsrc = transceiver.sendSsrc;
-	          //recvSsrc = transceiver.recvSsrc;
-	          localCapabilities = transceiver.localCapabilities;
+	              // FIXME: look at direction.
+	              if (self.localStreams.length > 0 &&
+	                  self.localStreams[0].getTracks().length >= sdpMLineIndex) {
+	                // FIXME: actually more complicated, needs to match types etc
+	                var localtrack = self.localStreams[0]
+	                    .getTracks()[sdpMLineIndex];
+	                rtpSender = new RTCRtpSender(localtrack,
+	                    transports.dtlsTransport);
+	              }
 	
-	          self.transceivers[sdpMLineIndex].recvSsrc = recvSsrc;
-	          self.transceivers[sdpMLineIndex].remoteCapabilities =
-	              remoteCapabilities;
-	          self.transceivers[sdpMLineIndex].cname = cname;
+	              self.transceivers[sdpMLineIndex] = {
+	                iceGatherer: transports.iceGatherer,
+	                iceTransport: transports.iceTransport,
+	                dtlsTransport: transports.dtlsTransport,
+	                localCapabilities: localCapabilities,
+	                remoteCapabilities: remoteCapabilities,
+	                rtpSender: rtpSender,
+	                rtpReceiver: rtpReceiver,
+	                kind: kind,
+	                mid: mid,
+	                cname: cname,
+	                sendEncodingParameters: sendEncodingParameters,
+	                recvEncodingParameters: recvEncodingParameters
+	              };
+	              // Start the RTCRtpReceiver now. The RTPSender is started in
+	              // setLocalDescription.
+	              self._transceive(self.transceivers[sdpMLineIndex],
+	                  false,
+	                  direction === 'sendrecv' || direction === 'sendonly');
+	            } else if (description.type === 'answer' && !rejected) {
+	              transceiver = self.transceivers[sdpMLineIndex];
+	              iceGatherer = transceiver.iceGatherer;
+	              iceTransport = transceiver.iceTransport;
+	              dtlsTransport = transceiver.dtlsTransport;
+	              rtpSender = transceiver.rtpSender;
+	              rtpReceiver = transceiver.rtpReceiver;
+	              sendEncodingParameters = transceiver.sendEncodingParameters;
+	              localCapabilities = transceiver.localCapabilities;
 	
-	          iceTransport.start(iceGatherer, remoteIceParameters, 'controlling');
-	          dtlsTransport.start(remoteDtlsParameters);
+	              self.transceivers[sdpMLineIndex].recvEncodingParameters =
+	                  recvEncodingParameters;
+	              self.transceivers[sdpMLineIndex].remoteCapabilities =
+	                  remoteCapabilities;
+	              self.transceivers[sdpMLineIndex].cname = cname;
 	
-	          self._transceive(transceiver,
-	              direction === 'sendrecv' || direction === 'recvonly',
-	              direction === 'sendrecv' || direction === 'sendonly');
+	              if (isIceLite || isComplete) {
+	                iceTransport.setRemoteCandidates(cands);
+	              }
+	              iceTransport.start(iceGatherer, remoteIceParameters,
+	                  'controlling');
+	              dtlsTransport.start(remoteDtlsParameters);
 	
-	          if (rtpReceiver &&
-	              (direction === 'sendrecv' || direction === 'sendonly')) {
-	            track = rtpReceiver.track;
-	            receiverList.push([track, rtpReceiver]);
-	            stream.addTrack(track);
-	          } else {
-	            // FIXME: actually the receiver should be created later.
-	            delete transceiver.rtpReceiver;
-	          }
-	        }
-	      });
+	              self._transceive(transceiver,
+	                  direction === 'sendrecv' || direction === 'recvonly',
+	                  direction === 'sendrecv' || direction === 'sendonly');
 	
-	      this.remoteDescription = {
-	          type: description.type,
-	          sdp: description.sdp
-	      };
-	      switch (description.type) {
-	        case 'offer':
-	          this._updateSignalingState('have-remote-offer');
-	          break;
-	        case 'answer':
-	          this._updateSignalingState('stable');
-	          break;
-	        default:
-	          throw new TypeError('unsupported type "' + description.type + '"');
-	      }
-	      if (stream.getTracks().length) {
-	        self.remoteStreams.push(stream);
-	        window.setTimeout(function() {
-	          var event = new Event('addstream');
-	          event.stream = stream;
-	          self.dispatchEvent(event);
-	          if (self.onaddstream !== null) {
-	            window.setTimeout(function() {
-	              self.onaddstream(event);
-	            }, 0);
-	          }
-	
-	          receiverList.forEach(function(item) {
-	            var track = item[0];
-	            var receiver = item[1];
-	            var event = new Event('track');
-	            event.track = track;
-	            event.receiver = receiver;
-	            event.streams = [stream];
-	            self.dispatchEvent(event);
-	            if (self.ontrack !== null) {
-	                window.setTimeout(function() {
-	                  self.ontrack(event);
-	                }, 0);
+	              if (rtpReceiver &&
+	                  (direction === 'sendrecv' || direction === 'sendonly')) {
+	                track = rtpReceiver.track;
+	                receiverList.push([track, rtpReceiver]);
+	                stream.addTrack(track);
+	              } else {
+	                // FIXME: actually the receiver should be created later.
+	                delete transceiver.rtpReceiver;
+	              }
 	            }
 	          });
-	        }, 0);
-	      }
-	      if (arguments.length > 1 && typeof arguments[1] === 'function') {
-	        window.setTimeout(arguments[1], 0);
-	      }
-	      return Promise.resolve();
-	    };
+	
+	          this.remoteDescription = {
+	            type: description.type,
+	            sdp: description.sdp
+	          };
+	          switch (description.type) {
+	            case 'offer':
+	              this._updateSignalingState('have-remote-offer');
+	              break;
+	            case 'answer':
+	              this._updateSignalingState('stable');
+	              break;
+	            default:
+	              throw new TypeError('unsupported type "' + description.type +
+	                  '"');
+	          }
+	          if (stream.getTracks().length) {
+	            self.remoteStreams.push(stream);
+	            window.setTimeout(function() {
+	              var event = new Event('addstream');
+	              event.stream = stream;
+	              self.dispatchEvent(event);
+	              if (self.onaddstream !== null) {
+	                window.setTimeout(function() {
+	                  self.onaddstream(event);
+	                }, 0);
+	              }
+	
+	              receiverList.forEach(function(item) {
+	                var track = item[0];
+	                var receiver = item[1];
+	                var trackEvent = new Event('track');
+	                trackEvent.track = track;
+	                trackEvent.receiver = receiver;
+	                trackEvent.streams = [stream];
+	                self.dispatchEvent(event);
+	                if (self.ontrack !== null) {
+	                  window.setTimeout(function() {
+	                    self.ontrack(trackEvent);
+	                  }, 0);
+	                }
+	              });
+	            }, 0);
+	          }
+	          if (arguments.length > 1 && typeof arguments[1] === 'function') {
+	            window.setTimeout(arguments[1], 0);
+	          }
+	          return Promise.resolve();
+	        };
 	
 	    window.RTCPeerConnection.prototype.close = function() {
 	      this.transceivers.forEach(function(transceiver) {
@@ -13535,28 +13948,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // Update the signaling state.
 	    window.RTCPeerConnection.prototype._updateSignalingState =
 	        function(newState) {
-	      this.signalingState = newState;
-	      var event = new Event('signalingstatechange');
-	      this.dispatchEvent(event);
-	      if (this.onsignalingstatechange !== null) {
-	        this.onsignalingstatechange(event);
-	      }
-	    };
+	          this.signalingState = newState;
+	          var event = new Event('signalingstatechange');
+	          this.dispatchEvent(event);
+	          if (this.onsignalingstatechange !== null) {
+	            this.onsignalingstatechange(event);
+	          }
+	        };
 	
 	    // Determine whether to fire the negotiationneeded event.
 	    window.RTCPeerConnection.prototype._maybeFireNegotiationNeeded =
 	        function() {
-	      // Fire away (for now).
-	      var event = new Event('negotiationneeded');
-	      this.dispatchEvent(event);
-	      if (this.onnegotiationneeded !== null) {
-	        this.onnegotiationneeded(event);
-	      }
-	    };
+	          // Fire away (for now).
+	          var event = new Event('negotiationneeded');
+	          this.dispatchEvent(event);
+	          if (this.onnegotiationneeded !== null) {
+	            this.onnegotiationneeded(event);
+	          }
+	        };
 	
 	    // Update the connection state.
-	    window.RTCPeerConnection.prototype._updateConnectionState =
-	        function() {
+	    window.RTCPeerConnection.prototype._updateConnectionState = function() {
 	      var self = this;
 	      var newState;
 	      var states = {
@@ -13573,18 +13985,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        states[transceiver.dtlsTransport.state]++;
 	      });
 	      // ICETransport.completed and connected are the same for this purpose.
-	      states['connected'] += states['completed'];
+	      states.connected += states.completed;
 	
 	      newState = 'new';
-	      if (states['failed'] > 0) {
+	      if (states.failed > 0) {
 	        newState = 'failed';
-	      } else if (states['connecting'] > 0 || states['checking'] > 0) {
+	      } else if (states.connecting > 0 || states.checking > 0) {
 	        newState = 'connecting';
-	      } else if (states['disconnected'] > 0) {
+	      } else if (states.disconnected > 0) {
 	        newState = 'disconnected';
-	      } else if (states['new'] > 0) {
+	      } else if (states.new > 0) {
 	        newState = 'new';
-	      } else if (states['connecting'] > 0 || states['completed'] > 0) {
+	      } else if (states.connected > 0 || states.completed > 0) {
 	        newState = 'connected';
 	      }
 	
@@ -13669,8 +14081,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var sdp = SDPUtils.writeSessionBoilerplate();
 	      var transceivers = [];
 	      tracks.forEach(function(mline, sdpMLineIndex) {
-	        // For each track, create an ice gatherer, ice transport, dtls transport,
-	        // potentially rtpsender and rtpreceiver.
+	        // For each track, create an ice gatherer, ice transport,
+	        // dtls transport, potentially rtpsender and rtpreceiver.
 	        var track = mline.track;
 	        var kind = mline.kind;
 	        var mid = SDPUtils.generateIdentifier();
@@ -13682,7 +14094,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var rtpReceiver;
 	
 	        // generate an ssrc now, to be used later in rtpSender.send
-	        var sendSsrc = (2 * sdpMLineIndex + 1) * 1001;
+	        var sendEncodingParameters = [{
+	          ssrc: (2 * sdpMLineIndex + 1) * 1001
+	        }];
 	        if (track) {
 	          rtpSender = new RTCRtpSender(track, transports.dtlsTransport);
 	        }
@@ -13701,8 +14115,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          rtpReceiver: rtpReceiver,
 	          kind: kind,
 	          mid: mid,
-	          sendSsrc: sendSsrc,
-	          recvSsrc: null
+	          sendEncodingParameters: sendEncodingParameters,
+	          recvEncodingParameters: null
 	        };
 	        var transceiver = transceivers[sdpMLineIndex];
 	        sdp += SDPUtils.writeMediaSection(transceiver,
@@ -13722,12 +14136,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	    window.RTCPeerConnection.prototype.createAnswer = function() {
 	      var self = this;
-	      var answerOptions;
-	      if (arguments.length === 1 && typeof arguments[0] !== 'function') {
-	        answerOptions = arguments[0];
-	      } else if (arguments.length === 3) {
-	        answerOptions = arguments[2];
-	      }
 	
 	      var sdp = SDPUtils.writeSessionBoilerplate();
 	      this.transceivers.forEach(function(transceiver) {
@@ -13795,18 +14203,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.transceivers.forEach(function(transceiver) {
 	        ['rtpSender', 'rtpReceiver', 'iceGatherer', 'iceTransport',
 	            'dtlsTransport'].forEach(function(method) {
-	          if (transceiver[method]) {
-	            promises.push(transceiver[method].getStats());
-	          }
-	        });
+	              if (transceiver[method]) {
+	                promises.push(transceiver[method].getStats());
+	              }
+	            });
 	      });
 	      var cb = arguments.length > 1 && typeof arguments[1] === 'function' &&
 	          arguments[1];
 	      return new Promise(function(resolve) {
-	        var results = {};
+	        // shim getStats with maplike support
+	        var results = new Map();
 	        Promise.all(promises).then(function(res) {
 	          res.forEach(function(result) {
 	            Object.keys(result).forEach(function(id) {
+	              results.set(id, result[id]);
 	              results[id] = result[id];
 	            });
 	          });
@@ -13829,21 +14239,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	    logging('DEPRECATED, reattachMediaStream will soon be removed.');
 	    to.srcObject = from.srcObject;
 	  }
-	}
+	};
 	
 	// Expose public methods.
-	module.e = {
+	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
+	  shimGetUserMedia: __webpack_require__(191),
 	  attachMediaStream: edgeShim.attachMediaStream,
 	  reattachMediaStream: edgeShim.reattachMediaStream
-	}
-	
+	};
 
 
 /***/ },
-/* 190 */
-/***/ function(module, exports, __webpack_require__) {
+/* 191 */
+/***/ function(module, exports) {
 
+	"use strict";
 	/*
 	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
 	 *
@@ -13851,6 +14262,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  that can be found in the LICENSE file in the root of the source
 	 *  tree.
 	 */
+	 /* eslint-env node */
+	'use strict';
+	
+	// Expose public methods.
+	module.exports = function() {
+	  var shimError_ = function(e) {
+	    return {
+	      name: {PermissionDeniedError: 'NotAllowedError'}[e.name] || e.name,
+	      message: e.message,
+	      constraint: e.constraint,
+	      toString: function() {
+	        return this.name;
+	      }
+	    };
+	  };
+	
+	  // getUserMedia error shim.
+	  var origGetUserMedia = navigator.mediaDevices.getUserMedia.
+	      bind(navigator.mediaDevices);
+	  navigator.mediaDevices.getUserMedia = function(c) {
+	    return origGetUserMedia(c).catch(function(e) {
+	      return Promise.reject(shimError_(e));
+	    });
+	  };
+	};
+
+
+/***/ },
+/* 192 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	/*
+	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+	 *
+	 *  Use of this source code is governed by a BSD-style license
+	 *  that can be found in the LICENSE file in the root of the source
+	 *  tree.
+	 */
+	 /* eslint-env node */
 	'use strict';
 	
 	var logging = __webpack_require__(0).log;
@@ -13861,9 +14312,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (typeof window === 'object' && window.RTCPeerConnection && !('ontrack' in
 	        window.RTCPeerConnection.prototype)) {
 	      Object.defineProperty(window.RTCPeerConnection.prototype, 'ontrack', {
-	        get: function() { return this._ontrack; },
+	        get: function() {
+	          return this._ontrack;
+	        },
 	        set: function(f) {
-	          var self = this;
 	          if (this._ontrack) {
 	            this.removeEventListener('track', this._ontrack);
 	            this.removeEventListener('addstream', this._ontrackpoly);
@@ -13902,6 +14354,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	
 	  shimPeerConnection: function() {
+	    if (typeof window !== 'object' || !(window.RTCPeerConnection ||
+	        window.mozRTCPeerConnection)) {
+	      return; // probably media.peerconnection.enabled=false in about:config
+	    }
 	    // The RTCPeerConnection object.
 	    if (!window.RTCPeerConnection) {
 	      window.RTCPeerConnection = function(pcConfig, pcConstraints) {
@@ -13930,7 +14386,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            pcConfig.iceServers = newIceServers;
 	          }
 	        }
-	        return new mozRTCPeerConnection(pcConfig, pcConstraints); // jscs:ignore requireCapitalizedConstructors
+	        return new mozRTCPeerConnection(pcConfig, pcConstraints);
 	      };
 	      window.RTCPeerConnection.prototype = mozRTCPeerConnection.prototype;
 	
@@ -13938,12 +14394,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (mozRTCPeerConnection.generateCertificate) {
 	        Object.defineProperty(window.RTCPeerConnection, 'generateCertificate', {
 	          get: function() {
-	            if (arguments.length) {
-	              return mozRTCPeerConnection.generateCertificate.apply(null,
-	                  arguments);
-	            } else {
-	              return mozRTCPeerConnection.generateCertificate;
-	            }
+	            return mozRTCPeerConnection.generateCertificate;
 	          }
 	        });
 	      }
@@ -13951,6 +14402,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	      window.RTCSessionDescription = mozRTCSessionDescription;
 	      window.RTCIceCandidate = mozRTCIceCandidate;
 	    }
+	
+	    // shim away need for obsolete RTCIceCandidate/RTCSessionDescription.
+	    ['setLocalDescription', 'setRemoteDescription', 'addIceCandidate']
+	        .forEach(function(method) {
+	          var nativeMethod = RTCPeerConnection.prototype[method];
+	          RTCPeerConnection.prototype[method] = function() {
+	            arguments[0] = new ((method === 'addIceCandidate') ?
+	                RTCIceCandidate : RTCSessionDescription)(arguments[0]);
+	            return nativeMethod.apply(this, arguments);
+	          };
+	        });
+	
+	    // shim getStats with maplike support
+	    var makeMapStats = function(stats) {
+	      var map = new Map();
+	      Object.keys(stats).forEach(function(key) {
+	        map.set(key, stats[key]);
+	        map[key] = stats[key];
+	      });
+	      return map;
+	    };
+	
+	    var nativeGetStats = RTCPeerConnection.prototype.getStats;
+	    RTCPeerConnection.prototype.getStats = function(selector, onSucc, onErr) {
+	      return nativeGetStats.apply(this, [selector || null])
+	        .then(function(stats) {
+	          return makeMapStats(stats);
+	        })
+	        .then(onSucc, onErr);
+	    };
 	  },
 	
 	  shimGetUserMedia: function() {
@@ -13962,7 +14443,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	        var require = [];
 	        Object.keys(c).forEach(function(key) {
-	          if (key === 'require' || key === 'advanced' || key === 'mediaSource') {
+	          if (key === 'require' || key === 'advanced' ||
+	              key === 'mediaSource') {
 	            return;
 	          }
 	          var r = c[key] = (typeof c[key] === 'object') ?
@@ -13999,6 +14481,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	        return c;
 	      };
+	      constraints = JSON.parse(JSON.stringify(constraints));
 	      if (browserDetails.version < 38) {
 	        logging('spec: ' + JSON.stringify(constraints));
 	        if (constraints.audio) {
@@ -14019,7 +14502,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return new Promise(function(resolve, reject) {
 	        navigator.getUserMedia(constraints, resolve, reject);
 	      });
-	    }
+	    };
 	
 	    // Shim for mediaDevices on older versions.
 	    if (!navigator.mediaDevices) {
@@ -14030,14 +14513,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    navigator.mediaDevices.enumerateDevices =
 	        navigator.mediaDevices.enumerateDevices || function() {
-	      return new Promise(function(resolve) {
-	        var infos = [
-	          {kind: 'audioinput', deviceId: 'default', label: '', groupId: ''},
-	          {kind: 'videoinput', deviceId: 'default', label: '', groupId: ''}
-	        ];
-	        resolve(infos);
-	      });
-	    };
+	          return new Promise(function(resolve) {
+	            var infos = [
+	              {kind: 'audioinput', deviceId: 'default', label: '', groupId: ''},
+	              {kind: 'videoinput', deviceId: 'default', label: '', groupId: ''}
+	            ];
+	            resolve(infos);
+	          });
+	        };
 	
 	    if (browserDetails.version < 41) {
 	      // Work around http://bugzil.la/1169665
@@ -14064,23 +14547,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    logging('DEPRECATED, reattachMediaStream will soon be removed.');
 	    to.srcObject = from.srcObject;
 	  }
-	}
+	};
 	
 	// Expose public methods.
-	module.e = {
+	module.exports = {
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(191),
+	  shimGetUserMedia: __webpack_require__(193),
 	  attachMediaStream: firefoxShim.attachMediaStream,
 	  reattachMediaStream: firefoxShim.reattachMediaStream
-	}
+	};
 
 
 /***/ },
-/* 191 */
+/* 193 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
 	/*
 	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
 	 *
@@ -14088,13 +14572,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  that can be found in the LICENSE file in the root of the source
 	 *  tree.
 	 */
+	 /* eslint-env node */
 	'use strict';
 	
 	var logging = __webpack_require__(0).log;
 	var browserDetails = __webpack_require__(0).browserDetails;
 	
 	// Expose public methods.
-	module.e = function() {
+	module.exports = function() {
+	  var shimError_ = e => ({
+	    name: {
+	      SecurityError: 'NotAllowedError',
+	      PermissionDeniedError: 'NotAllowedError'
+	    }[e.name] || e.name,
+	    message: {
+	      'The operation is insecure.': 'The request is not allowed by the user ' +
+	      'agent or the platform in the current context.'
+	    }[e.message] || e.message,
+	    constraint: e.constraint,
+	    toString: function() {
+	      return this.name + (this.message && ': ') + this.message;
+	    }
+	  });
+	
+	
 	  // getUserMedia constraints shim.
 	  var getUserMedia_ = function(constraints, onSuccess, onError) {
 	    var constraintsToFF37_ = function(c) {
@@ -14140,6 +14641,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      return c;
 	    };
+	    constraints = JSON.parse(JSON.stringify(constraints));
 	    if (browserDetails.version < 38) {
 	      logging('spec: ' + JSON.stringify(constraints));
 	      if (constraints.audio) {
@@ -14150,7 +14652,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      logging('ff37: ' + JSON.stringify(constraints));
 	    }
-	    return navigator.mozGetUserMedia(constraints, onSuccess, onError);
+	    return navigator.mozGetUserMedia(constraints, onSuccess,
+	                                     e => onError(shimError_(e)));
 	  };
 	
 	  navigator.getUserMedia = getUserMedia_;
@@ -14160,7 +14663,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return new Promise(function(resolve, reject) {
 	      navigator.getUserMedia(constraints, resolve, reject);
 	    });
-	  }
+	  };
 	
 	  // Shim for mediaDevices on older versions.
 	  if (!navigator.mediaDevices) {
@@ -14171,14 +14674,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  navigator.mediaDevices.enumerateDevices =
 	      navigator.mediaDevices.enumerateDevices || function() {
-	    return new Promise(function(resolve) {
-	      var infos = [
-	        {kind: 'audioinput', deviceId: 'default', label: '', groupId: ''},
-	        {kind: 'videoinput', deviceId: 'default', label: '', groupId: ''}
-	      ];
-	      resolve(infos);
-	    });
-	  };
+	        return new Promise(function(resolve) {
+	          var infos = [
+	            {kind: 'audioinput', deviceId: 'default', label: '', groupId: ''},
+	            {kind: 'videoinput', deviceId: 'default', label: '', groupId: ''}
+	          ];
+	          resolve(infos);
+	        });
+	      };
 	
 	  if (browserDetails.version < 41) {
 	    // Work around http://bugzil.la/1169665
@@ -14193,14 +14696,61 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    };
 	  }
-	}
+	  if (browserDetails.version < 49) {
+	    var origGetUserMedia = navigator.mediaDevices.getUserMedia.
+	        bind(navigator.mediaDevices);
+	    navigator.mediaDevices.getUserMedia = c =>
+	        origGetUserMedia(c).catch(e => Promise.reject(shimError_(e)));
+	  }
+	};
 
 
 /***/ },
-/* 192 */
+/* 194 */
+/***/ function(module, exports) {
+
+	"use strict";
+	/*
+	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+	 *
+	 *  Use of this source code is governed by a BSD-style license
+	 *  that can be found in the LICENSE file in the root of the source
+	 *  tree.
+	 */
+	'use strict';
+	var safariShim = {
+	  // TODO: DrAlex, should be here, double check against LayoutTests
+	  // shimOnTrack: function() { },
+	
+	  // TODO: DrAlex
+	  // attachMediaStream: function(element, stream) { },
+	  // reattachMediaStream: function(to, from) { },
+	
+	  // TODO: once the back-end for the mac port is done, add.
+	  // TODO: check for webkitGTK+
+	  // shimPeerConnection: function() { },
+	
+	  shimGetUserMedia: function() {
+	    navigator.getUserMedia = navigator.webkitGetUserMedia;
+	  }
+	};
+	
+	// Expose public methods.
+	module.exports = {
+	  shimGetUserMedia: safariShim.shimGetUserMedia
+	  // TODO
+	  // shimOnTrack: safariShim.shimOnTrack,
+	  // shimPeerConnection: safariShim.shimPeerConnection,
+	  // attachMediaStream: safariShim.attachMediaStream,
+	  // reattachMediaStream: safariShim.reattachMediaStream
+	};
+
+
+/***/ },
+/* 195 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.e = __webpack_require__(67);
+	module.exports = __webpack_require__(68);
 
 
 /***/ }

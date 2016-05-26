@@ -21,21 +21,23 @@ var App = {
             }.bind(this));
     },
     attachListeners: function() {
-        var self = this;
-        document.querySelector('.input-field input + .button.scan')
-            .addEventListener("click", function onClick(e) {
-                e.preventDefault();
-                e.target.removeEventListener("click", onClick);
-                document.querySelector('.input-field input[type=file]').click();
-            });
-        document.querySelector('.input-field input[type=file]')
-            .addEventListener("change", function onChange(e) {
-                e.preventDefault();
-                e.target.removeEventListener("change", onChange);
-                if (e.target.files && e.target.files.length) {
-                    self.decode(URL.createObjectURL(e.target.files[0]));
-                }
-            });
+        var self = this,
+            button = document.querySelector('.input-field input + .button.scan'),
+            fileInput = document.querySelector('.input-field input[type=file]');
+
+        button.addEventListener("click", function onClick(e) {
+            e.preventDefault();
+            button.removeEventListener("click", onClick);
+            document.querySelector('.input-field input[type=file]').click();
+        });
+
+        fileInput.addEventListener("change", function onChange(e) {
+            e.preventDefault();
+            fileInput.removeEventListener("change", onChange);
+            if (e.target.files && e.target.files.length) {
+                self.decode(URL.createObjectURL(e.target.files[0]));
+            }
+        });
     }
 };
 App.init();

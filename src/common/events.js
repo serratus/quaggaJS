@@ -50,9 +50,16 @@ export default function createEventedElement() {
             var event = getEvent(eventName),
                 subscribers = event.subscribers;
 
-            event.subscribers = subscribers.filter(function(subscriber) {
+            subscribers.filter(function(subscriber) {
+                return !!subscriber.once;
+            }).forEach((subscriber) => {
                 publishSubscription(subscriber, data);
+            });
+            event.subscribers = subscribers.filter(function(subscriber) {
                 return !subscriber.once;
+            });
+            event.subscribers.forEach((subscriber) => {
+                publishSubscription(subscriber, data);
             });
         },
         once: function(event, callback, async) {
