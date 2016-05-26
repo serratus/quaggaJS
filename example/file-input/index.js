@@ -14,7 +14,7 @@ var App = {
                 document.querySelector('input.isbn').value = result.codeResult.code;
             })
             .catch(function() {
-                console.log("Not found!");
+                document.querySelector('input.isbn').value = "Not Found";
             })
             .then(function() {
                 this.attachListeners();
