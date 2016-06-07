@@ -67,7 +67,6 @@ function initInputStream(cb) {
     }
 
     _inputStream.setAttribute("preload", "auto");
-    _inputStream.setAttribute("autoplay", true);
     _inputStream.setInputStream(_config.inputStream);
     _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
 }
