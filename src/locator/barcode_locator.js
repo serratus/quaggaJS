@@ -561,7 +561,7 @@ export default function createLocator(inputImageWrapper, config) {
             boxes = findBoxes(topLabels, maxLabel);
             return boxes;
         }
-    }
+    };
 }
 export function checkImageConstraints(inputStream, config) {
     var patchSize,

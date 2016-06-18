@@ -50,14 +50,19 @@ export default function createEventedElement() {
             var event = getEvent(eventName),
                 subscribers = event.subscribers;
 
+            // Publish one-time subscriptions
             subscribers.filter(function(subscriber) {
                 return !!subscriber.once;
             }).forEach((subscriber) => {
                 publishSubscription(subscriber, data);
             });
+
+            // remove them from the subscriber
             event.subscribers = subscribers.filter(function(subscriber) {
                 return !subscriber.once;
             });
+
+            // publish the rest
             event.subscribers.forEach((subscriber) => {
                 publishSubscription(subscriber, data);
             });

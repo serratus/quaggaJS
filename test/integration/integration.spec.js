@@ -53,7 +53,8 @@ describe('decodeSingle', function () {
                         expect(result.codeResult.code).to.equal(sample.result);
                         expect(result.codeResult.format).to.equal(sample.format);
                         callback();
-                    });
+                    })
+                    .start();
             }, function() {
                 done();
             });

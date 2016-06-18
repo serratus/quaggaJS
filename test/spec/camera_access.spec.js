@@ -27,9 +27,10 @@ beforeEach(function() {
     sinon.spy(tracks[0], "stop");
 
     video = {
-        src: null,
+        srcObject: null,
         addEventListener: function() {},
         removeEventListener: function() {},
+        setAttribute: sinon.spy(),
         play: function() {},
         videoWidth: 320,
         videoHeight: 480
@@ -60,12 +61,9 @@ describe('success', function() {
             CameraAccess.request(video, {})
             .then(function () {
                 expect(navigator.mediaDevices.getUserMedia.calledOnce).to.equal(true);
-                expect(video.src).to.deep.equal(stream);
+                expect(video.srcObject).to.deep.equal(stream);
                 done();
             })
-            window.setTimeout(() => {
-                video.onloadedmetadata();
-            }, 100);
         });
 
         it("should allow deprecated constraints to be used", (done) => {
@@ -89,9 +87,6 @@ describe('success', function() {
                 expect(args[0].video.maxAspectRatio).not.to.be.defined;
                 done();
             })
-            window.setTimeout(() => {
-                video.onloadedmetadata();
-            }, 100);
         });
     });
 
@@ -122,9 +117,6 @@ describe('success', function() {
                 expect(args[0].video.deviceId).to.equal("user");
                 done();
             })
-            window.setTimeout(() => {
-                video.onloadedmetadata();
-            }, 100);
         });
     });
 
@@ -132,15 +124,12 @@ describe('success', function() {
         it('should release the camera', function (done) {
             CameraAccess.request(video, {})
             .then(function () {
-                expect(video.src).to.deep.equal(stream);
+                expect(video.srcObject).to.deep.equal(stream);
                 CameraAccess.release();
-                expect(video.src.getVideoTracks()).to.have.length(1);
-                expect(video.src.getVideoTracks()[0].stop.calledOnce).to.equal(true);
+                expect(video.srcObject.getVideoTracks()).to.have.length(1);
+                expect(video.srcObject.getVideoTracks()[0].stop.calledOnce).to.equal(true);
                 done();
             });
-            window.setTimeout(() => {
-                video.onloadedmetadata();
-            }, 100);
         });
     });
 });

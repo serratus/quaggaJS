@@ -33,7 +33,13 @@
         "objectLiteralComputedProperties": true
     },
     "globals": {
-        "ENV": true
+        "ENV": true,
+        "it": true,
+        "describe": true,
+        "beforeEach": true,
+        "sinon": true,
+        "expect": true,
+        "afterEach": true
     },
     "rules": {
         "no-unused-expressions": 1,

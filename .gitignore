@@ -4,3 +4,4 @@ coverage/
 .project
 _site/
 .idea/
+.vscode/

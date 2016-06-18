@@ -7,7 +7,6 @@ import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
 import {merge, pick, omitBy, isEmpty} from 'lodash';
 
-
 function fromImage(config, imageSrc, inputConfig = {}) {
     const staticImageConfig = {
         inputStream: {

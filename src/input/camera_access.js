@@ -34,11 +34,11 @@ function waitForVideo(video) {
 function initCamera(video, constraints) {
     return navigator.mediaDevices.getUserMedia(constraints)
     .then((stream) => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             streamRef = stream;
             video.setAttribute("autoplay", 'true');
             video.srcObject = stream;
-            video.addEventListener('loadedmetadata', (e) => {
+            video.addEventListener('loadedmetadata', () => {
                 video.play();
                 resolve();
             });
@@ -51,13 +51,13 @@ function deprecatedConstraints(videoConstraints) {
     const normalized = pick(videoConstraints, ["width", "height", "facingMode",
             "aspectRatio", "deviceId"]);
 
-    if (typeof videoConstraints["minAspectRatio"] !== 'undefined' &&
-            videoConstraints["minAspectRatio"] > 0) {
-        normalized["aspectRatio"] = videoConstraints["minAspectRatio"];
+    if (typeof videoConstraints.minAspectRatio !== 'undefined' &&
+            videoConstraints.minAspectRatio > 0) {
+        normalized.aspectRatio = videoConstraints.minAspectRatio;
         console.log("WARNING: Constraint 'minAspectRatio' is deprecated; Use 'aspectRatio' instead");
     }
-    if (typeof videoConstraints["facing"] !== 'undefined') {
-        normalized["facingMode"] = videoConstraints["facing"];
+    if (typeof videoConstraints.facing !== 'undefined') {
+        normalized.facingMode = videoConstraints.facing;
         console.log("WARNING: Constraint 'facing' is deprecated. Use 'facingMode' instead'");
     }
     return normalized;
@@ -69,7 +69,7 @@ function applyCameraFacing(facing, constraints) {
     }
     if ( typeof MediaStreamTrack !== 'undefined' &&
             typeof MediaStreamTrack.getSources !== 'undefined') {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             MediaStreamTrack.getSources((sourceInfos) => {
                 const videoSource = sourceInfos.filter((sourceInfo) => (
                     sourceInfo.kind === "video" && sourceInfo.facing === facing
