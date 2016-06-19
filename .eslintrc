@@ -46,7 +46,7 @@
         "no-extra-boolean-cast": 1,
         "no-multi-spaces": 2,
         "no-underscore-dangle": 0,
-        "comma-dangle": 2,
+        "comma-dangle": 0,
         "camelcase": 0,
         "curly": 2,
         "eqeqeq": 2,

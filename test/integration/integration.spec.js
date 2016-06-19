@@ -47,7 +47,7 @@ describe('decodeSingle', function () {
                 config.readers = readers;
                 Quagga
                     .config(config)
-                    .fromImage(config.src)
+                    .fromSource(config.src)
                     .addEventListener('processed', function(result){
                         console.log(sample.name);
                         expect(result.codeResult.code).to.equal(sample.result);

@@ -10,7 +10,6 @@ import {createConfigFromSource} from './input/config_factory';
 
 function fromSource(config, source, inputConfig = {}) {
     config = createConfigFromSource(config, inputConfig, source);
-    console.log(config);
     const scanner = createScanner();
     return {
         addEventListener(eventType, cb) {
@@ -36,6 +35,7 @@ function fromSource(config, source, inputConfig = {}) {
             return this;
         },
         toPromise() {
+            // how to cancel?? timeout!
             return new Promise((resolve, reject) => {
                 scanner.decodeSingle(config, (result) => {
                     if (result && result.codeResult && result.codeResult.code) {

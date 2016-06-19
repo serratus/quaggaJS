@@ -9,14 +9,6 @@ MyFileList.prototype.constructor = MyFileList;
 
 const OriginalFileList = window.FileList;
 
-beforeEach(function() {
-    window.FileList = MyFileList;
-});
-
-afterEach(function() {
-    window.FileList = OriginalFileList;
-});
-
 function expectImageConfig(config) {
     expect(config.inputStream.type).to.equal("ImageStream");
     expect(config.inputStream.sequence).to.equal(false);
@@ -37,6 +29,14 @@ function expectLiveConfig(config) {
 }
 
 describe("createConfigFromSource", () => {
+    beforeEach(function() {
+        window.FileList = MyFileList;
+    });
+
+    afterEach(function() {
+        window.FileList = OriginalFileList;
+    });
+
     it("should create an image config for an image-file", () => {
         const file = new File([], "image.jpg", {type: 'image/jpg'});
         const config = createConfigFromSource({}, {}, file);
