@@ -7,7 +7,7 @@ export default class Scanner extends React.Component {
         this._scanner = Quagga
             .decoder({readers: ['ean_reader']})
             .locator({patchSize: 'medium'})
-            .fromVideo({
+            .fromSource({
                 target: '.overlay__content',
                 constraints: {
                     width: 800,
