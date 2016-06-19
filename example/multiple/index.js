@@ -82,7 +82,7 @@ var App = {
         var scanner = Quagga
             .decoder({readers: this.querySelectedReaders()})
             .locator({patchSize: 'medium'})
-            .fromVideo({
+            .fromSource({
                 target: selector,
                 constraints: {
                     width: 600,
