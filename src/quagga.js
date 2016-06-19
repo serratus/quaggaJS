@@ -5,85 +5,11 @@ import ImageWrapper from './common/image_wrapper';
 import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
-import {merge, pick, omitBy, isEmpty} from 'lodash';
+import {merge} from 'lodash';
+import {createConfigFromSource} from './input/config_factory';
 
-function fromImage(config, imageSrc, inputConfig = {}) {
-    const staticImageConfig = {
-        inputStream: {
-            type: "ImageStream",
-            sequence: false,
-            size: 800,
-            src: imageSrc
-        },
-        numOfWorkers: (ENV.development && config.debug) ? 0 : 1
-    };
-    config = merge(
-        config,
-        staticImageConfig,
-        {numOfWorkers: typeof config.numOfWorkers === 'number' && config.numOfWorkers > 0 ? 1 : 0},
-        {inputStream: omitBy(pick(config.inputStream, ['size', 'src']), isEmpty)},
-        {inputStream: inputConfig});
-
-    const scanner = createScanner();
-    return {
-        addEventListener(eventType, cb) {
-            scanner.subscribe(eventType, cb);
-            return this;
-        },
-        removeEventListener(eventType, cb) {
-            scanner.unsubscribe(eventType, cb);
-            return this;
-        },
-        start() {
-            scanner.init(config, () => {
-                scanner.start();
-            });
-            return this;
-        },
-        stop() {
-            scanner.stop();
-            return this;
-        },
-        toPromise() {
-            return new Promise((resolve, reject) => {
-                scanner.decodeSingle(config, (result) => {
-                    if (result && result.codeResult && result.codeResult.code) {
-                        return resolve(result);
-                    }
-                    return reject(result);
-                });
-            });
-        }
-    };
-}
-
-function fromVideo(config, source, inputConfig = {}) {
-    // remember last instance
-    // check if anything but the imagesrc has changed
-    //
-    let sourceConfig = {
-        type: "LiveStream",
-        constraints: {
-            width: 640,
-            height: 480,
-            facingMode: "environment"
-        }
-    };
-
-    /*if (source instanceof MediaStream) {
-        // stream
-    } else*/ if (source instanceof Element) {
-        // video element
-    } else if (typeof source === 'string') {
-        // video source
-    } else if (typeof source === 'object'
-            && (typeof source.constraints !== 'undefined'
-            || typeof source.area !== 'undefined')) {
-        inputConfig = source;
-    } else if (!source) {
-        // LiveStream
-    }
-    config = merge({}, config, {inputStream: sourceConfig}, {inputStream: inputConfig});
+function fromSource(config, source, inputConfig = {}) {
+    config = createConfigFromSource(config, inputConfig, source);
     console.log(config);
     const scanner = createScanner();
     return {
@@ -108,6 +34,16 @@ function fromVideo(config, source, inputConfig = {}) {
         stop() {
             scanner.stop();
             return this;
+        },
+        toPromise() {
+            return new Promise((resolve, reject) => {
+                scanner.decodeSingle(config, (result) => {
+                    if (result && result.codeResult && result.codeResult.code) {
+                        return resolve(result);
+                    }
+                    return reject(result);
+                });
+            });
         }
     };
 }
@@ -121,11 +57,8 @@ function setConfig(configuration = {}, key, config = {}) {
 
 function createApi(configuration = Config) {
     return {
-        fromImage(src, conf) {
-            return fromImage(configuration, src, conf);
-        },
-        fromVideo(src, inputConfig) {
-            return fromVideo(configuration, src, inputConfig);
+        fromSource(src, inputConfig) {
+            return fromSource(configuration, src, inputConfig);
         },
         decoder(conf) {
             return setConfig(configuration, "decoder", conf);
