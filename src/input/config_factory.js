@@ -1,29 +1,29 @@
 import {merge, pick, omitBy, isEmpty} from 'lodash';
 
+import DOMHelper from '../common/dom_helper';
+
 const isDataURL = {regex: /^\s*data:([a-z]+\/[a-z0-9\-\+]+(;[a-z\-]+\=[a-z0-9\-]+)?)?(;base64)?,[a-z0-9\!\$\&\'\,\(\)\*\+\,\;\=\-\.\_\~\:\@\/\?\%\s]*\s*$/i}, // eslint-disable-line max-len
     isBlobURL = {regex: /^\s*blob:(.*)$/i},
     isMediaURL = {regex: /^(?:(?:http[s]?|ftp):\/)?\/?(?:(?:[^:\/\s]+)(?:(?:\/\w+)*\/))?([\w\-]+\.([^#?\s]+))(?:.*)?(?:#[\w\-]+)?$/i},  // eslint-disable-line max-len
     isImageExt = {regex: /(jpe?g|png|gif|tiff)(?:\s+|$)/i},
     isVideoExt = {regex: /(webm|ogg|mp4|m4v)/i};
 
-const MediaStream = "MediaStream" in window ? window.MediaStream : function(){};
-
 export function createConfigFromSource(config, sourceConfig, source) {
-    if (source instanceof MediaStream) {
+    if (source instanceof DOMHelper.MediaStream) {
         return createConfigForStream(config, sourceConfig, {srcObject: source});
-    } else if (source instanceof HTMLImageElement) {
+    } else if (source instanceof DOMHelper.HTMLImageElement) {
         throw new Error('Source "HTMLImageElement": not yet supported');
         // return createConfigForImage(config, inputConfig, {image: source});
-    } else if (source instanceof HTMLVideoElement) {
+    } else if (source instanceof DOMHelper.HTMLVideoElement) {
         throw new Error('Source "HTMLVideoElement": not yet supported');
         // return createConfigForVideo(config, inputConfig, {video: source});
-    } else if (source instanceof HTMLCanvasElement) {
+    } else if (source instanceof DOMHelper.HTMLCanvasElement) {
         return createConfigForCanvas(config, sourceConfig, {canvas: source});
-    } else if (source instanceof FileList) {
+    } else if (source instanceof DOMHelper.FileList) {
         if (source.length > 0) {
             return createConfigForFile(config, sourceConfig, source[0]);
         }
-    } else if (source instanceof File) {
+    } else if (source instanceof DOMHelper.File) {
         return createConfigForFile(config, sourceConfig, source);
     } else if (typeof source === 'string') {
         return createConfigForString(config, sourceConfig, source);
@@ -64,7 +64,7 @@ function createConfigForMimeType(config, inputConfig, {src, mime}) {
 }
 
 function createConfigForFile(config, inputConfig, file) {
-    const src = window.URL.createObjectURL(file);
+    const src = DOMHelper.URL.createObjectURL(file);
     return createConfigForMimeType(config, inputConfig, {
         src,
         mime: file.type

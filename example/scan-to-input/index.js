@@ -66,7 +66,7 @@ var App = {
             this._scanner = Quagga
                 .decoder({readers: ['ean_reader']})
                 .locator({patchSize: 'medium'})
-                .fromVideo({
+                .fromSource({
                     target: selector,
                     constraints: {
                         width: 800,

@@ -4,11 +4,11 @@ var App = {
     init: function() {
         this.attachListeners();
     },
-    decode: function(src) {
+    decode: function(file) {
         Quagga
             .decoder({readers: ['ean_reader']})
             .locator({patchSize: 'medium'})
-            .fromImage(src, {size: 800})
+            .fromSource(file, {size: 800})
             .toPromise()
             .then(function(result) {
                 document.querySelector('input.isbn').value = result.codeResult.code;
@@ -35,7 +35,7 @@ var App = {
             e.preventDefault();
             fileInput.removeEventListener("change", onChange);
             if (e.target.files && e.target.files.length) {
-                self.decode(URL.createObjectURL(e.target.files[0]));
+                self.decode(e.target.files[0]);
             }
         });
     }
