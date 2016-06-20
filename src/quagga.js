@@ -35,15 +35,40 @@ function fromSource(config, source, inputConfig = {}) {
             return this;
         },
         toPromise() {
-            // how to cancel?? timeout!
-            return new Promise((resolve, reject) => {
-                scanner.decodeSingle(config, (result) => {
-                    if (result && result.codeResult && result.codeResult.code) {
-                        return resolve(result);
-                    }
-                    return reject(result);
+            if (config.inputStream.type === 'LiveStream'
+                    || config.inputStream.type === 'VideoStream') {
+                let cancelRequested = false;
+                return {
+                    cancel() {
+                        cancelRequested = true;
+                    },
+                    promise: new Promise((resolve, reject) => {
+                        function onProcessed(result) {
+                            if (result && result.codeResult && result.codeResult.code) {
+                                scanner.stop();
+                                scanner.unsubscribe("processed", onProcessed);
+                                resolve(result);
+                            }
+                            if (cancelRequested) {
+                                scanner.stop();
+                                scanner.unsubscribe("processed", onProcessed);
+                                reject("cancelled!");
+                            }
+                        }
+                        scanner.subscribe("processed", onProcessed);
+                        this.start();
+                    })
+                };
+            } else {
+                return new Promise((resolve, reject) => {
+                    scanner.decodeSingle(config, (result) => {
+                        if (result && result.codeResult && result.codeResult.code) {
+                            return resolve(result);
+                        }
+                        return reject(result);
+                    });
                 });
-            });
+            }
         }
     };
 }
@@ -65,6 +90,9 @@ function createApi(configuration = Config) {
         },
         locator(conf) {
             return setConfig(configuration, "locator", conf);
+        },
+        throttle(timeInMs) {
+            return setConfig(configuration, "frequency", 1000 / parseInt(timeInMs));
         },
         config(conf) {
             return createApi(merge({}, configuration, conf));
