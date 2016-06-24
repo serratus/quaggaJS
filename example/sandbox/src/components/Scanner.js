@@ -27,9 +27,7 @@ export default class Scanner extends React.Component {
     }
     render() {
         return (
-            <div className="overlay__content">
-                <div className="overlay__close" onClick={this._onCancel}>X</div>
-            </div>
+            <div className="overlay__content" />
         );
     }
     componentDidMount() {

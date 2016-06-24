@@ -25,9 +25,9 @@ export default class App extends React.Component {
         }]
     };
 
+    _handleToggle = () => this.setState({drawerOpen: !this.state.drawerOpen});
     _handleClose = () => this.setState({drawerOpen: false});
-    _handleOpen = () => this.setState({drawerOpen: true});
-    _handleOpenChange = () => (drawerOpen) => this.setState({drawerOpen});
+    _onRequestChange = drawerOpen => this.setState({drawerOpen});
 
     _startScanning = (e) => {
         e.preventDefault();
@@ -54,7 +54,7 @@ export default class App extends React.Component {
                     docked={false}
                     width={200}
                     open={this.state.drawerOpen}
-                    onRequestChange={this._handleOpenChange}
+                    onRequestChange={this._onRequestChange}
                 >
                     <MenuItem onTouchTap={this._handleClose}>Menu Item</MenuItem>
                     <MenuItem onTouchTap={this._handleClose}>Menu Item 2</MenuItem>
@@ -63,7 +63,7 @@ export default class App extends React.Component {
                     style={{position: 'fixed', top: '0px'}}
                     title="QuaggaJS"
                     iconClassNameRight="muidocs-icon-navigation-expand-more"
-                    onLeftIconButtonTouchTap={this._handleOpen}
+                    onLeftIconButtonTouchTap={this._handleToggle}
                     />
                 <FloatingActionButton
                     secondary={true}
