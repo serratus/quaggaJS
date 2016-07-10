@@ -4,6 +4,7 @@ import Subheader from 'material-ui/Subheader';
 import Toggle from 'material-ui/Toggle';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
+import createConfigOption from './ConfigOption';
 
 function generateItems(keyValuePairs) {
     return keyValuePairs.map(([value, label]) => (
@@ -29,9 +30,20 @@ let configOptions = {
     deviceId: [],
 };
 
+const generalOptions = {
+    frequency: [[0, "full"], [1, "1Hz"], [2, "2Hz"], [5, "5Hz"],
+                [10, "10Hz"], [15, "15Hz"], [20, "20Hz"]],
+    numOfWorkers: [[0, "0"], [1, "1"], [2, "2"], [4, "4"], [8, "8"]],
+};
+
 let items = Object.keys(configOptions).reduce((result, option) => ({
     ...result,
     [option]: generateItems(configOptions[option]),
+}), {});
+
+let generalItems = Object.keys(generalOptions).reduce((result, option) => ({
+    ...result,
+    [option]: generateItems(generalOptions[option]),
 }), {});
 
 const selectStyle = {
@@ -42,16 +54,19 @@ const selectedItemStyle = {
     overflow: 'hidden',
 };
 
+const SelectConfigOption = createConfigOption(SelectField);
+
 export default class ConfigView extends React.Component {
     state = {
         devicesFetched: false,
         numOfWorkers: 2,
+        frequency: 0,
         ...Object
             .keys(configOptions)
             .reduce((result, option) => ({...result, [option]: (configOptions[option][0] || [null])[0]}), {}),
     };
 
-    handleChange = (category, event, index, value) => {
+    handleChange = (event, index, value, category) => {
         this.setState({[category]: value});
     }
 
@@ -82,31 +97,38 @@ export default class ConfigView extends React.Component {
             <Subheader>Constraints</Subheader>
             <div style={{paddingLeft: 16, paddingRight: 16}}>
             {Object.keys(items).map(option => (
-                <SelectField fullWidth={true} key={option} style={selectStyle}
+                <SelectConfigOption
+                    fullWidth={true}
+                    key={option}
+                    option={option}
+                    style={selectStyle}
                     labelStyle={selectedItemStyle}
                     value={this.state[option]}
-                    onChange={this.handleChange.bind(this, option)}
+                    onChange={this.handleChange}
                   floatingLabelText={option}
                 >
                   {items[option]}
-                </SelectField>
+                </SelectConfigOption>
             ))}
           </div>
           <List>
             <Subheader>General</Subheader>
-            <ListItem primaryText="locate" secondaryText="Automatically detect position" rightToggle={<Toggle />} />
+            <ListItem primaryText="locate" secondaryText="Detect Location" rightToggle={<Toggle />} />
             <div style={{paddingLeft: 16, paddingRight: 16}}>
-            <SelectField fullWidth={true} key={'numOfWorkers'}
-                style={selectStyle}
-                labelStyle={selectedItemStyle}
-                value={this.state.numOfWorkers}
-                onChange={this.handleChange.bind(this, 'numOfWorkers')}
-              floatingLabelText='numOfWorkers'
-            >
-              {[0, 1, 2, 4, 8]
-                  .map(numOfWorkers => <MenuItem key={numOfWorkers} value={numOfWorkers} primaryText={numOfWorkers} />)
-              }
-            </SelectField>
+                {Object.keys(generalItems).map(option => (
+                    <SelectConfigOption
+                        fullWidth={true}
+                        key={option}
+                        option={option}
+                        style={selectStyle}
+                        labelStyle={selectedItemStyle}
+                        value={this.state[option]}
+                        onChange={this.handleChange}
+                      floatingLabelText={option}
+                    >
+                      {generalItems[option]}
+                    </SelectConfigOption>
+                ))}
             </div>
           </List>
           <List>

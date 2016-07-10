@@ -2,7 +2,7 @@ import React from 'react';
 import Quagga from '../../../../dist/quagga';
 
 export default class Scanner extends React.Component {
-    propTypes = {
+    static propTypes = {
         onDetected: React.PropTypes.func,
         onCancel: React.PropTypes.func,
     };
