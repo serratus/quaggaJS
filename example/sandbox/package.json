@@ -10,11 +10,15 @@
   "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.9.0",
+    "babel-eslint": "^6.1.2",
     "babel-loader": "^6.2.4",
     "babel-plugin-transform-class-properties": "^6.9.0",
     "babel-preset-es2015-webpack": "^6.4.1",
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-0": "^6.5.0",
+    "eslint": "^3.0.1",
+    "eslint-config-netconomy": "^300.0.0",
+    "eslint-plugin-react": "^5.2.2",
     "webpack": "^2.1.0-beta.7"
   },
   "dependencies": {

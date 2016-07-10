@@ -1,3 +1,7 @@
+html {
+    font-family: 'Roboto', sans-serif;
+}
+
 .overlay__content {
     position: relative;
 }

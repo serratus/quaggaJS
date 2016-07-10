@@ -1,0 +1,8 @@
+{
+    "root": true,
+    "extends": "./node_modules/eslint-config-netconomy/react.js",
+    "parser": "babel-eslint",
+    "rules": {
+        "comma-dangle": [2, "always-multiline"],
+    }
+}

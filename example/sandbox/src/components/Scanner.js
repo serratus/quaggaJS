@@ -2,6 +2,11 @@ import React from 'react';
 import Quagga from '../../../../dist/quagga';
 
 export default class Scanner extends React.Component {
+    propTypes = {
+        onDetected: React.PropTypes.func,
+        onCancel: React.PropTypes.func,
+    };
+
     constructor(props) {
         super(props);
         this._scanner = Quagga
@@ -13,28 +18,30 @@ export default class Scanner extends React.Component {
                 constraints: {
                     width: 800,
                     height: 600,
-                    facingMode: "environment"
-                }
+                    facingMode: "environment",
+                },
             });
-        this._onCancel = this._onCancel.bind(this);
     }
-    _onCancel(e) {
+
+    _onCancel = (e) => {
         e.preventDefault();
         if (this._scanUntilResult) {
             this._scanUntilResult.cancel();
             this._scanUntilResult = null;
         }
     }
-    render() {
-        return (
-            <div className="overlay__content" />
-        );
-    }
+
     componentDidMount() {
         this._scanUntilResult = this._scanner.toPromise();
         this._scanUntilResult.promise
             .then(this.props.onDetected)
             .catch(this.props.onCancel);
+    }
+
+    render() {
+        return (
+            <div className="overlay__content" />
+        );
     }
 
     componentWillUnmount() {

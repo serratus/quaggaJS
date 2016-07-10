@@ -1,33 +1,38 @@
 import React from 'react';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
-import MenuItem from 'material-ui/MenuItem';
-import Paper from 'material-ui/Paper';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
-import ContentAdd from 'material-ui/svg-icons/content/add';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import {Card, CardTitle, CardText} from 'material-ui/Card';
+import IconButton from 'material-ui/IconButton';
+import TuneIcon from 'material-ui/svg-icons/image/tune';
 
 import Scanner from './Scanner';
 import ScanIcon from './ScanIcon';
+import ConfigView from './ConfigView';
 
 export default class App extends React.Component {
     state = {
         drawerOpen: false,
         scanning: false,
+        currentView: 'root',
         scannedCodes: [{
             codeResult: {
                 code: "FANAVF1461710",
-                format: "code_128"
+                format: "code_128",
             },
-            timestamp: new Date()
-        }]
+            timestamp: new Date(),
+        }],
     };
 
-    _handleToggle = () => this.setState({drawerOpen: !this.state.drawerOpen});
+    _handleToggle = () => {
+        this.setState({drawerOpen: !this.state.drawerOpen});
+    }
     _handleClose = () => this.setState({drawerOpen: false});
-    _onRequestChange = drawerOpen => this.setState({drawerOpen});
+    _onRequestChange = drawerOpen => {
+        this.setState({drawerOpen});
+    };
 
     _startScanning = (e) => {
         e.preventDefault();
@@ -47,22 +52,27 @@ export default class App extends React.Component {
             .concat(this.state.scannedCodes)});
     }
 
+    _navigateTo = (route) => {
+        this.setState({
+            drawerOpen: false,
+            currentView: route,
+        });
+    }
+
     render() {
         return (
             <div>
                 <Drawer
                     docked={false}
-                    width={200}
                     open={this.state.drawerOpen}
                     onRequestChange={this._onRequestChange}
                 >
-                    <MenuItem onTouchTap={this._handleClose}>Menu Item</MenuItem>
-                    <MenuItem onTouchTap={this._handleClose}>Menu Item 2</MenuItem>
+                    <ConfigView />
                 </Drawer>
                 <AppBar
                     style={{position: 'fixed', top: '0px'}}
                     title="QuaggaJS"
-                    iconClassNameRight="muidocs-icon-navigation-expand-more"
+                    iconElementLeft={<IconButton onTouchTap={this._handleToggle}><TuneIcon /></IconButton>}
                     onLeftIconButtonTouchTap={this._handleToggle}
                     />
                 <FloatingActionButton
@@ -80,7 +90,7 @@ export default class App extends React.Component {
                         <FlatButton
                             label="Cancel"
                             primary={true}
-                            onTouchTap={this._stopScanning}/>
+                            onTouchTap={this._stopScanning}/>,
                     ]}
                     modal={true}
                     contentStyle={{width: '95%', maxWidth: '95%', height: '95%', maxHeight: '95%'}}
@@ -89,7 +99,7 @@ export default class App extends React.Component {
                     <Scanner onDetected={this._handleResult} onCancel={this._stopScanning} />
                 </Dialog>
                 <div style={{paddingTop: '64px'}}>
-                    {this.state.scannedCodes.map((scannedCode, i) => (
+                    {this.state.currentView === 'root' && this.state.scannedCodes.map((scannedCode, i) => (
                         <Card key={i} style={{margin: '0.5em 0.25em 0em'}}>
                             <CardTitle
                                 titleStyle={{textOverflow: 'ellipsis', overflow: 'hidden'}}
