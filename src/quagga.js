@@ -8,8 +8,7 @@ import Config from './config/config';
 import {merge} from 'lodash';
 import {createConfigFromSource} from './input/config_factory';
 
-function fromSource(config, source, inputConfig = {}) {
-    config = createConfigFromSource(config, inputConfig, source);
+function fromConfig(config) {
     const scanner = createScanner();
     return {
         addEventListener(eventType, cb) {
@@ -73,6 +72,11 @@ function fromSource(config, source, inputConfig = {}) {
     };
 }
 
+function fromSource(config, source, inputConfig = {}) {
+    config = createConfigFromSource(config, inputConfig, source);
+    return fromConfig(config);
+}
+
 const defaultScanner = createScanner();
 
 function setConfig(configuration = {}, key, config = {}) {
@@ -84,6 +88,9 @@ function createApi(configuration = Config) {
     return {
         fromSource(src, inputConfig) {
             return fromSource(configuration, src, inputConfig);
+        },
+        fromConfig(conf) {
+            return createApi(merge({}, configuration, conf));
         },
         decoder(conf) {
             return setConfig(configuration, "decoder", conf);

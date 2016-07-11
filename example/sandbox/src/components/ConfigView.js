@@ -6,68 +6,116 @@ import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import createConfigOption from './ConfigOption';
 
-function generateItems(keyValuePairs) {
-    return keyValuePairs.map(([value, label]) => (
-        <MenuItem key={value} value={value} primaryText={label} />
-    ));
-}
-
-const availableReaders = [
-    ['ean_reader', "EAN-13", true],
-    ['ean_8_reader', "EAN-8"],
-    ["upc_e_reader", "UPC-E"],
-    ["code_39_reader", "CODE 39", true],
-    ["codabar_reader", "Codabar"],
-    ["code_128_reader", "CODE 128", true],
-    ["i2of5_reader", "ITF", true],
-];
-
-let configOptions = {
-    width: [[640, "640px"], [800, "800px"], [1280, "1280px"], [1920, "1920px"]],
-    height: [[480, "480px"], [600, "600px"], [720, "720px"], [1080, "1080px"]],
-    facingMode: [["user", "user"], ["environment", "environment"]],
-    aspectRatio: [[1, '1/1'], [4 / 3, '4/3'], [16 / 9, '16/9'], [21 / 9, '21/9']],
-    deviceId: [],
-};
-
-const generalOptions = {
-    frequency: [[0, "full"], [1, "1Hz"], [2, "2Hz"], [5, "5Hz"],
-                [10, "10Hz"], [15, "15Hz"], [20, "20Hz"]],
-    numOfWorkers: [[0, "0"], [1, "1"], [2, "2"], [4, "4"], [8, "8"]],
-};
-
-let items = Object.keys(configOptions).reduce((result, option) => ({
-    ...result,
-    [option]: generateItems(configOptions[option]),
-}), {});
-
-let generalItems = Object.keys(generalOptions).reduce((result, option) => ({
-    ...result,
-    [option]: generateItems(generalOptions[option]),
-}), {});
+let configSections = [{
+    name: "Constraints",
+    path: ["inputStream", "constraints"],
+    options: {
+        width: [[640, "640px"], [800, "800px"], [1280, "1280px"], [1920, "1920px"]],
+        height: [[480, "480px"], [600, "600px"], [720, "720px"], [1080, "1080px"]],
+        facingMode: [["user", "user"], ["environment", "environment"]],
+        aspectRatio: [[1, '1/1'], [4 / 3, '4/3'], [16 / 9, '16/9'], [21 / 9, '21/9']],
+        deviceId: [],
+    },
+}, {
+    name: "General",
+    path: [],
+    options: {
+        locate: true,
+        numOfWorkers: [[0, "0"], [1, "1"], [2, "2"], [4, "4"], [8, "8"]],
+        frequency: [[0, "full"], [1, "1Hz"], [2, "2Hz"], [5, "5Hz"],
+                    [10, "10Hz"], [15, "15Hz"], [20, "20Hz"]],
+    },
+}, {
+    name: "Reader",
+    path: ["decoder", "readers"],
+    options: {
+        ean_reader: false,
+        ean_8_reader: false,
+        upc_e_reader: false,
+        code_39_reader: false,
+        codabar_reader: false,
+        code_128_reader: false,
+        i2of5_reader: false,
+    },
+}, {
+    name: "Locator",
+    path: ["locator"],
+    options: {
+        halfSample: true,
+        patchSize: [
+            ["x-small", "x-small"],
+            ["small", "small"],
+            ["medium", "medium"],
+            ["large", "large"],
+            ["x-large", "x-large"],
+        ],
+    },
+}];
 
 const selectStyle = {
 };
+
 const selectedItemStyle = {
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
     overflow: 'hidden',
 };
 
+const reducer = function reduce(state, path, value) {
+    if (path.length === 1 && typeof value === 'boolean' && Array.isArray(state)) {
+        const index = state.indexOf(path[0]);
+        if (index !== -1 && value || index === -1 && !value) {
+            return state;
+        } else if (index !== -1 && !value) {
+            const newArray = state.slice();
+            newArray.splice(index, 1);
+            return newArray;
+        } else {
+            return state.concat([path[0]]);
+        }
+    }
+    if (path.length === 0) {
+        return value;
+    }
+    const [part, ...rest] = path;
+    return Object.assign({}, state, {[part]: reduce(state[part], rest, value)});
+};
+
+const get = function get(object, path) {
+    if (Array.isArray(object) && (typeof path[0] === 'string')) {
+        return object.indexOf(path[0]) !== -1;
+    }
+    if (path.length === 0) {
+        return object;
+    }
+    const [part, ...rest] = path;
+    return get(object[part], rest);
+};
+
+const getConfigByPath = function(object, path) {
+    return get(object, ['config'].concat(path));
+};
+
 const SelectConfigOption = createConfigOption(SelectField);
+const ToggleConfigOption = createConfigOption(Toggle);
 
 export default class ConfigView extends React.Component {
-    state = {
-        devicesFetched: false,
-        numOfWorkers: 2,
-        frequency: 0,
-        ...Object
-            .keys(configOptions)
-            .reduce((result, option) => ({...result, [option]: (configOptions[option][0] || [null])[0]}), {}),
+    static propTypes = {
+        onChange: React.PropTypes.func,
+        config: React.PropTypes.object.isRequired,
     };
 
-    handleChange = (event, index, value, category) => {
-        this.setState({[category]: value});
+    state = {
+        devicesFetched: false,
+    };
+
+    handleChange = (event, index, value, path) => {
+        const newState = reducer(this.props.config, path, value);
+        this.props.onChange(newState);
+    }
+
+    handleToggle = (event, value, path) => {
+        return this.handleChange(event, 0, value, path);
     }
 
     componentWillMount() {
@@ -80,68 +128,66 @@ export default class ConfigView extends React.Component {
                         videoDevice.deviceId,
                         videoDevice.label,
                     ]));
-                configOptions = {
-                    ...configOptions,
-                    deviceId: videoDevices,
+                const constraints = configSections
+                    .map((section, index) => (section.name === "Constraints" ? {section, index} : null))
+                    .filter(sectionIndex => !!sectionIndex)[0];
+                configSections = configSections.slice();
+                constraints.section = {
+                    ...constraints.section,
+                    options: {
+                        ...constraints.section.options,
+                        deviceId: [[0, "no preference"]].concat(videoDevices),
+                    },
                 };
-                items = {
-                    ...items,
-                    deviceId: generateItems(configOptions.deviceId),
-                };
+                configSections[constraints.index] = constraints.section;
                 this.setState({devicesFetched: true});
             });
     }
+
     render() {
-        return (
-          <div>
-            <Subheader>Constraints</Subheader>
-            <div style={{paddingLeft: 16, paddingRight: 16}}>
-            {Object.keys(items).map(option => (
-                <SelectConfigOption
-                    fullWidth={true}
-                    key={option}
-                    option={option}
-                    style={selectStyle}
-                    labelStyle={selectedItemStyle}
-                    value={this.state[option]}
-                    onChange={this.handleChange}
-                  floatingLabelText={option}
-                >
-                  {items[option]}
-                </SelectConfigOption>
-            ))}
-          </div>
-          <List>
-            <Subheader>General</Subheader>
-            <ListItem primaryText="locate" secondaryText="Detect Location" rightToggle={<Toggle />} />
-            <div style={{paddingLeft: 16, paddingRight: 16}}>
-                {Object.keys(generalItems).map(option => (
-                    <SelectConfigOption
-                        fullWidth={true}
-                        key={option}
-                        option={option}
-                        style={selectStyle}
-                        labelStyle={selectedItemStyle}
-                        value={this.state[option]}
-                        onChange={this.handleChange}
-                      floatingLabelText={option}
-                    >
-                      {generalItems[option]}
-                    </SelectConfigOption>
-                ))}
-            </div>
-          </List>
-          <List>
-            <Subheader>Readers</Subheader>
-            {availableReaders.map(([reader, label, enabled]) => (
-                <ListItem
-                    key={reader}
-                    primaryText={label}
-                    rightToggle={<Toggle defaultToggled={enabled ? enabled : false} />}
-                />
-            ))}
-          </List>
-        </div>
-        );
+        return (<div>{
+            configSections.map(section => (
+                <List>
+                    <Subheader>{section.name}</Subheader>
+                    {Object.keys(section.options).map(option => {
+                        const path = section.path.concat([option]);
+                        if (typeof section.options[option] === 'boolean') {
+                            return (
+                                <ListItem
+                                    key={option}
+                                    path={path}
+                                    primaryText={option}
+                                    rightToggle={
+                                        <ToggleConfigOption
+                                            onToggle={this.handleToggle}
+                                            path={path}
+                                            toggled={!!getConfigByPath(this.props, path)} />
+                                    }
+                                />
+                            );
+                        } else {
+                            return (
+                                <div style={{paddingLeft: 16, paddingRight: 16}}>
+                                    <SelectConfigOption
+                                        fullWidth={true}
+                                        key={option}
+                                        path={path}
+                                        style={selectStyle}
+                                        labelStyle={selectedItemStyle}
+                                        value={getConfigByPath(this.props, path)}
+                                        onChange={this.handleChange}
+                                        floatingLabelText={option}
+                                    >
+                                    {section.options[option].map(([value, label]) => (
+                                            <MenuItem key={value} value={value} primaryText={label} />
+                                    ))}
+                                    </SelectConfigOption>
+                                </div>
+                            );
+                        }
+                    })}
+                </List>
+            ))
+        }</div>);
     }
 };

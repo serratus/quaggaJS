@@ -12,11 +12,50 @@ import Scanner from './Scanner';
 import ScanIcon from './ScanIcon';
 import ConfigView from './ConfigView';
 
+const cleanConfig = config => {
+    if (typeof config.inputStream.constraints.deviceId === 'number') {
+        config.inputStream.constraints.deviceId = null;
+    }
+    return config;
+};
+
 export default class App extends React.Component {
     state = {
         drawerOpen: false,
         scanning: false,
         currentView: 'root',
+        config: {
+            frequency: 5,
+            numOfWorkers: 2,
+            locate: true,
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                constraints: {
+                    width: 640,
+                    height: 480,
+                    deviceId: 0,
+                    facingMode: "environment",
+                },
+                area: {
+                    top: "0%",
+                    right: "0%",
+                    left: "0%",
+                    bottom: "0%",
+                },
+            },
+            decoder: {
+                readers: [
+                    'ean_reader',
+                    'code_39_reader',
+                    'code_128_reader',
+                ],
+            },
+            locator: {
+                halfSample: true,
+                patchSize: "medium",
+            },
+        },
         scannedCodes: [{
             codeResult: {
                 code: "FANAVF1461710",
@@ -59,6 +98,11 @@ export default class App extends React.Component {
         });
     }
 
+    _handleConfigChange = config => {
+        this.setState({config: cleanConfig(config)});
+        console.log(config);
+    }
+
     render() {
         return (
             <div>
@@ -67,7 +111,7 @@ export default class App extends React.Component {
                     open={this.state.drawerOpen}
                     onRequestChange={this._onRequestChange}
                 >
-                    <ConfigView />
+                    <ConfigView config={this.state.config} onChange={this._handleConfigChange} />
                 </Drawer>
                 <AppBar
                     style={{position: 'fixed', top: '0px'}}
@@ -96,7 +140,10 @@ export default class App extends React.Component {
                     contentStyle={{width: '95%', maxWidth: '95%', height: '95%', maxHeight: '95%'}}
                     open={this.state.scanning}
                 >
-                    <Scanner onDetected={this._handleResult} onCancel={this._stopScanning} />
+                    <Scanner
+                        config={this.state.config}
+                        onDetected={this._handleResult}
+                        onCancel={this._stopScanning} />
                 </Dialog>
                 <div style={{paddingTop: '64px'}}>
                     {this.state.currentView === 'root' && this.state.scannedCodes.map((scannedCode, i) => (

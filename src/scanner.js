@@ -296,7 +296,7 @@ function createScanner() {
 
     function startContinuousUpdate() {
         var next = null,
-            delay = 1000 / (_config.frequency || 60);
+            delay = 1000 / (_config.frequency === 0 ? 60 : (_config.frequency || 60));
 
         _stopped = false;
         (function frame(timestamp) {

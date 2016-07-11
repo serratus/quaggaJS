@@ -5,21 +5,16 @@ export default class Scanner extends React.Component {
     static propTypes = {
         onDetected: React.PropTypes.func,
         onCancel: React.PropTypes.func,
+        config: React.PropTypes.object.isRequired,
     };
 
     constructor(props) {
         super(props);
         this._scanner = Quagga
-            .decoder({readers: ['code_128_reader']})
-            .locator({patchSize: 'medium'})
-            .throttle(500)
+            .config(props.config)
             .fromSource({
+                ...this.props.config.inputStream,
                 target: '.overlay__content',
-                constraints: {
-                    width: 800,
-                    height: 600,
-                    facingMode: "environment",
-                },
             });
     }
 

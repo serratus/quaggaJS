@@ -1,4 +1,4 @@
-import {merge, pick} from 'lodash';
+import {merge, pick, omit} from 'lodash';
 
 var streamRef;
 
@@ -64,7 +64,14 @@ function deprecatedConstraints(videoConstraints) {
 }
 
 function applyCameraFacing(facing, constraints) {
-    if (typeof constraints.video.deviceId !== 'undefined' || !facing){
+    if (typeof constraints.video.deviceId === 'string' && constraints.video.deviceId.length > 0) {
+        return Promise.resolve({
+            ...constraints,
+            video: {
+                ...omit(constraints.video, "facingMode")
+            }
+        });
+    } else if (!facing) {
         return Promise.resolve(constraints);
     }
     if ( typeof MediaStreamTrack !== 'undefined' &&
