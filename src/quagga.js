@@ -68,7 +68,13 @@ function fromConfig(config) {
                     });
                 });
             }
-        }
+        },
+        registerResultCollector(resultCollector) {
+            scanner.registerResultCollector(resultCollector);
+        },
+        getCanvas() {
+            return scanner.canvas;
+        },
     };
 }
 
@@ -76,8 +82,6 @@ function fromSource(config, source, inputConfig = {}) {
     config = createConfigFromSource(config, inputConfig, source);
     return fromConfig(config);
 }
-
-const defaultScanner = createScanner();
 
 function setConfig(configuration = {}, key, config = {}) {
     var mergedConfig = merge({}, configuration, {[key]: config});
@@ -90,6 +94,7 @@ function createApi(configuration = Config) {
             return fromSource(configuration, src, inputConfig);
         },
         fromConfig(conf) {
+            // check if source is given an return scanner
             return createApi(merge({}, configuration, conf));
         },
         decoder(conf) {
@@ -103,12 +108,6 @@ function createApi(configuration = Config) {
         },
         config(conf) {
             return createApi(merge({}, configuration, conf));
-        },
-        registerResultCollector(resultCollector) {
-            defaultScanner.registerResultCollector(resultCollector);
-        },
-        getCanvas() {
-            return defaultScanner.canvas;
         },
         ImageWrapper,
         ImageDebug,
