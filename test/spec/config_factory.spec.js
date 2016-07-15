@@ -1,4 +1,5 @@
 import {createConfigFromSource} from '../../src/input/config_factory';
+import DOMHelper from '../../src/common/dom_helper';
 
 function MyFileList(file) {
     Array.call(this);
@@ -7,7 +8,7 @@ function MyFileList(file) {
 MyFileList.prototype = Object.create(Array.prototype);
 MyFileList.prototype.constructor = MyFileList;
 
-const OriginalFileList = window.FileList;
+const OriginalFileList = DOMHelper.FileList;
 
 function expectImageConfig(config) {
     expect(config.inputStream.type).to.equal("ImageStream");
@@ -30,11 +31,11 @@ function expectLiveConfig(config) {
 
 describe("createConfigFromSource", () => {
     beforeEach(function() {
-        window.FileList = MyFileList;
+        DOMHelper.setObject('FileList', MyFileList);
     });
 
     afterEach(function() {
-        window.FileList = OriginalFileList;
+        DOMHelper.setObject('FileList', OriginalFileList);
     });
 
     it("should create an image config for an image-file", () => {

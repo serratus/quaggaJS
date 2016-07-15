@@ -18,4 +18,8 @@ const DOMHelper = windowObjects.reduce((result, obj) => {
     };
 }, {});
 
+DOMHelper.setObject = (key, value) => {
+    DOMHelper[key] = value;
+};
+
 export default DOMHelper;
