@@ -20,12 +20,10 @@ function createScanner() {
         _stopped,
         _canvasContainer = {
             ctx: {
-                image: null,
-                overlay: null
+                image: null
             },
             dom: {
-                image: null,
-                overlay: null
+                image: null
             }
         },
         _inputImageWrapper,
@@ -117,18 +115,6 @@ function createScanner() {
             _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
             _canvasContainer.dom.image.width = _inputStream.getCanvasSize().x;
             _canvasContainer.dom.image.height = _inputStream.getCanvasSize().y;
-
-            _canvasContainer.dom.overlay = document.querySelector("canvas.drawingBuffer");
-            if (!_canvasContainer.dom.overlay) {
-                _canvasContainer.dom.overlay = document.createElement("canvas");
-                _canvasContainer.dom.overlay.className = "drawingBuffer";
-                if ($viewport) {
-                    $viewport.appendChild(_canvasContainer.dom.overlay);
-                }
-            }
-            _canvasContainer.ctx.overlay = _canvasContainer.dom.overlay.getContext("2d");
-            _canvasContainer.dom.overlay.width = _inputStream.getCanvasSize().x;
-            _canvasContainer.dom.overlay.height = _inputStream.getCanvasSize().y;
         }
     }
 

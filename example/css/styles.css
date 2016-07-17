@@ -248,4 +248,18 @@ footer {
 .container {
   margin: 20px auto;
   padding: 10px;
+  max-width: 640px;
+}
+
+#interactive.viewport {
+    position: relative;
+}
+
+#interactive.viewport > canvas, #interactive.viewport > video {
+    max-width: 100%;
+    width: 100%;
+}
+
+canvas.drawing {
+    position: absolute;
 }

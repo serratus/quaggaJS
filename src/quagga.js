@@ -73,7 +73,7 @@ function fromConfig(config) {
             scanner.registerResultCollector(resultCollector);
         },
         getCanvas() {
-            return scanner.canvas;
+            return scanner.canvas.dom.image;
         },
     };
 }
