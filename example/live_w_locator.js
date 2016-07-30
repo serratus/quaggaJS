@@ -1,38 +1,33 @@
 $(function() {
-    var resultCollector = Quagga.ResultCollector.create({
-        capture: true,
-        capacity: 20,
-        blacklist: [{code: "2167361334", format: "i2of5"}],
-        filter: function(codeResult) {
-            // only store results which match this constraint
-            // e.g.: codeResult
-            return true;
-        }
-    });
     var App = {
         init : function() {
-            var self = this;
+            this.overlay = document.querySelector('#interactive canvas.drawing');
 
-            Quagga.init(this.state, function(err) {
-                if (err) {
-                    return self.handleError(err);
-                }
-                Quagga.registerResultCollector(resultCollector);
-                App.attachListeners();
-                Quagga.start();
+            this.scanner = Quagga
+                .fromConfig(this.state);
+
+            this.scanner
+                .addEventListener("processed", drawResult.bind(this, this.scanner))
+                .addEventListener("detected", addToResults.bind(this, this.scanner));
+
+            this.scanner.start()
+            .then(function (){
+                console.log("started");
+                this.attachListeners();
+            }.bind(this))
+            .catch(function(err) {
+                console.log("Error: " + err);
             });
-        },
-        handleError: function(err) {
-            console.log(err);
         },
         attachListeners: function() {
             var self = this;
 
             $(".controls").on("click", "button.stop", function(e) {
                 e.preventDefault();
-                Quagga.stop();
-                self._printCollectedResults();
-            });
+                this.detachListeners();
+                this.scanner.stop();
+                this.scanner.removeEventListener();
+            }.bind(this));
 
             $(".controls .reader-config-group").on("change", "input, select", function(e) {
                 e.preventDefault();
@@ -43,18 +38,6 @@ $(function() {
 
                 console.log("Value of "+ state + " changed to " + value);
                 self.setState(state, value);
-            });
-        },
-        _printCollectedResults: function() {
-            var results = resultCollector.getResults(),
-                $ul = $("#result_strip ul.collector");
-
-            results.forEach(function(result) {
-                var $li = $('<li><div class="thumbnail"><div class="imgWrapper"><img /></div><div class="caption"><h4 class="code"></h4></div></div></li>');
-
-                $li.find("img").attr("src", result.frame);
-                $li.find("h4.code").html(result.codeResult.code + " (" + result.codeResult.format + ")");
-                $ul.prepend($li);
             });
         },
         _accessByPath: function(obj, path, val) {
@@ -79,17 +62,16 @@ $(function() {
             $(".controls .reader-config-group").off("change", "input, select");
         },
         setState: function(path, value) {
-            var self = this;
-
-            if (typeof self._accessByPath(self.inputMapper, path) === "function") {
-                value = self._accessByPath(self.inputMapper, path)(value);
+            if (typeof this._accessByPath(this.inputMapper, path) === "function") {
+                value = this._accessByPath(this.inputMapper, path)(value);
             }
 
-            self._accessByPath(self.state, path, value);
+            this._accessByPath(this.state, path, value);
 
-            console.log(JSON.stringify(self.state));
-            App.detachListeners();
-            Quagga.stop();
+            console.log(JSON.stringify(this.state));
+            this.detachListeners();
+            this.scanner.stop();
+            this.scanner.removeEventListener();
             App.init();
         },
         inputMapper: {
@@ -137,7 +119,8 @@ $(function() {
                 patchSize: "medium",
                 halfSample: true
             },
-            numOfWorkers: 4,
+            numOfWorkers: 2,
+            frequency: 10,
             decoder: {
                 readers : [{
                     format: "code_128_reader",
@@ -151,42 +134,45 @@ $(function() {
 
     App.init();
 
-    Quagga.onProcessed(function(result) {
-        var drawingCtx = Quagga.canvas.ctx.overlay,
-            drawingCanvas = Quagga.canvas.dom.overlay;
+    function drawResult(scanner, result) {
+        var processingCanvas = scanner.getCanvas(),
+            canvas = App.overlay,
+            ctx = canvas.getContext("2d");
+
+        canvas.setAttribute('width', processingCanvas.getAttribute('width'));
+        canvas.setAttribute('height', processingCanvas.getAttribute('height'));
 
         if (result) {
             if (result.boxes) {
-                drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
+                ctx.clearRect(0, 0, parseInt(canvas.getAttribute("width")), parseInt(canvas.getAttribute("height")));
                 result.boxes.filter(function (box) {
                     return box !== result.box;
                 }).forEach(function (box) {
-                    Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                    Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "green", lineWidth: 2});
                 });
             }
 
             if (result.box) {
-                Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
+                Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, ctx, {color: "#00F", lineWidth: 2});
             }
 
             if (result.codeResult && result.codeResult.code) {
-                Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
+                Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, ctx, {color: 'red', lineWidth: 3});
             }
         }
-    });
+    };
 
-    Quagga.onDetected(function(result) {
-        var code = result.codeResult.code;
+    function addToResults(scanner, result) {
+        var code = result.codeResult.code,
+            $node,
+            canvas = scanner.getCanvas();
 
         if (App.lastResult !== code) {
             App.lastResult = code;
-            var $node = null, canvas = Quagga.canvas.dom.image;
-
             $node = $('<li><div class="thumbnail"><div class="imgWrapper"><img /></div><div class="caption"><h4 class="code"></h4></div></div></li>');
             $node.find("img").attr("src", canvas.toDataURL());
             $node.find("h4.code").html(code);
             $("#result_strip ul.thumbnails").prepend($node);
         }
-    });
-
+    };
 });

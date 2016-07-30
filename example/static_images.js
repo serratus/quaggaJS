@@ -12,10 +12,10 @@ $(function() {
                 .addEventListener("processed", drawResult.bind(this, this.scanner))
                 .addEventListener("detected", addToResults.bind(this, this.scanner));
 
-            this.scanner.start().then(() => {
+            this.scanner.start().then(function() {
                 console.log("Started");
                 this.attachListeners();
-            });
+            }.bind(this));
         },
         config: {
             "default": {
