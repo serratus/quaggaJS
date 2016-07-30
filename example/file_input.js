@@ -57,7 +57,7 @@ $(function() {
             this.detachListeners();
             console.log("decode...");
             var scanner = Quagga
-                .fromConfig(this.state)
+                .config(this.state)
                 .fromSource(file, {size: this.state.inputStream.size});
             scanner
                 .toPromise()

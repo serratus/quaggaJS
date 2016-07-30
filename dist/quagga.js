@@ -4719,8 +4719,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	
 	
-	function fromConfig(config) {
+	function _fromConfig(config) {
 	    var scanner = /* harmony import */__WEBPACK_IMPORTED_MODULE_3__scanner__["a"].bind()();
+	    var pendingStart = null;
+	    var initialized = false;
 	    return {
 	        addEventListener: function addEventListener(eventType, cb) {
 	            scanner.subscribe(eventType, cb);
@@ -4731,14 +4733,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return this;
 	        },
 	        start: function start() {
-	            scanner.init(config, function (error) {
-	                if (error) {
-	                    console.log(error);
-	                    throw error;
-	                }
+	            if (scanner.isRunning()) {
+	                return Promise.resolve(true);
+	            }
+	            if (pendingStart) {
+	                return pendingStart;
+	            }
+	            if (initialized) {
 	                scanner.start();
+	                return Promise.resolve(true);
+	            }
+	            pendingStart = new Promise(function (resolve, reject) {
+	                scanner.init(config, function (error) {
+	                    if (error) {
+	                        console.log(error);
+	                        reject(error);
+	                    }
+	                    initialized = true;
+	                    scanner.start();
+	                    resolve();
+	                    pendingStart = null;
+	                });
 	            });
-	            return this;
+	            return pendingStart;
 	        },
 	        stop: function stop() {
 	            scanner.stop();
@@ -4801,7 +4818,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var inputConfig = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
 	    config = /* harmony import */__WEBPACK_IMPORTED_MODULE_8__input_config_factory__["a"].bind()(config, inputConfig, source);
-	    return fromConfig(config);
+	    return _fromConfig(config);
 	}
 	
 	function setConfig() {
@@ -4824,8 +4841,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return _fromSource(configuration, src, inputConfig);
 	        },
 	        fromConfig: function fromConfig(conf) {
-	            // check if source is given an return scanner
-	            return createApi(/* harmony import */__WEBPACK_IMPORTED_MODULE_0_lodash_merge___default.a.bind()({}, configuration, conf));
+	            return _fromConfig(/* harmony import */__WEBPACK_IMPORTED_MODULE_0_lodash_merge___default.a.bind()({}, configuration, conf));
 	        },
 	        decoder: function decoder(conf) {
 	            return setConfig(configuration, "decoder", conf);
@@ -6495,6 +6511,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            _eventHandlers[event].push(f);
 	        }
+	    };
+	
+	    that.clearEventHandlers = function () {
+	        _eventHandlers = {};
 	    };
 	
 	    that.setTopRight = function (topRight) {
@@ -8916,7 +8936,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function createScanner() {
 	    var _inputStream,
 	        _framegrabber,
-	        _stopped,
+	        _stopped = true,
 	        _canvasContainer = {
 	        ctx: {
 	            image: null
@@ -9355,13 +9375,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        start: function start() {
 	            _start();
 	        },
+	        isRunning: function isRunning() {
+	            return !_stopped;
+	        },
 	        stop: function stop() {
 	            _stopped = true;
 	            adjustWorkerPool(0);
 	            if (_config.inputStream.type === "LiveStream") {
 	                /* harmony import */__WEBPACK_IMPORTED_MODULE_5__input_camera_access__["a"].release();
-	                _inputStream.clearEventHandlers();
 	            }
+	            _inputStream.clearEventHandlers();
 	        },
 	        pause: function pause() {
 	            _stopped = true;

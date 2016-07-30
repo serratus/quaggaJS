@@ -273,6 +273,10 @@ InputStream.createImageStream = function() {
         }
     };
 
+    that.clearEventHandlers = function() {
+        _eventHandlers = {};
+    };
+
     that.setTopRight = function(topRight) {
         _topRight.x = topRight.x;
         _topRight.y = topRight.y;

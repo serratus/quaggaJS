@@ -10,6 +10,8 @@ import {createConfigFromSource} from './input/config_factory';
 
 function fromConfig(config) {
     const scanner = createScanner();
+    let pendingStart = null;
+    let initialized = false;
     return {
         addEventListener(eventType, cb) {
             scanner.subscribe(eventType, cb);
@@ -20,14 +22,29 @@ function fromConfig(config) {
             return this;
         },
         start() {
-            scanner.init(config, (error) => {
-                if (error) {
-                    console.log(error);
-                    throw error;
-                }
+            if (scanner.isRunning()) {
+                return Promise.resolve(true);
+            }
+            if (pendingStart) {
+                return pendingStart;
+            }
+            if (initialized) {
                 scanner.start();
+                return Promise.resolve(true);
+            }
+            pendingStart = new Promise((resolve, reject) => {
+                scanner.init(config, (error) => {
+                    if (error) {
+                        console.log(error);
+                        reject(error);
+                    }
+                    initialized = true;
+                    scanner.start();
+                    resolve();
+                    pendingStart = null;
+                });
             });
-            return this;
+            return pendingStart;
         },
         stop() {
             scanner.stop();
@@ -94,8 +111,7 @@ function createApi(configuration = Config) {
             return fromSource(configuration, src, inputConfig);
         },
         fromConfig(conf) {
-            // check if source is given an return scanner
-            return createApi(merge({}, configuration, conf));
+            return fromConfig(merge({}, configuration, conf));
         },
         decoder(conf) {
             return setConfig(configuration, "decoder", conf);

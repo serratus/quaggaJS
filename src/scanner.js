@@ -17,7 +17,7 @@ const vec2 = {
 function createScanner() {
     var _inputStream,
         _framegrabber,
-        _stopped,
+        _stopped = true,
         _canvasContainer = {
             ctx: {
                 image: null
@@ -467,13 +467,16 @@ function createScanner() {
         start: function() {
             start();
         },
+        isRunning: function() {
+            return !_stopped;
+        },
         stop: function() {
             _stopped = true;
             adjustWorkerPool(0);
             if (_config.inputStream.type === "LiveStream") {
                 CameraAccess.release();
-                _inputStream.clearEventHandlers();
             }
+            _inputStream.clearEventHandlers();
         },
         pause: function() {
             _stopped = true;

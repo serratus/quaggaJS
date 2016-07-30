@@ -1,11 +1,20 @@
 $(function() {
     var App = {
         init: function() {
+            this.overlay = document.querySelector('#interactive canvas.drawing');
             var config = this.config[this.state.decoder.readers[0].format] || this.config.default;
             config = $.extend(true, {}, config, this.state);
-            Quagga.init(config, function() {
-                App.attachListeners();
-                Quagga.start();
+
+            this.scanner = Quagga
+                .fromConfig(config);
+
+            this.scanner
+                .addEventListener("processed", drawResult.bind(this, this.scanner))
+                .addEventListener("detected", addToResults.bind(this, this.scanner));
+
+            this.scanner.start().then(() => {
+                console.log("Started");
+                this.attachListeners();
             });
         },
         config: {
@@ -37,7 +46,7 @@ $(function() {
 
             $(".controls").on("click", "button.next", function(e) {
                 e.preventDefault();
-                Quagga.start();
+                self.scanner.start();
             });
 
             $(".controls .reader-config-group").on("change", "input, select", function(e) {
@@ -89,7 +98,8 @@ $(function() {
 
             console.log(JSON.stringify(self.state));
             App.detachListeners();
-            Quagga.stop();
+            this.scanner.stop();
+            this.scanner.removeEventListener();
             App.init();
         },
         inputMapper: {
@@ -121,6 +131,7 @@ $(function() {
             inputStream: {
                 src: "../test/fixtures/code_128/"
             },
+            numOfWorkers: 1,
             decoder : {
                 readers : [{
                     format: "code_128_reader",
@@ -133,38 +144,42 @@ $(function() {
     App.init();
     window.App = App;
 
-    Quagga.onProcessed(function(result) {
-        var drawingCtx = Quagga.canvas.ctx.overlay,
-            drawingCanvas = Quagga.canvas.dom.overlay;
+    function drawResult(scanner, result) {
+        var processingCanvas = scanner.getCanvas(),
+            canvas = App.overlay,
+            ctx = canvas.getContext("2d");
+
+        canvas.setAttribute('width', processingCanvas.getAttribute('width'));
+        canvas.setAttribute('height', processingCanvas.getAttribute('height'));
 
         if (result) {
             if (result.boxes) {
-                drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
+                ctx.clearRect(0, 0, parseInt(canvas.getAttribute("width")), parseInt(canvas.getAttribute("height")));
                 result.boxes.filter(function (box) {
                     return box !== result.box;
                 }).forEach(function (box) {
-                    Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                    Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, ctx, {color: "green", lineWidth: 2});
                 });
             }
 
             if (result.box) {
-                Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
+                Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, ctx, {color: "#00F", lineWidth: 2});
             }
 
             if (result.codeResult && result.codeResult.code) {
-                Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
+                Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, ctx, {color: 'red', lineWidth: 3});
             }
         }
-    });
+    };
 
-    Quagga.onDetected(function(result) {
-        var $node,
-            canvas = Quagga.canvas.dom.image,
-            detectedCode = result.codeResult.code;
+    function addToResults(scanner, result) {
+        var code = result.codeResult.code,
+            $node,
+            canvas = scanner.getCanvas();
 
         $node = $('<li><div class="thumbnail"><div class="imgWrapper"><img /></div><div class="caption"><h4 class="code"></h4></div></div></li>');
         $node.find("img").attr("src", canvas.toDataURL());
-        $node.find("h4.code").html(detectedCode);
+        $node.find("h4.code").html(code);
         $("#result_strip ul.thumbnails").prepend($node);
-    });
+    }
 });
