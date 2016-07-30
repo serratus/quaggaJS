@@ -1,0 +1,47 @@
+---
+layout: examples
+title: Demo with sample images
+showInMenu: false
+---
+
+
+<section id="container" class="container">
+    <h3>Working with static images</h3>
+    <p>This examples uses static image files as input which are loaded from
+        the server on startup. The locating and decoding process takes place
+        inside the browser. Hit the <strong>next</strong> button to try a
+        different image. You can also switch between different test-sets,
+        depending on the barcode-type.
+    </p>
+    <div class="controls">
+        <fieldset class="input-group">
+            <button class="next">Next</button>
+        </fieldset>
+        <fieldset class="reader-config-group">
+            <span>Barcode-Type</span>
+            <select name="decoder_readers;input-stream_src">
+                <option value="code_128" selected="selected">Code 128</option>
+                <option value="code_39">Code 39</option>
+                <option value="ean">EAN</option>
+                <option value="ean_extended">EAN-extended</option>
+                <option value="ean_8">EAN-8</option>
+                <option value="upc">UPC</option>
+                <option value="upc_e">UPC-E</option>
+                <option value="codabar">Codabar</option>
+                <option value="i2of5">I2of5</option>
+            </select>
+        </fieldset>
+    </div>
+  <div id="result_strip">
+    <ul class="thumbnails"></ul>
+  </div>
+  <div id="interactive" class="viewport">
+      <canvas class="drawing" />
+  </div>
+</section>
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="js/quagga.min.js" type="text/javascript"></script>
+<script>
+    site = {baseurl: "{{ site.baseurl }}"};
+</script>
+<script src="static_images.js" type="text/javascript"></script>

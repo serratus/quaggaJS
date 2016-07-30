@@ -20,14 +20,19 @@
   width: 640px;
 }
 
-/* line 6, ../sass/_viewport.scss */
-#interactive.viewport canvas, video {
-  float: left;
-  width: 640px;
+#interactive.viewport {
+    position: relative;
 }
-/* line 10, ../sass/_viewport.scss */
-#interactive.viewport canvas.drawingBuffer, video.drawingBuffer {
-  margin-left: -640px;
+
+#interactive.viewport > canvas, #interactive.viewport > video {
+    max-width: 100%;
+    width: 100%;
+}
+
+canvas.drawing, canvas.drawingBuffer {
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 
 /* line 16, ../sass/_viewport.scss */
@@ -139,27 +144,17 @@
     overflow: hidden;
   }
 
-  /* line 11, ../sass/phone/_viewport.scss */
-  #interactive.viewport canvas, video {
-    width: 100%;
-    height: auto;
-  }
-  /* line 15, ../sass/phone/_viewport.scss */
-  #interactive.viewport canvas.drawingBuffer, video.drawingBuffer {
-    margin-left: -300px;
-  }
-
   /* line 20, ../sass/phone/_viewport.scss */
   #result_strip {
     margin-top: 5px;
     padding-top: 5px;
   }
-  
+
   #result_strip ul.thumbnails {
     width: 100%;
     height: auto;
   }
-  
+
   /* line 24, ../sass/phone/_viewport.scss */
   #result_strip ul.thumbnails > li {
     width: 150px;
