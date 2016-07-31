@@ -52,6 +52,7 @@
     transform: translate(-50%, -50%);
     width: 90%;
     max-height: 90%;
+    max-width: 800px;
 }
 
 .overlay__close {
@@ -83,11 +84,6 @@
     height: 100%;
     left: 0;
     top: 0;
-}
-
-/* line 1, ../sass/_viewport.scss */
-#interactive.viewport {
-  width: 640px;
 }
 
 #interactive.viewport {
@@ -189,21 +185,13 @@ canvas.drawing, canvas.drawingBuffer {
   clear: both;
 }
 
-@media (min-width: 604px) and (max-width: 1024px) {
-  /* tablet styles */
-}
 @media (max-width: 603px) {
   /* line 2, ../sass/phone/_core.scss */
   #container {
-    width: 300px;
     margin: 10px auto;
     -moz-box-shadow: none;
     -webkit-box-shadow: none;
     box-shadow: none;
-  }
-  /* line 9, ../sass/phone/_core.scss */
-  #container form.voucher-form input.voucher-code {
-    width: 180px;
   }
 }
 @media (max-width: 603px) {

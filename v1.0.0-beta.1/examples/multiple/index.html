@@ -1,0 +1,58 @@
+---
+layout: v1.0.0-beta.1/examples
+title: Demo with live-stream
+showInMenu: false
+---
+
+<link rel="stylesheet" type="text/css" href="./styles.css" />
+<section id="container" class="container">
+    <h3>Scan various barcodes continously</h3>
+    <p>
+        Be aware that not all combinations play together nicely. Some
+        codes do not have a checksum (e.g. ITF).
+    </p>
+    <div class="controls">
+        <button type="button" class="icon-barcode button scan">Start Scanning</button>
+        <div class="readers">
+            <label>
+                <span>EAN-13</span>
+                <input type="checkbox" checked name="ean_reader" />
+            </label>
+            <label>
+                <span>EAN-8</span>
+                <input type="checkbox" name="ean_8_reader" />
+            </label>
+            <label>
+                <span>UPC-E</span>
+                <input type="checkbox" name="upc_e_reader" />
+            </label>
+            <label>
+                <span>Code 39</span>
+                <input type="checkbox" checked name="code_39_reader" />
+            </label>
+            <label>
+                <span>Codabar</span>
+                <input type="checkbox" name="codabar_reader" />
+            </label>
+            <label>
+                <span>Code 128</span>
+                <input type="checkbox" checked name="code_128_reader" />
+            </label>
+            <label>
+                <span>Interleaved 2 of 5</span>
+                <input type="checkbox" name="i2of5_reader" />
+            </label>
+        </div>
+    </div>
+    <div class="overlay overlay--inline">
+        <div class="overlay__content">
+            <div class="overlay__close">X</div>
+            <ul class="results"></ul>
+        </div>
+    </div>
+</section>
+<ul class="results"></ul>
+
+<script src="../js/quagga.js" type="text/javascript"></script>
+<script src="index.js" type="text/javascript"></script>
+<script src="../js/prism.js"></script>
