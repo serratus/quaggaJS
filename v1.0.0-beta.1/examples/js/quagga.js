@@ -4759,6 +4759,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        stop: function stop() {
 	            scanner.stop();
+	            initialized = false;
 	            return this;
 	        },
 	        toPromise: function toPromise() {
