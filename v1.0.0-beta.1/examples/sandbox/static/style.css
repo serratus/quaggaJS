@@ -1,0 +1,20 @@
+html {
+    font-family: 'Roboto', sans-serif;
+}
+
+.overlay__content {
+    position: relative;
+}
+
+.overlay__content video, .overlay__content canvas {
+    max-width: 100%;
+}
+
+.overlay__content canvas {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+}
