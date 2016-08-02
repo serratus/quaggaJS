@@ -48,6 +48,7 @@ function fromConfig(config) {
         },
         stop() {
             scanner.stop();
+            initialized = false;
             return this;
         },
         toPromise() {
