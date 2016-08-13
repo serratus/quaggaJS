@@ -176,8 +176,21 @@ InputStream.createImageStream = function() {
         loaded = false;
         ImageLoader.load(baseUrl, function(imgs) {
             imgArray = imgs;
-            width = imgs[0].width;
-            height = imgs[0].height;
+            if (imgs[0].tags && imgs[0].tags.orientation) {
+                switch (imgs[0].tags.orientation) {
+                case 6:
+                case 8:
+                    width = imgs[0].img.height;
+                    height = imgs[0].img.width;
+                    break;
+                default:
+                    width = imgs[0].img.width;
+                    height = imgs[0].img.height;
+                }
+            } else {
+                width = imgs[0].img.width;
+                height = imgs[0].img.height;
+            }
             calculatedWidth =
                 _config.size ? width / height > 1 ? _config.size : Math.floor((width / height) * _config.size) : width;
             calculatedHeight =
