@@ -24,7 +24,12 @@
         "objectLiteralComputedProperties": true
     },
     "globals": {
-        "ENV": true
+        "ENV": true,
+        "beforeEach": true,
+        "describe": true,
+        "it": true,
+        "expect": true,
+        "sinon": true
     },
     "rules": {
         "no-unused-expressions": 1,

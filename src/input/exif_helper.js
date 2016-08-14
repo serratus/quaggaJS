@@ -12,6 +12,19 @@ export function findTagsInObjectURL(src, tags = AvailableTags) {
     return Promise.resolve(null);
 }
 
+export function base64ToArrayBuffer(dataUrl) {
+    const base64 = dataUrl.replace(/^data\:([^\;]+)\;base64,/gmi, ''),
+        binary = atob(base64),
+        len = binary.length,
+        buffer = new ArrayBuffer(len),
+        view = new Uint8Array(buffer);
+
+    for (let i = 0; i < len; i++) {
+        view[i] = binary.charCodeAt(i);
+    }
+    return buffer;
+}
+
 function readToBuffer(blob) {
     return new Promise(resolve => {
         const fileReader = new FileReader();
@@ -23,20 +36,21 @@ function readToBuffer(blob) {
 }
 
 function objectURLToBlob(url) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const http = new XMLHttpRequest();
         http.open("GET", url, true);
         http.responseType = "blob";
-        http.onload = function() {
-            if (this.status === 200 || this.status === 0) {
+        http.onreadystatechange = function () {
+            if (http.readyState === XMLHttpRequest.DONE && (http.status === 200 || http.status === 0)) {
                 resolve(this.response);
             }
         };
+        http.onerror = reject;
         http.send();
     });
 }
 
-function findTagsInBuffer(file, selectedTags = AvailableTags) {
+export function findTagsInBuffer(file, selectedTags = AvailableTags) {
     const dataView = new DataView(file),
         length = file.byteLength,
         exifTags = selectedTags.reduce((result, selectedTag) => {
