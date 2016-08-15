@@ -49,10 +49,10 @@ barcodes
 
 ## Using static image files <i class="icon-image"/>
 
-[This example](static_images.html) shows the capabilities of QuaggaJS using
+[This example](static_images/) shows the capabilities of QuaggaJS using
 images taken under various conditions.
 
-<a href="static_images" class="columns large-quater small-half">
+<a href="static_images/" class="columns large-quater small-half">
     <img src="{{ site.baseurl }}/assets/example_static_01.jpg" />
     <img src="{{ site.baseurl }}/assets/example_static_02.jpg" />
     <img src="{{ site.baseurl }}/assets/example_static_03.jpg" />
@@ -61,13 +61,13 @@ images taken under various conditions.
 
 ## Using the live-stream from your webcam <i class="icon-video-camera"/>
 
-This is the preferred mode of using QuaggaJS. [This example](live_w_locator.html)  demonstrates the real-time decoding capabilities of QuaggaJS by using your
+This is the preferred mode of using QuaggaJS. [This example](live_w_locator/)  demonstrates the real-time decoding capabilities of QuaggaJS by using your
 webcam as a barcode-scanner.
 
-[![Live 1]({{ site.baseurl }}/assets/example_live_01.jpg)](live_w_locator.html)
+[![Live 1]({{ site.baseurl }}/assets/example_live_01.jpg)](live_w_locator/)
 
 ## Using the File API <i class="icon-camera"/> <i class="icon-image"/>
 
-Instead of directly accessing the user's webcam, [this example](file_input.html)  shows you how to use QuaggaJS with the HTML5 File API to decode a pre-taken image.
+Instead of directly accessing the user's webcam, [this example](file_input/)  shows you how to use QuaggaJS with the HTML5 File API to decode a pre-taken image.
 
-[![File Input 1]({{ site.baseurl }}/assets/example_file_input_01.jpg)](file_input.html)
+[![File Input 1]({{ site.baseurl }}/assets/example_file_input_01.jpg)](file_input/)

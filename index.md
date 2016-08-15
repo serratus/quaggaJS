@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2016-04-24)
+- [Changelog](#changelog) (2016-08-15)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
@@ -641,6 +641,11 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2016-08-15
+- Features
+  - Proper handling of EXIF orientation when using `Quagga.decodeSingle`
+  (see [#121](https://github.com/serratus/quaggaJS/issues/121))
 
 ### 2016-04-24
 - Features
