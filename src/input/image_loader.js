@@ -1,3 +1,5 @@
+import {findTagsInObjectURL} from './exif_helper';
+
 var ImageLoader = {};
 ImageLoader.load = function(directory, callback, offset, size, sequence) {
     var htmlImagesSrcArray = new Array(size),
@@ -26,7 +28,7 @@ ImageLoader.load = function(directory, callback, offset, size, sequence) {
                 for (var y = 0; y < htmlImagesSrcArray.length; y++) {
                     var imgName = htmlImagesSrcArray[y].substr(htmlImagesSrcArray[y].lastIndexOf("/"));
                     if (loadedImg.src.lastIndexOf(imgName) !== -1) {
-                        htmlImagesArray[y] = loadedImg;
+                        htmlImagesArray[y] = {img: loadedImg};
                         break;
                     }
                 }
@@ -37,7 +39,18 @@ ImageLoader.load = function(directory, callback, offset, size, sequence) {
             if (ENV.development) {
                 console.log("Images loaded");
             }
-            callback.apply(null, [htmlImagesArray]);
+            if (sequence === false) {
+                findTagsInObjectURL(directory, ['orientation'])
+                    .then(tags => {
+                        htmlImagesArray[0].tags = tags;
+                        callback(htmlImagesArray);
+                    }).catch(e => {
+                        console.log(e);
+                        callback(htmlImagesArray);
+                    });
+            } else {
+                callback(htmlImagesArray);
+            }
         }
     };
 
