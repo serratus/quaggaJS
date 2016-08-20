@@ -1,0 +1,140 @@
+body {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+body > header {
+    flex: 0 0 auto;
+    padding: 0.5rem 1rem;
+}
+
+* {
+    box-sizing: inherit;
+}
+
+header > .headline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.headline h1, .headline h2 {
+    margin: 0;
+}
+
+.headline h2 {
+    font-size: 1.3rem;
+    text-align: right;
+}
+
+body > .container {
+    margin: 0;
+    flex: 1 1 auto;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
+/* Controls */
+
+/* Scan! Button */
+
+.icon-barcode.scan {
+    font-size: x-large;
+    padding: 0.5rem;
+    text-align: center;
+    margin: 0 auto;
+    display: block;
+    width: 70%;
+}
+
+.icon-barcode.scan:before {
+    margin-right: 0.5rem;
+}
+
+/* Reader Checkboxes */
+
+.controls .readers {
+    font-size: 1.3rem;
+    width: 70%;
+    margin: 2rem auto 0;
+}
+
+.controls .readers label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.controls .readers input {
+    flex: 0 0 auto;
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+.controls .readers span {
+    flex: 1 1 auto;
+}
+
+/* Results */
+
+body > .results {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    background-color: #DDD;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    padding: 0.25rem;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    border-top: 1px solid #777;
+}
+
+.results > li {
+    flex: 0 1 auto;
+    margin: 0.25rem;
+    background: #fff;
+    border-radius: 2px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.results:empty {
+    display: none;
+}
+
+.result {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+}
+
+.result > .format {
+    font-weight: bold;
+}
+
+.result > .code {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Scanner */
+
+.container .controls.hide {
+    display: none;
+}
+
+.overlay--inline {
+    position: absolute;
+    display: none;
+}
+
+.overlay--inline.show {
+    display: block;
+}

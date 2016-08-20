@@ -68,8 +68,13 @@ export default {
                 }
                 _canvas.ctx.pattern = _canvas.dom.pattern.getContext("2d");
 
-                _canvas.dom.overlay = document.querySelector("canvas.drawingBuffer");
-                if (_canvas.dom.overlay) {
+                if ($debug) {
+                    _canvas.dom.overlay = document.querySelector("canvas.drawingBuffer");
+                    if (!_canvas.dom.overlay) {
+                        _canvas.dom.overlay = document.createElement("canvas");
+                        _canvas.dom.overlay.className = "drawingBuffer";
+                        $debug.appendChild(_canvas.dom.overlay);
+                    }
                     _canvas.ctx.overlay = _canvas.dom.overlay.getContext("2d");
                 }
             }

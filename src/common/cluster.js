@@ -1,10 +1,11 @@
 const vec2 = {
     clone: require('gl-vec2/clone'),
     dot: require('gl-vec2/dot')
-}
-    /**
-     * Creates a cluster for grouping similar orientations of datapoints
-     */
+};
+
+/**
+ * Creates a cluster for grouping similar orientations of datapoints
+ */
 export default {
     create: function(point, threshold) {
         var points = [],

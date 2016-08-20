@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>index</title>
+    <meta name="description" content="" />
+    <meta name="author" content="Christoph Oberhofer" />
+
+    <meta name="viewport" content="width=device-width; initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="../css/fonts.css" />
+    <link rel="stylesheet" type="text/css" href="../css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="../css/prism.css" />
+  </head>
+
+  <body>
+      <header>
+          <div class="headline">
+              <h1>QuaggaJS</h1>
+              <h2>An advanced barcode-scanner written in JavaScript</h2>
+          </div>
+      </header>
+    <section id="container" class="container">
+        <h3>Scan barcode to input-field</h3>
+        <p>Click the <strong>button</strong> next to the input-field
+            to start scanning an <strong>EAN-13</strong> barcode</p>
+        <div>
+            <form>
+                <div class="input-field">
+                    <label for="isbn_input">EAN:</label>
+                    <input id="isbn_input" class="isbn" type="text" />
+                    <button type="button" class="icon-barcode button scan">&nbsp;</button>
+                </div>
+            </form>
+        </div>
+        <p>This example demonstrates the following features:
+            <ul>
+                <li>Access to user's camera</li>
+                <li>Configuring EAN-Reader</li>
+                <li>Use custom mount-point (Query-Selector)</li>
+                <li>Start/Stop scanning based on certain events</li>
+            </ul>
+        </p>
+        <div class="source-code">
+            <h4>Source</h4>
+            <div class="collapsable-source">
+                <pre>
+                    <code class="language-javascript">
+var Quagga = window.Quagga;
+var App = {
+    _scanner: null,
+    init: function() {
+        this.attachListeners();
+    },
+    activateScanner: function() {
+        var scanner = this.configureScanner('.overlay__content'),
+            onDetected = function (result) {
+                document.querySelector('input.isbn').value = result.codeResult.code;
+                stop();
+            }.bind(this),
+            stop = function() {
+                scanner.stop();  // should also clear all event-listeners?
+                scanner.removeEventListener('detected', onDetected);
+                this.hideOverlay();
+                this.attachListeners();
+            }.bind(this);
+
+        this.showOverlay(stop);
+        scanner.addEventListener('detected', onDetected).start();
+    },
+    attachListeners: function() {
+        var self = this,
+            button = document.querySelector('.input-field input + button.scan');
+
+        button.addEventListener("click", function onClick(e) {
+            e.preventDefault();
+            button.removeEventListener("click", onClick);
+            self.activateScanner();
+        });
+    },
+    showOverlay: function(cancelCb) {
+        if (!this._overlay) {
+            var content = document.createElement('div'),
+                closeButton = document.createElement('div');
+
+            closeButton.appendChild(document.createTextNode('X'));
+            content.className = 'overlay__content';
+            closeButton.className = 'overlay__close';
+            this._overlay = document.createElement('div');
+            this._overlay.className = 'overlay';
+            this._overlay.appendChild(content);
+            content.appendChild(closeButton);
+            closeButton.addEventListener('click', function closeClick() {
+                closeButton.removeEventListener('click', closeClick);
+                cancelCb();
+            });
+            document.body.appendChild(this._overlay);
+        } else {
+            var closeButton = document.querySelector('.overlay__close');
+            closeButton.addEventListener('click', function closeClick() {
+                closeButton.removeEventListener('click', closeClick);
+                cancelCb();
+            });
+        }
+        this._overlay.style.display = "block";
+    },
+    hideOverlay: function() {
+        if (this._overlay) {
+            this._overlay.style.display = "none";
+        }
+    },
+    configureScanner: function(selector) {
+        if (!this._scanner) {
+            this._scanner = Quagga
+                .decoder({readers: ['ean_reader']})
+                .locator({patchSize: 'medium'})
+                .fromVideo({
+                    target: selector,
+                    constraints: {
+                        width: 800,
+                        height: 600,
+                        facingMode: "environment"
+                    }
+                });
+        }
+        return this._scanner;
+    }
+};
+App.init();
+                    </code>
+                </pre>
+            </div>
+            <div class="collapsable-source">
+                <pre>
+                    <code class="language-html">
+&lt;form&gt;
+    &lt;div class="input-field"&gt;
+        &lt;label for="isbn_input"&gt;EAN:&lt;/label&gt;
+        &lt;input id="isbn_input" class="isbn" type="text" /&gt;
+        &lt;button type="button" class="icon-barcode button scan"&gt;&nbsp;&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/form&gt;
+                    </code>
+                </pre>
+            </div>
+        </div>
+    </section>
+          <footer>
+        <p>
+          &copy; Copyright by Christoph Oberhofer
+        </p>
+      </footer>
+
+    <script src="../../dist/quagga.js" type="text/javascript"></script>
+    <script src="index.js" type="text/javascript"></script>
+    <script src="../vendor/prism.js"></script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "quagga-react",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:watch": "webpack --config webpack.config.js --watch",
+    "build:dev": "webpack --config webpack.config.js",
+    "build:prod": "webpack --config webpack.config.min.js"
+  },
+  "author": "Christoph Oberhofer <ch.oberhofer@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.10.4",
+    "babel-eslint": "^6.1.2",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-transform-class-properties": "^6.10.2",
+    "babel-preset-es2015-webpack": "^6.4.1",
+    "babel-preset-react": "^6.11.1",
+    "babel-preset-stage-0": "^6.5.0",
+    "eslint": "^3.1.1",
+    "eslint-config-netconomy": "^300.0.1",
+    "eslint-plugin-react": "^5.2.2",
+    "json-loader": "^0.5.4",
+    "webpack": "^2.1.0-beta.18"
+  },
+  "dependencies": {
+    "material-ui": "^0.15.2",
+    "react": "^15.2.1",
+    "react-dom": "^15.2.1",
+    "react-tap-event-plugin": "^1.0.0"
+  }
+}

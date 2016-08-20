@@ -40,7 +40,6 @@ module.exports = function(config) {
         },
         plugins: [
             'karma-chrome-launcher',
-            'karma-firefox-launcher',
             'karma-coverage',
             'karma-mocha',
             'karma-chai',
@@ -50,7 +49,7 @@ module.exports = function(config) {
             require('karma-webpack')
         ],
         reporters: ['progress', 'coverage'],
-        port: 9876,
+        port: 9999,
         colors: true,
         logLevel: config.LOG_INFO,
         autoWatch: true,
