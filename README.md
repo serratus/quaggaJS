@@ -60,6 +60,11 @@ The following APIs need to be implemented in your browser:
 In addition to the APIs mentioned above:
 - [MediaDevices](http://caniuse.com/#feat=stream)
 
+__Important:__ Accessing `getUserMedia` requires a secure origin in most
+browsers, meaning that `http://` can only be used on `localhost`. All other
+hostnames need to be served via `https://`. You can find more information in the
+[Chrome M47 WebRTC Release Notes](https://groups.google.com/forum/#!topic/discuss-webrtc/sq5CVmY69sc).
+
 ## <a name="installing">Installing</a>
 
 QuaggaJS can be installed using __npm__, __bower__, or by including it with
