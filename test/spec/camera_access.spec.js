@@ -90,36 +90,6 @@ describe('success', function() {
         });
     });
 
-    describe('facingMode fallback in Chrome', () => {
-        beforeEach(() => {
-            window.MediaStreamTrack.getSources = (cb) => {
-                return cb([
-                    {kind: "video", facing: "environment", id: "environment"},
-                    {kind: "audio", id: "audio"},
-                    {kind: "video", facing: "user", id: "user"}
-                ]);
-            };
-        });
-
-        afterEach(() => {
-            window.MediaStreamTrack = {};
-        })
-
-        it("should set deviceId in case facingMode is not supported", (done) => {
-            CameraAccess.request(video, {
-                facing: "user"
-            })
-            .then(function () {
-                const call = navigator.mediaDevices.getUserMedia.getCall(0),
-                    args = call.args;
-                expect(call).to.be.defined;
-                expect(args[0].video.facingMode).not.to.be.defined;
-                expect(args[0].video.deviceId).to.equal("user");
-                done();
-            })
-        });
-    });
-
     describe('release', function () {
         it('should release the camera', function (done) {
             CameraAccess.request(video, {})
