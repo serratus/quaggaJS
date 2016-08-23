@@ -65,6 +65,29 @@ browsers, meaning that `http://` can only be used on `localhost`. All other
 hostnames need to be served via `https://`. You can find more information in the
 [Chrome M47 WebRTC Release Notes](https://groups.google.com/forum/#!topic/discuss-webrtc/sq5CVmY69sc).
 
+### Feature-detection of getUserMedia
+
+QuaggaJS has a hard dependency on
+[webrtc-adapter](https://github.com/webrtc/adapter) which makes access to
+`getUserMedia` consistent throughout all browsers. Use this to test your
+browser's capabilities:
+
+```javascript
+if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+  // safely access `navigator.mediaDevices.getUserMedia`
+}
+```
+
+The above condition evaluates to:
+
+| Browser       | result  |
+| ------------- |:-------:|
+| Edge          | `true`  |
+| Chrome        | `true`  |
+| Firefox       | `true`  |
+| IE 11         | `false` |
+| Safari iOS    | `false` |
+
 ## <a name="installing">Installing</a>
 
 QuaggaJS can be installed using __npm__, __bower__, or by including it with
