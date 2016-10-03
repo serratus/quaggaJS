@@ -17,6 +17,7 @@ module.exports = {
     resolve: {
         modules: [
             path.resolve('./src/input/'),
+            path.resolve('./src/common/'),
             'node_modules'
         ]
     },

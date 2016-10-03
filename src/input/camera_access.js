@@ -1,4 +1,10 @@
-import {merge, pick} from 'lodash';
+import {omit, pick} from 'lodash';
+import {getUserMedia, enumerateDevices} from 'mediaDevices';
+
+const facingMatching = {
+    "user": /front/i,
+    "environment": /back/i
+};
 
 var streamRef;
 
@@ -32,24 +38,19 @@ function waitForVideo(video) {
  * @param {Object} video
  */
 function initCamera(video, constraints) {
-    if (navigator.mediaDevices
-            && typeof navigator.mediaDevices.getUserMedia === 'function') {
-        return navigator.mediaDevices
-            .getUserMedia(constraints)
-            .then((stream) => {
-                return new Promise((resolve) => {
-                    streamRef = stream;
-                    video.setAttribute("autoplay", 'true');
-                    video.srcObject = stream;
-                    video.addEventListener('loadedmetadata', () => {
-                        video.play();
-                        resolve();
-                    });
-                });
-            })
-            .then(waitForVideo.bind(null, video));
-    }
-    return Promise.reject(new Error('getUserMedia is not defined'));
+    return getUserMedia(constraints)
+    .then((stream) => {
+        return new Promise((resolve) => {
+            streamRef = stream;
+            video.setAttribute("autoplay", 'true');
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', () => {
+                video.play();
+                resolve();
+            });
+        });
+    })
+    .then(waitForVideo.bind(null, video));
 }
 
 function deprecatedConstraints(videoConstraints) {
@@ -68,16 +69,50 @@ function deprecatedConstraints(videoConstraints) {
     return normalized;
 }
 
-function pickConstraints(videoConstraints) {
-    return {
+function pickDevice(constraints) {
+    const desiredFacing = constraints.video.facingMode,
+        facingMatch = facingMatching[desiredFacing];
+
+    if (!facingMatch) {
+        return Promise.resolve(constraints);
+    }
+    return enumerateDevices()
+    .then(devices => {
+        const selectedDeviceId = devices
+            .filter(device => device.kind === 'videoinput' && facingMatch.test(device.label))
+            .map(facingDevice => facingDevice.deviceId)[0];
+        if (selectedDeviceId) {
+            constraints = {
+                ...constraints,
+                video: {
+                    ...omit(constraints.video, ["facingMode"]),
+                    deviceId: selectedDeviceId,
+                }
+            };
+        }
+        return Promise.resolve(constraints);
+    });
+}
+
+export function pickConstraints(videoConstraints) {
+    const normalizedConstraints = {
         audio: false,
         video: deprecatedConstraints(videoConstraints)
     };
+
+    if (!normalizedConstraints.video.deviceId) {
+        if (typeof normalizedConstraints.video.facingMode === 'string'
+                && normalizedConstraints.video.facingMode.length > 0) {
+            return pickDevice(normalizedConstraints);
+        }
+    }
+    return Promise.resolve(normalizedConstraints);
 }
 
 export default {
     request: function(video, videoConstraints) {
-        return initCamera(video, pickConstraints(videoConstraints));
+        return pickConstraints(videoConstraints)
+            .then(initCamera.bind(null, video));
     },
     release: function() {
         var tracks = streamRef && streamRef.getVideoTracks();
