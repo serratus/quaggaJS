@@ -29,6 +29,7 @@ module.exports = function(config) {
             resolve: {
                 modules: [
                     path.resolve('./src/input/'),
+                    path.resolve('./test/mocks/'),
                     'node_modules'
                 ]
             },

@@ -1,4 +1,5 @@
 import {omit, pick} from 'lodash';
+import {getUserMedia, enumerateDevices} from 'mediaDevices';
 
 const facingMatching = {
     "user": /front/i,
@@ -37,24 +38,19 @@ function waitForVideo(video) {
  * @param {Object} video
  */
 function initCamera(video, constraints) {
-    if (navigator.mediaDevices
-            && typeof navigator.mediaDevices.getUserMedia === 'function') {
-        return navigator.mediaDevices
-            .getUserMedia(constraints)
-            .then((stream) => {
-                return new Promise((resolve) => {
-                    streamRef = stream;
-                    video.setAttribute("autoplay", 'true');
-                    video.srcObject = stream;
-                    video.addEventListener('loadedmetadata', () => {
-                        video.play();
-                        resolve();
-                    });
-                });
-            })
-            .then(waitForVideo.bind(null, video));
-    }
-    return Promise.reject(new Error('getUserMedia is not defined'));
+    return getUserMedia(constraints)
+    .then((stream) => {
+        return new Promise((resolve) => {
+            streamRef = stream;
+            video.setAttribute("autoplay", 'true');
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', () => {
+                video.play();
+                resolve();
+            });
+        });
+    })
+    .then(waitForVideo.bind(null, video));
 }
 
 function deprecatedConstraints(videoConstraints) {
@@ -80,7 +76,7 @@ function pickDevice(constraints) {
     if (!facingMatch) {
         return Promise.resolve(constraints);
     }
-    return navigator.mediaDevices.enumerateDevices()
+    return enumerateDevices()
     .then(devices => {
         const selectedDeviceId = devices
             .filter(device => device.kind === 'videoinput' && facingMatch.test(device.label))
@@ -98,7 +94,7 @@ function pickDevice(constraints) {
     });
 }
 
-function pickConstraints(videoConstraints) {
+export function pickConstraints(videoConstraints) {
     const normalizedConstraints = {
         audio: false,
         video: deprecatedConstraints(videoConstraints)

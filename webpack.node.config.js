@@ -6,6 +6,7 @@ module.exports = require('./webpack.config.js');
 module.exports.resolve = {
     modules: [
         path.resolve('./lib/'),
+        path.resolve('./src/common/'),
         'node_modules'
     ]
 };
