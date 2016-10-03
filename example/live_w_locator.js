@@ -97,9 +97,9 @@ $(function() {
                 constraints: function(value){
                     var values = value.split('x');
                     return {
-                        width: parseInt(values[0]),
-                        height: parseInt(values[1])
-                    }
+                        width: {min: parseInt(values[0])},
+                        height: {min: parseInt(values[1])}
+                    };
                 }
             },
             numOfWorkers: function(value) {
@@ -128,9 +128,10 @@ $(function() {
             inputStream: {
                 type : "LiveStream",
                 constraints: {
-                    width: 640,
-                    height: 480,
-                    facingMode: "environment"
+                    width: {min: 640},
+                    height: {min: 480},
+                    facingMode: "environment",
+                    aspectRatio: {min: 1, max: 2}
                 }
             },
             locator: {
