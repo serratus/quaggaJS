@@ -566,7 +566,7 @@ that node does not support web-workers out of the box. Therefore the config
 property `numOfWorkers` must be explicitly set to `0`.
 
 ```javascript
-var Quagga = require('quagga');
+var Quagga = require('quagga').default;
 
 Quagga.decodeSingle({
     src: "image-abc-123.jpg",
