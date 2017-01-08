@@ -23,7 +23,7 @@ module.exports = function(config) {
                 }, {
                     test: /\.js$/,
                     include: path.resolve('src'),
-                    loader: 'babel-istanbul'
+                    loader: 'babel-istanbul-loader'
                 }]
             },
             resolve: {

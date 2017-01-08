@@ -109,6 +109,11 @@ export function pickConstraints(videoConstraints) {
     return Promise.resolve(normalizedConstraints);
 }
 
+function enumerateVideoDevices() {
+    return enumerateDevices()
+    .then(devices => devices.filter(device => device.kind === 'videoinput'));
+}
+
 export default {
     request: function(video, videoConstraints) {
         return pickConstraints(videoConstraints)
@@ -120,5 +125,14 @@ export default {
             tracks[0].stop();
         }
         streamRef = null;
+    },
+    enumerateVideoDevices,
+    getActiveStreamLabel: function() {
+        if (streamRef) {
+            const tracks = streamRef.getVideoTracks();
+            if (tracks && tracks.length) {
+                return tracks[0].label;
+            }
+        }
     }
 };

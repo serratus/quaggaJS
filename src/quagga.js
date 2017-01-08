@@ -539,5 +539,6 @@ export default {
     },
     ImageWrapper: ImageWrapper,
     ImageDebug: ImageDebug,
-    ResultCollector: ResultCollector
+    ResultCollector: ResultCollector,
+    CameraAccess: CameraAccess,
 };
