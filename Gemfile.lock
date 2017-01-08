@@ -134,7 +134,6 @@ GEM
       ethon (>= 0.7.4)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    wdm (0.1.1)
     yajl-ruby (1.2.1)
 
 PLATFORMS
@@ -144,7 +143,6 @@ PLATFORMS
 
 DEPENDENCIES
   github-pages
-  wdm (>= 0.1.0)
 
 BUNDLED WITH
-   1.12.5
+   1.13.6

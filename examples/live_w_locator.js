@@ -10,9 +10,31 @@ $(function() {
                 Quagga.start();
             });
         },
+        initCameraSelection: function(){
+            var streamLabel = Quagga.CameraAccess.getActiveStreamLabel();
+
+            return Quagga.CameraAccess.enumerateVideoDevices()
+            .then(function(devices) {
+                function pruneText(text) {
+                    return text.length > 30 ? text.substr(0, 30) : text;
+                }
+                var $deviceSelection = document.getElementById("deviceSelection");
+                while ($deviceSelection.firstChild) {
+                    $deviceSelection.removeChild($deviceSelection.firstChild);
+                }
+                devices.forEach(function(device) {
+                    var $option = document.createElement("option");
+                    $option.value = device.deviceId || device.id;
+                    $option.appendChild(document.createTextNode(pruneText(device.label || device.deviceId || device.id)));
+                    $option.selected = streamLabel === device.label;
+                    $deviceSelection.appendChild($option);
+                });
+            });
+        },
         attachListeners: function() {
             var self = this;
 
+            self.initCameraSelection();
             $(".controls").on("click", "button.stop", function(e) {
                 e.preventDefault();
                 Quagga.stop();
@@ -36,7 +58,11 @@ $(function() {
 
             return parts.reduce(function(o, key, i) {
                 if (setter && (i + 1) === depth) {
-                    o[key] = val;
+                    if (typeof o[key] === "object" && typeof val === "object") {
+                        Object.assign(o[key], val);
+                    } else {
+                        o[key] = val;
+                    }
                 }
                 return key in o ? o[key] : {};
             }, obj);
@@ -67,11 +93,16 @@ $(function() {
         inputMapper: {
             inputStream: {
                 constraints: function(value){
-                    var values = value.split('x');
-                    return {
-                        width: {min: parseInt(values[0])},
-                        height: {min: parseInt(values[1])}
+                    if (/^(\d+)x(\d+)$/.test(value)) {
+                        var values = value.split('x');
+                        return {
+                            width: {min: parseInt(values[0])},
+                            height: {min: parseInt(values[1])}
+                        };
                     }
+                    return {
+                        deviceId: value
+                    };
                 }
             },
             numOfWorkers: function(value) {
