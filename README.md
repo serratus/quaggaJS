@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2016-10-03)
+- [Changelog](#changelog) (2017-01-08)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
@@ -663,6 +663,13 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2017-01-08
+- Improvements
+  - Exposing `CameraAccess` module to get access to methods like
+    `enumerateVideoDevices` and `getActiveStreamLabel`
+    (see `example/live_w_locator`)
+  - Update to webpack 2.2 (API is still unstable)
 
 ### 2016-10-03
 - Fixes
