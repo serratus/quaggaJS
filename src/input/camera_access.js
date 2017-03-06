@@ -69,42 +69,15 @@ function deprecatedConstraints(videoConstraints) {
     return normalized;
 }
 
-function pickDevice(constraints) {
-    const desiredFacing = constraints.video.facingMode,
-        facingMatch = facingMatching[desiredFacing];
-
-    if (!facingMatch) {
-        return Promise.resolve(constraints);
-    }
-    return enumerateDevices()
-    .then(devices => {
-        const selectedDeviceId = devices
-            .filter(device => device.kind === 'videoinput' && facingMatch.test(device.label))
-            .map(facingDevice => facingDevice.deviceId)[0];
-        if (selectedDeviceId) {
-            constraints = {
-                ...constraints,
-                video: {
-                    ...omit(constraints.video, ["facingMode"]),
-                    deviceId: selectedDeviceId,
-                }
-            };
-        }
-        return Promise.resolve(constraints);
-    });
-}
-
 export function pickConstraints(videoConstraints) {
     const normalizedConstraints = {
         audio: false,
         video: deprecatedConstraints(videoConstraints)
     };
 
-    if (!normalizedConstraints.video.deviceId) {
-        if (typeof normalizedConstraints.video.facingMode === 'string'
-                && normalizedConstraints.video.facingMode.length > 0) {
-            return pickDevice(normalizedConstraints);
-        }
+    if (normalizedConstraints.video.deviceId
+            && normalizedConstraints.video.facingMode) {
+        delete normalizedConstraints.video.facingMode;
     }
     return Promise.resolve(normalizedConstraints);
 }

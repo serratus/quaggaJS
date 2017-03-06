@@ -67,10 +67,11 @@ hostnames need to be served via `https://`. You can find more information in the
 
 ### Feature-detection of getUserMedia
 
-QuaggaJS has a hard dependency on
-[webrtc-adapter](https://github.com/webrtc/adapter) which makes access to
-`getUserMedia` consistent throughout all browsers. Use this to test your
-browser's capabilities:
+Every browser seems to differently implement the `mediaDevices.getUserMedia`
+API. Therefore it's highly recommended to include
+[webrtc-adapter](https://github.com/webrtc/adapter) in your project.
+
+Here's how you can test your browser's capabilities:
 
 ```javascript
 if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
