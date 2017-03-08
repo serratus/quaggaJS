@@ -1,5 +1,4 @@
 import './common/typedefs';
-import 'webrtc-adapter';
 import createScanner from './scanner';
 import ImageWrapper from './common/image_wrapper';
 import ImageDebug from './common/image_debug';
@@ -134,4 +133,5 @@ function createApi(configuration = Config) {
         }
     };
 }
+
 export default createApi();

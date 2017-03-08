@@ -24,6 +24,7 @@ module.exports = function(config) {
             resolve: {
                 modules: [
                     path.resolve('./src/input/'),
+                    path.resolve('./src/common/'),
                     'node_modules'
                 ]
             },
@@ -36,7 +37,6 @@ module.exports = function(config) {
         plugins: [
             'karma-chrome-launcher',
             'karma-mocha',
-            'karma-requirejs',
             'karma-chai',
             'karma-sinon',
             'karma-sinon-chai',

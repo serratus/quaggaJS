@@ -72,7 +72,6 @@ describe("ResultCollector", () => {
 
             results = collector.getResults();
             expect(results).to.have.length(2);
-
             results.forEach(function(result) {
                 expect(result).not.to.deep.equal(config.blacklist[0]);
             });

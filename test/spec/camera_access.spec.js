@@ -1,4 +1,5 @@
-import CameraAccess from '../../src/input/camera_access';
+import CameraAccess, {pickConstraints} from '../../src/input/camera_access';
+import {setDevices, setStream, getConstraints, setSupported} from 'mediaDevices';
 
 var originalURL,
     originalMediaStreamTrack,
@@ -15,7 +16,7 @@ describe("CameraAccess", () => {
         originalMediaStreamTrack = window.MediaStreamTrack;
         window.MediaStreamTrack = {};
         window.URL = {
-            createObjectURL() {
+            createObjectURL(stream) {
                 return stream;
             }
         };
@@ -25,6 +26,7 @@ describe("CameraAccess", () => {
                 return tracks;
             }
         };
+        setStream(stream);
         sinon.spy(tracks[0], "stop");
 
         video = {
@@ -57,6 +59,7 @@ describe("CameraAccess", () => {
         afterEach(function() {
             navigator.mediaDevices.getUserMedia.restore();
         });
+
         describe('request', function () {
             it('should request the camera', function (done) {
                 CameraAccess.request(video, {})
@@ -91,30 +94,30 @@ describe("CameraAccess", () => {
             });
         });
 
-        it('should release the camera', function (done) {
-            CameraAccess.request(video, {})
-            .then(function () {
-                expect(video.srcObject).to.deep.equal(stream);
-                CameraAccess.release();
-                expect(video.srcObject.getVideoTracks()).to.have.length(1);
-                expect(video.srcObject.getVideoTracks()[0].stop.calledOnce).to.equal(true);
-                done();
+        describe('release', function () {
+            it('should release the camera', function (done) {
+                CameraAccess.request(video, {})
+                .then(function () {
+                    expect(video.srcObject).to.deep.equal(stream);
+                    CameraAccess.release();
+                    expect(video.srcObject.getVideoTracks()).to.have.length(1);
+                    expect(video.srcObject.getVideoTracks()[0].stop.calledOnce).to.equal(true);
+                    done();
+                });
             });
         });
     });
 
     describe('failure', function() {
+        beforeEach(() => {
+            setSupported(false);
+        });
+
+        afterEach(() => {
+            setSupported(true);
+        });
+
         describe("permission denied", function(){
-            beforeEach(function() {
-                sinon.stub(navigator.mediaDevices, "getUserMedia", function(constraints, success, failure) {
-                    return Promise.reject(new Error());
-                });
-            });
-
-            afterEach(function() {
-                navigator.mediaDevices.getUserMedia.restore();
-            });
-
             it('should throw if getUserMedia not available', function(done) {
                 CameraAccess.request(video, {})
                 .catch(function (err) {
@@ -140,6 +143,49 @@ describe("CameraAccess", () => {
                 CameraAccess.request(video, {})
                 .catch((err) => {
                     expect(err).to.be.defined;
+                    done();
+                });
+            });
+        });
+
+        describe("pickConstraints", () => {
+            it("should return the given constraints if no facingMode is defined", (done) => {
+                const givenConstraints = {width: 180};
+                return pickConstraints(givenConstraints).then((actualConstraints) => {
+                    expect(actualConstraints.video).to.deep.equal(givenConstraints);
+                    done();
+                })
+                .catch((err) => {
+                    expect(err).to.equal(null);
+                    console.log(err);
+                    done();
+                });
+            });
+
+            it("should return the given constraints if deviceId is defined", (done) => {
+                const givenConstraints = {width: 180, deviceId: "4343"};
+                return pickConstraints(givenConstraints).then((actualConstraints) => {
+                    expect(actualConstraints.video).to.deep.equal(givenConstraints);
+                    done();
+                })
+                .catch((err) => {
+                    expect(err).to.equal(null);
+                    console.log(err);
+                    done();
+                });
+            });
+
+            it("should set deviceId if facingMode is set to environment", (done) => {
+                setDevices([{deviceId: "front", kind: "videoinput", label: "front Facing"},
+                    {deviceId: "back", label: "back Facing", kind: "videoinput"}]);
+                const givenConstraints = {width: 180, facingMode: "environment"};
+                return pickConstraints(givenConstraints).then((actualConstraints) => {
+                    expect(actualConstraints.video).to.deep.equal({width: 180, deviceId: "back"});
+                    done();
+                })
+                .catch((err) => {
+                    console.log(err);
+                    expect(err).to.equal(null);
                     done();
                 });
             });

@@ -10,9 +10,9 @@ module.exports = function(grunt) {
     grunt.registerTask('uglyasm', function() {
         var code = fs.readFileSync('dist/quagga.js', 'utf-8'),
             minifiedCode = fs.readFileSync('dist/quagga.min.js', 'utf-8'),
-            commentEnd = '/* @preserve ASM END */',
-            moduleFunctionRegex = /function\s*\((\w+,\s*\w+,\s*\w+)\)\s*\{\s*\/\* \@preserve ASM BEGIN \*\//,
-            commentStartIdx = code.indexOf("/* @preserve ASM BEGIN */"),
+            commentEnd = '@preserve ASM END',
+            moduleFunctionRegex = /function\s*\((\w+,\s*\w+,\s*\w+)\)\s*\{(\n?\s*\"use strict\";?)*\n?\/\*\s*\@preserve ASM BEGIN/,
+            commentStartIdx = code.indexOf("@preserve ASM BEGIN"),
             asmEndIdxTmp = code.indexOf(commentEnd),
             asmEndIdx = code.indexOf("}", asmEndIdxTmp),
             asmCodeTmp = code.substring(commentStartIdx - Math.min(500, commentStartIdx),
@@ -29,8 +29,6 @@ module.exports = function(grunt) {
             .replace(/\n\s*/g, '') // remove indentation
             .replace(/ ([+=^|&]|>+|<+) /g, '$1') // remove spaces around operators
             .replace(/[\r\n/]/g, ''); // remove new lines
-
-        grunt.log.debug(asmCodeMinified);
 
         asmModule = moduleFunctionRegex.exec(asmCode);
         if (!asmModule) {

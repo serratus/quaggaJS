@@ -23,12 +23,13 @@ module.exports = function(config) {
                 }, {
                     test: /\.js$/,
                     include: path.resolve('src'),
-                    loader: 'babel-istanbul'
+                    loader: 'istanbul-instrumenter-loader'
                 }]
             },
             resolve: {
                 modules: [
                     path.resolve('./src/input/'),
+                    path.resolve('./test/mocks/'),
                     'node_modules'
                 ]
             },
