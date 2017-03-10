@@ -1,5 +1,4 @@
 import TypeDefs from './common/typedefs'; // eslint-disable-line no-unused-vars
-import WebrtcAdapter from 'webrtc-adapter'; // eslint-disable-line no-unused-vars
 import ImageWrapper from './common/image_wrapper';
 import BarcodeLocator from './locator/barcode_locator';
 import BarcodeDecoder from './decoder/barcode_decoder';
@@ -539,5 +538,6 @@ export default {
     },
     ImageWrapper: ImageWrapper,
     ImageDebug: ImageDebug,
-    ResultCollector: ResultCollector
+    ResultCollector: ResultCollector,
+    CameraAccess: CameraAccess,
 };

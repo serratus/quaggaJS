@@ -1,7 +1,7 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2016-10-03)
+- [Changelog](#changelog) (2017-01-08)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
@@ -67,10 +67,11 @@ hostnames need to be served via `https://`. You can find more information in the
 
 ### Feature-detection of getUserMedia
 
-QuaggaJS has a hard dependency on
-[webrtc-adapter](https://github.com/webrtc/adapter) which makes access to
-`getUserMedia` consistent throughout all browsers. Use this to test your
-browser's capabilities:
+Every browser seems to differently implement the `mediaDevices.getUserMedia`
+API. Therefore it's highly recommended to include
+[webrtc-adapter](https://github.com/webrtc/adapter) in your project.
+
+Here's how you can test your browser's capabilities:
 
 ```javascript
 if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
@@ -663,6 +664,13 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2017-01-08
+- Improvements
+  - Exposing `CameraAccess` module to get access to methods like
+    `enumerateVideoDevices` and `getActiveStreamLabel`
+    (see `example/live_w_locator`)
+  - Update to webpack 2.2 (API is still unstable)
 
 ### 2016-10-03
 - Fixes
