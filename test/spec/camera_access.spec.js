@@ -50,22 +50,16 @@ describe("CameraAccess", () => {
     });
 
     describe('success', function() {
-        beforeEach(function() {
-            sinon.stub(navigator.mediaDevices, "getUserMedia", function(constraints) {
-                return Promise.resolve(stream);
-            });
-        });
-
-        afterEach(function() {
-            navigator.mediaDevices.getUserMedia.restore();
-        });
-
         describe('request', function () {
             it('should request the camera', function (done) {
                 CameraAccess.request(video, {})
                 .then(function () {
-                    expect(navigator.mediaDevices.getUserMedia.calledOnce).to.equal(true);
                     expect(video.srcObject).to.deep.equal(stream);
+                    done();
+                })
+                .catch((e) => {
+                    console.log(e);
+                    expect(true).to.equal(false);
                     done();
                 });
             });
@@ -79,16 +73,14 @@ describe("CameraAccess", () => {
                     maxAspectRatio: 100
                 })
                 .then(function () {
-                    const call = navigator.mediaDevices.getUserMedia.getCall(0),
-                        args = call.args;
-                    expect(call).to.be.defined;
-                    expect(args[0].video.width).to.equal(320);
-                    expect(args[0].video.height).to.equal(240);
-                    expect(args[0].video.facingMode).to.equal("user");
-                    expect(args[0].video.aspectRatio).to.equal(2);
-                    expect(args[0].video.facing).not.to.be.defined;
-                    expect(args[0].video.minAspectRatio).not.to.be.defined;
-                    expect(args[0].video.maxAspectRatio).not.to.be.defined;
+                    const transformedConstraints = getConstraints();
+                    expect(transformedConstraints.video.width).to.equal(320);
+                    expect(transformedConstraints.video.height).to.equal(240);
+                    expect(transformedConstraints.video.facingMode).to.equal("user");
+                    expect(transformedConstraints.video.aspectRatio).to.equal(2);
+                    expect(transformedConstraints.video.facing).not.to.be.defined;
+                    expect(transformedConstraints.video.minAspectRatio).not.to.be.defined;
+                    expect(transformedConstraints.video.maxAspectRatio).not.to.be.defined;
                     done();
                 });
             });
@@ -126,68 +118,49 @@ describe("CameraAccess", () => {
                 });
             });
         });
+    });
 
-        describe("not available", function(){
-            var originalGetUserMedia;
-
-            beforeEach(function() {
-                originalGetUserMedia = navigator.mediaDevices.getUserMedia;
-                navigator.mediaDevices.getUserMedia = undefined;
-            });
-
-            afterEach(function() {
-                navigator.mediaDevices.getUserMedia = originalGetUserMedia;
-            });
-
-            it('should throw if getUserMedia not available', function(done) {
-                CameraAccess.request(video, {})
-                .catch((err) => {
-                    expect(err).to.be.defined;
-                    done();
-                });
+    describe("pickConstraints", () => {
+        it("should return the given constraints if no facingMode is defined", (done) => {
+            const givenConstraints = {width: 180};
+            return pickConstraints(givenConstraints).then((actualConstraints) => {
+                expect(actualConstraints.video).to.deep.equal(givenConstraints);
+                done();
+            })
+            .catch((err) => {
+                expect(err).to.equal(null);
+                console.log(err);
+                done();
             });
         });
 
-        describe("pickConstraints", () => {
-            it("should return the given constraints if no facingMode is defined", (done) => {
-                const givenConstraints = {width: 180};
-                return pickConstraints(givenConstraints).then((actualConstraints) => {
-                    expect(actualConstraints.video).to.deep.equal(givenConstraints);
-                    done();
-                })
-                .catch((err) => {
-                    expect(err).to.equal(null);
-                    console.log(err);
-                    done();
-                });
+        it("should return the given constraints if deviceId is defined", (done) => {
+            const givenConstraints = {width: 180, deviceId: "4343"};
+            return pickConstraints(givenConstraints).then((actualConstraints) => {
+                expect(actualConstraints.video).to.deep.equal(givenConstraints);
+                done();
+            })
+            .catch((err) => {
+                expect(err).to.equal(null);
+                console.log(err);
+                done();
             });
+        });
 
-            it("should return the given constraints if deviceId is defined", (done) => {
-                const givenConstraints = {width: 180, deviceId: "4343"};
-                return pickConstraints(givenConstraints).then((actualConstraints) => {
-                    expect(actualConstraints.video).to.deep.equal(givenConstraints);
-                    done();
-                })
-                .catch((err) => {
-                    expect(err).to.equal(null);
-                    console.log(err);
-                    done();
-                });
-            });
-
-            it("should set deviceId if facingMode is set to environment", (done) => {
-                setDevices([{deviceId: "front", kind: "videoinput", label: "front Facing"},
-                    {deviceId: "back", label: "back Facing", kind: "videoinput"}]);
-                const givenConstraints = {width: 180, facingMode: "environment"};
-                return pickConstraints(givenConstraints).then((actualConstraints) => {
-                    expect(actualConstraints.video).to.deep.equal({width: 180, deviceId: "back"});
-                    done();
-                })
-                .catch((err) => {
-                    console.log(err);
-                    expect(err).to.equal(null);
-                    done();
-                });
+        it("should set deviceId if facingMode & deviceId are set", (done) => {
+            setDevices([{deviceId: "front", kind: "videoinput", label: "front Facing"},
+                {deviceId: "back", label: "back Facing", kind: "videoinput"}]);
+            const givenConstraints = {width: 180, facingMode: "environment", deviceId: "back"};
+            return pickConstraints(givenConstraints)
+            .then((actualConstraints) => {
+                console.log(JSON.stringify(actualConstraints, 0, 4));
+                expect(actualConstraints.video).to.deep.equal({width: 180, deviceId: "back"});
+                done();
+            })
+            .catch((err) => {
+                console.log(err);
+                expect(err).to.equal(null);
+                done();
             });
         });
     });

@@ -13,6 +13,9 @@ module.exports = function(config) {
             'test/test-main.js': ['webpack']
         },
         webpack: {
+            entry: [
+                './src/quagga.js'
+            ],
             module: {
                 loaders: [{
                     test: /\.jsx?$/,
@@ -23,7 +26,10 @@ module.exports = function(config) {
                 }, {
                     test: /\.js$/,
                     include: path.resolve('src'),
-                    loader: 'istanbul-instrumenter-loader'
+                    loader: 'istanbul-instrumenter-loader',
+                    query: {
+                        esModules: true
+                    }
                 }]
             },
             resolve: {

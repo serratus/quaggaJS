@@ -12,10 +12,9 @@ const windowObjects = [
 ];
 
 const DOMHelper = windowObjects.reduce((result, obj) => {
-    return {
-        ...result,
+    return Object.assign({}, result, {
         [obj]: obj in windowRef ? windowRef[obj] : () => {}
-    };
+    });
 }, {});
 
 DOMHelper.setObject = (key, value) => {

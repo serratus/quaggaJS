@@ -345,13 +345,9 @@ function createScanner() {
     }
 
     function configForWorker(config) {
-        return {
-            ...config,
-            inputStream: {
-                ...config.inputStream,
-                target: null
-            }
-        };
+        return Object.assign({}, config, {
+            inputStream: Object.assign({}, config.inputStream, {target: null})
+        });
     }
 
     function workerInterface(factory) {
