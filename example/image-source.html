@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
+    <style>
+        body, html {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+        }
+        video {
+            display: none;
+        }
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <button id="hdReady">720p</button>
+        <button id="camera">camera</button>
+        <select id="cameraSelect"></select>
+        <button id="zoom">zoom</button>
+    </div>
+    <div id="videoStatistics"></div>
+    <div id="canvasStatistics"></div>
+    <video autoplay></video>
+    <canvas id="input"></canvas>
+    <canvas id="output"></canvas>
+<script src="//webrtc.github.io/adapter/adapter-latest.js" type="text/javascript"></script>
+<script>
+  var imageCapture;
+  var cameraSource;
+  var output = {
+      canvas: document.querySelector('#output'),
+      ctx: document.querySelector('#output').getContext('2d'),
+  }
+
+  // import {fromCamera, fromImage, fromVideo, fromCanvas, fromStream} from 'quagga';
+  // import {}
+
+  var PORTRAIT = "portrait";
+ var LANDSCAPE = "landscape";
+
+var matchingScreens = {
+    [PORTRAIT]: /portrait/i,
+    [LANDSCAPE]: /landscape/i,
+};
+
+function determineOrientation() {
+    var orientationType = screen.msOrientation || screen.mozOrientation;
+    if (typeof orientationType !== 'string') {
+        orientationType = screen.orientation;
+        if (typeof orientationType === 'object' && orientationType.type) {
+            orientationType = orientationType.type;
+        }
+    }
+    if (orientationType) {
+        return Object.keys(matchingScreens)
+        .filter(orientation => matchingScreens[orientation].test(orientationType))[0];
+    }
+    console.log(`Failed to determine orientation, defaults to ${PORTRAIT}`);
+    return PORTRAIT;
+}
+
+  function waitForVideo(video) {
+      return new Promise((resolve, reject) => {
+          let attempts = 20;
+
+          function checkVideo() {
+              if (attempts > 0) {
+                  if (video.videoWidth > 10 && video.videoHeight > 10) {
+                      console.log(video.videoWidth + "px x " + video.videoHeight + "px");
+                      resolve();
+                  } else {
+                      window.setTimeout(checkVideo, 200);
+                  }
+              } else {
+                  reject('Unable to play video stream. Is webcam working?');
+              }
+              attempts--;
+          }
+          checkVideo();
+      });
+  }
+
+  function printVideoStatistics(video) {
+      document.querySelector('#videoStatistics').innerHTML = `
+      <span>${video.videoWidth}</span><span>x</span><span>${video.videoHeight}</span>
+      `;
+  }
+
+  var Source = {
+      fromCamera: function(constraints) {
+          if (!constraints) {
+              constraints = {width: {ideal: 540}, height: {ideal: 540}, aspectRatio: {ideal: 1}, facingMode: 'environment'};
+          }
+          var orientation = determineOrientation();
+          var videoConstraints = constraints;
+          console.log(orientation);
+          if (orientation === PORTRAIT) {
+              constraints = Object.assign({}, constraints, {
+                  width: constraints.height,
+                  height: constraints.width,
+              });
+          }
+          console.log(videoConstraints, constraints);
+          return navigator.mediaDevices.getUserMedia({
+              video: constraints
+          })
+          .then(function(mediastream) {
+              var video = document.querySelector('video');
+              video.srcObject = mediastream;
+
+              var track = mediastream.getVideoTracks()[0];
+
+              return waitForVideo(video)
+              .then(printVideoStatistics.bind(null, video))
+              .then(function() {
+                  return {
+                      type: "CAMERA",
+                      getWidth: function() {
+                          return video.videoWidth;
+                      },
+                      getHeight: function() {
+                          return video.videoHeight;
+                      },
+                      getConstraints: function() {
+                          return videoConstraints;
+                      },
+                      getDrawable: function() {
+                          return video;
+                      },
+                      applyConstraints: function(constraints) {
+                          track.stop();
+                          videoConstraints = Object.assign({}, constraints);
+                          var orientation = determineOrientation();
+                          console.log(orientation);
+                          if (orientation === PORTRAIT) {
+                              constraints = Object.assign({}, constraints, {
+                                  width: constraints.height,
+                                  height: constraints.width,
+                              });
+                          }
+                          console.log(videoConstraints, constraints);
+                          if (constraints.zoom && constraints.zoom.exact > 1) {
+                              // increase width/height by 2
+                              constraints.width.ideal = Math.floor(constraints.width.ideal * constraints.zoom.exact);
+                              constraints.height.ideal = Math.floor(constraints.height.ideal * constraints.zoom.exact);
+                              delete constraints.zoom;
+                          }
+                          return navigator.mediaDevices.getUserMedia({
+                              video: constraints
+                          })
+                          .then(function(mediastream) {
+                              video.srcObject = mediastream;
+                              track = mediastream.getVideoTracks()[0]
+                          })
+                          .then(waitForVideo.bind(null, video))
+                          .then(printVideoStatistics.bind(null, video));
+                      },
+                      getLabel: function() {
+                          return track.label;
+                      }
+                  }
+              });
+          });
+      }
+  }
+
+  function adjustCanvasSize(input, canvas) {
+      if (input instanceof HTMLVideoElement) {
+          if (canvas.height !== input.videoHeight || canvas.width !== input.videoWidth) {
+              console.log('adjusting canvas size', input.videoHeight, input.videoWidth);
+              canvas.height = input.videoHeight;
+              canvas.width = input.videoWidth;
+              return true;
+          }
+          return false;
+      } else if (typeof input.width !== 'undefined') {
+          if (canvas.height !== input.height || canvas.width !== input.width) {
+              console.log('adjusting canvas size', input.height, input.width);
+              canvas.height = input.height;
+              canvas.width = input.width;
+              return true;
+          }
+          return false;
+      } else {
+          throw new Error('Not a video element!');
+      }
+  }
+
+  var PixelCapture = {
+      fromSource: function(source) {
+          var drawable = source.getDrawable();
+          var canvas = null;
+          var ctx = null;
+          var bytePool = [];
+
+          if (drawable instanceof HTMLVideoElement) {
+              canvas = document.querySelector('#input');
+              ctx = canvas.getContext('2d');
+          }
+
+          function nextAvailableBuffer() {
+              var i;
+              var buffer;
+              var bytesRequired = (canvas.height * canvas.width);
+              for (i = 0; i < bytePool.length; i++) {
+                  buffer = bytePool[i];
+                  if (buffer && buffer.buffer.byteLength === bytesRequired) {
+                      return bytePool[i];
+                  }
+              }
+              buffer = new Uint8Array(bytesRequired);
+              bytePool.push(buffer);
+              console.log("Added new entry to bufferPool", bytesRequired);
+              return buffer;
+          }
+
+          return {
+              grabFrameData: function grabFrameData() {
+                  // data should be calculated up-front when creating/updating the source
+                  var sx = 0,
+                    sy = 0,
+                    sWidth = source.getWidth(),
+                    sHeight = source.getHeight(),
+                    dx = 0,
+                    dy = 0,
+                    dWidth = source.getWidth(),
+                    dHeight = source.getHeight();
+
+                  var constraints = source.getConstraints();
+                  if (constraints.zoom && constraints.zoom.exact > 1) {
+                      var zoom = constraints.zoom.exact;
+                      sWidth = Math.floor(source.getWidth() / zoom);
+                      sHeight = Math.floor(source.getHeight() / zoom);
+                      sx = Math.floor((source.getWidth() - sWidth) / 2);
+                      sy = Math.floor((source.getHeight() - sHeight) / 2);
+                      dWidth = sWidth;
+                      dHeight = sHeight;
+                      adjustCanvasSize({height: sHeight, width: sWidth}, canvas);
+                  } else {
+                      adjustCanvasSize(drawable, canvas);
+                  }
+                  if (canvas.height < 10 || canvas.width < 10) {
+                      console.log('canvas not initialized. Waiting 100ms and then continuing');
+                      return sleep(100).then(grabFrameData);
+                  }
+                  ctx.drawImage(drawable, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                  var buffer = nextAvailableBuffer();
+                  computeGray(imageData, buffer);
+                  return Promise.resolve({
+                      width: canvas.width,
+                      height: canvas.height,
+                      data: buffer,
+                  });
+              }
+          }
+      }
+  }
+
+  function computeGray(imageData, outArray, config) {
+      var l = (imageData.length / 4) | 0,
+          i,
+          singleChannel = false;
+
+      if (singleChannel) {
+          for (i = 0; i < l; i++) {
+              outArray[i] = imageData[i * 4 + 0];
+          }
+      } else {
+          for (i = 0; i < l; i++) {
+              outArray[i] = Math.floor(
+                  0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+          }
+      }
+  };
+
+  function sleep(millis) {
+      return new Promise(function(resolve) {
+          window.setTimeout(resolve, millis);
+      })
+  }
+
+  function start(pixelCapturer) {
+      return pixelCapturer.grabFrameData()
+      .then(bitmap => {
+          adjustCanvasSize(bitmap, output.canvas);
+          drawImage(bitmap, output.ctx);
+          console.log(bitmap.width, bitmap.height, bitmap.data.length);
+      })
+      .then(sleep.bind(null, 200))
+      .then(function() {
+          return start(pixelCapturer);
+      });
+  }
+
+  function drawImage(bitmap, ctx) {
+      var canvasData = ctx.getImageData(0, 0, bitmap.width, bitmap.height),
+          data = canvasData.data,
+          imageData = bitmap.data,
+          imageDataPos = imageData.length,
+          canvasDataPos = data.length,
+          value;
+
+      if (canvasDataPos / imageDataPos !== 4) {
+          return false;
+      }
+      while (imageDataPos--){
+          value = imageData[imageDataPos];
+          data[--canvasDataPos] = 255;
+          data[--canvasDataPos] = value;
+          data[--canvasDataPos] = value;
+          data[--canvasDataPos] = value;
+      }
+      ctx.putImageData(canvasData, 0, 0);
+      return true;
+  }
+
+  function updateVideoDeviceSelection(source) {
+      navigator.mediaDevices.enumerateDevices()
+      .then(function(devices) {
+          var videoDevices = devices.filter(function(device) {
+              return device.kind === 'videoinput';
+          })
+          .map(function(videoDevice) {
+              var $option = document.createElement("option");
+              $option.value = videoDevice.deviceId || videoDevice.id;
+              $option.appendChild(document.createTextNode(videoDevice.label));
+              $option.selected = videoDevice.label === source.getLabel();
+              return $option;
+          })
+          .forEach(function(option) {
+              var $select = document.querySelector('#cameraSelect');
+              $select.appendChild(option);
+          });
+      });
+  }
+
+// user code
+
+  document.querySelector('#hdReady').addEventListener('click', function(e) {
+      cameraSource.applyConstraints({width: {ideal: 1280}, height: {ideal: 1280}, facingMode: 'environment'});
+  });
+
+  document.querySelector('#camera').addEventListener('click', function(e) {
+      var constraints = cameraSource.getConstraints();
+      constraints.facingMode = 'user';
+      cameraSource.applyConstraints(constraints);
+  });
+
+  Source
+    .fromCamera()
+    .then((source) => {
+        cameraSource = source;
+        var pixelCapturer = PixelCapture.fromSource(cameraSource);
+        start(pixelCapturer);
+        return {source, pixelCapturer};
+    })
+    .then(function(opts) {
+        updateVideoDeviceSelection(opts.source);
+    });
+
+  document.querySelector('#cameraSelect').addEventListener('change', function(e) {
+      var selectedDeviceId = e.target.value;
+      var oldConstraints = cameraSource.getConstraints();
+      oldConstraints.deviceId = selectedDeviceId;
+      cameraSource.applyConstraints(oldConstraints);
+  });
+
+  document.querySelector('#zoom').addEventListener('click', function(e) {
+      var oldConstraints = cameraSource.getConstraints();
+      oldConstraints.zoom = {exact: 2};
+      cameraSource.applyConstraints(oldConstraints);
+  });
+
+
+    // https://www.w3.org/TR/mediacapture-streams/#widl-ConstrainablePattern-getSettings-Settings
+
+    // changing zoom/resolution
+    // cameraSource.applyConstraints({width: {exact: 1280}, height: {exact: 720}, facingMode: 'environment'});
+
+    // getting most recently set constraints
+    // cameraSource.getConstraints();
+
+    // current settings of all the constrainable properties
+    // cameraSource.getSettings();
+
+    // get capapilities like
+    // cameraSource.getCapabilities();
+
+
+</script>
+</body>
+</html>

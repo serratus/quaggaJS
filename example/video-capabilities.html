@@ -1,0 +1,71 @@
+<html>
+<body>
+<video autoplay></video>
+<img>
+<input type="range" hidden>
+<button id="toggleLight">Light</button>
+<script src="//webrtc.github.io/adapter/adapter-latest.js" type="text/javascript"></script>
+<script>
+  var imageCapture;
+
+  navigator.mediaDevices.getUserMedia({
+      video: {
+          facingMode: 'environment',
+      }
+  })
+    .then(gotMedia)
+    .catch(err => console.error('getUserMedia() failed: ', err));
+
+  function gotMedia(mediastream) {
+    const video = document.querySelector('video');
+    video.srcObject = mediastream;
+
+    const track = mediastream.getVideoTracks()[0];
+    imageCapture = new ImageCapture(track);
+    imageCapture.getPhotoCapabilities()
+      .then(photoCapabilities => {
+          console.log(photoCapabilities)
+        // Check whether zoom is supported or not.
+        if (!photoCapabilities.zoom.min && !photoCapabilities.zoom.max) {
+          return;
+        }
+
+        // Map zoom to a slider element.
+        const input = document.querySelector('input[type="range"]');
+        input.min = photoCapabilities.zoom.min;
+        input.max = photoCapabilities.zoom.max;
+        input.step = photoCapabilities.zoom.step;
+        input.value = photoCapabilities.zoom.current;
+        input.oninput = function(event) {
+          imageCapture.setOptions({zoom: event.target.value});
+        }
+        input.hidden = false;
+
+        const toggleLightButton = document.querySelector('#toggleLight');
+        toggleLightButton.onclick = function(event) {
+            imageCapture.getPhotoCapabilities()
+            .then(function(current) {
+                if (current.fillLightMode === "off") {
+                    imageCapture.setOptions({fillLightMode: "torch"});
+                } else {
+                    imageCapture.setOptions({fillLightMode: "off"});
+                }
+            })
+        }
+      })
+      .catch(err => console.error('getPhotoCapabilities() failed: ', err));
+  }
+
+  function takePhoto() {
+    imageCapture.takePhoto()
+      .then(blob => {
+        console.log('Photo taken: ' + blob.type + ', ' + blob.size + 'B');
+
+        const image = document.querySelector('img');
+        image.src = URL.createObjectURL(blob);
+      })
+      .catch(err => console.error('takePhoto() failed: ', err));
+  }
+</script>
+</body>
+</html>
