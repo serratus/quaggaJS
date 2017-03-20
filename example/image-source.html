@@ -22,6 +22,7 @@
         <button id="camera">camera</button>
         <select id="cameraSelect"></select>
         <button id="zoom">zoom</button>
+        <input type="file" accept="image/*" capture="camera"/>
     </div>
     <div id="videoStatistics"></div>
     <div id="canvasStatistics"></div>
@@ -35,6 +36,10 @@
   var cameraSource;
   var output = {
       'CAMERA': {
+          canvas: document.querySelector('#output'),
+          ctx: document.querySelector('#output').getContext('2d'),
+      },
+      'IMAGE': {
           canvas: document.querySelector('#output'),
           ctx: document.querySelector('#output').getContext('2d'),
       },
@@ -122,6 +127,12 @@ function determineOrientation() {
   function printCanvasStatistics(canvas) {
       document.querySelector('#videoStatistics').innerHTML = `
       <span>${canvas.width}</span><span>x</span><span>${canvas.height}</span>
+      `;
+  }
+
+  function printImageStatistics(image) {
+      document.querySelector('#videoStatistics').innerHTML = `
+      <span>${image.naturalWidth}</span><span>x</span><span>${image.naturalHeight}</span>
       `;
   }
 
@@ -236,6 +247,61 @@ function determineOrientation() {
                   }
               }
           });
+      },
+      fromImage: function(input) {
+          var $image = null;
+          var src = null;
+          if (typeof input === 'string') {
+              // data or url, or queryString
+              $image = new Image();
+              src = input;
+          } else if (input instanceof HTMLImageElement) {
+              $image = input;
+          } else if (input instanceof File) {
+              $image = new Image();
+              src = URL.createObjectURL(input);
+          } else {
+              return Promise.reject("fromImage needs a src, HTMLImageElement or File");
+          }
+          return new Promise(function(resolve, reject) {
+              if (src || !$image.complete) {
+                  console.log('Adding eventlistener');
+                  $image.addEventListener('load', function() {
+                      console.log('resolve');
+                      resolve();
+                  }, false);
+                  if (src) {
+                      console.log(`Setting src = ${src}`);
+                      $image.src = src;
+                  }
+              } else {
+                  return resolve();
+              }
+          })
+          .then(printImageStatistics.bind(null, $image))
+          .then(function() {
+              return {
+                  type: "IMAGE",
+                  getWidth: function() {
+                      return $image.naturalWidth;
+                  },
+                  getHeight: function() {
+                      return $image.naturalHeight;
+                  },
+                  getDrawable: function() {
+                      return $image;
+                  },
+                  getLabel: function() {
+                      return $image.src;
+                  },
+                  getConstraints: function() {
+                      return {};
+                  },
+                  applyConstraints: function() {
+                      console.log('ImageSource.applyConstraints not implemented');
+                  }
+              }
+          });
       }
   }
 
@@ -268,7 +334,8 @@ function determineOrientation() {
           var ctx = null;
           var bytePool = [];
 
-          if (drawable instanceof HTMLVideoElement) {
+          if (drawable instanceof HTMLVideoElement
+                || drawable instanceof HTMLImageElement) {
               canvas = document.querySelector('#input');
               ctx = canvas.getContext('2d');
           }
@@ -436,7 +503,13 @@ async function initCanvasSource() {
     const pixelCapturer = PixelCapture.fromSource(canvasSource);
     start(pixelCapturer);
 }
-initCanvasSource();
+//initCanvasSource();
+
+async function initImageSource(file) {
+    const imageSource = await Source.fromImage(file);
+    const pixelCapturer = PixelCapture.fromSource(imageSource);
+    start(pixelCapturer);
+}
 
   document.querySelector('#cameraSelect').addEventListener('change', function(e) {
       var selectedDeviceId = e.target.value;
@@ -459,6 +532,12 @@ initCanvasSource();
       var constraints = cameraSource.getConstraints();
       constraints.facingMode = 'user';
       cameraSource.applyConstraints(constraints);
+  });
+
+  document.querySelector("input[type=file]").addEventListener("change", function(e) {
+      if (e.target.files && e.target.files.length) {
+          initImageSource(e.target.files[0]);
+      }
   });
 
 
