@@ -28,13 +28,20 @@
     <video autoplay></video>
     <canvas id="input"></canvas>
     <canvas id="output"></canvas>
+    <canvas id="canvasSourceOutput"></canvas>
 <script src="//webrtc.github.io/adapter/adapter-latest.js" type="text/javascript"></script>
 <script>
   var imageCapture;
   var cameraSource;
   var output = {
-      canvas: document.querySelector('#output'),
-      ctx: document.querySelector('#output').getContext('2d'),
+      'CAMERA': {
+          canvas: document.querySelector('#output'),
+          ctx: document.querySelector('#output').getContext('2d'),
+      },
+      'CANVAS': {
+          canvas: document.querySelector('#canvasSourceOutput'),
+          ctx: document.querySelector('#canvasSourceOutput').getContext('2d'),
+      }
   }
 
   // import {fromCamera, fromImage, fromVideo, fromCanvas, fromStream} from 'quagga';
@@ -85,9 +92,36 @@ function determineOrientation() {
       });
   }
 
+  function waitForCanvas(canvas) {
+      return new Promise((resolve, reject) => {
+          let attempts = 20;
+
+          function checkCanvas() {
+              if (attempts > 0) {
+                  if (canvas.width > 10 && canvas.height > 10) {
+                      console.log(canvas.width + "px x " + canvas.height + "px");
+                      resolve();
+                  } else {
+                      window.setTimeout(checkCanvas, 200);
+                  }
+              } else {
+                  reject('Unable to find content on canvas!');
+              }
+              attempts--;
+          }
+          checkCanvas();
+      });
+  }
+
   function printVideoStatistics(video) {
       document.querySelector('#videoStatistics').innerHTML = `
       <span>${video.videoWidth}</span><span>x</span><span>${video.videoHeight}</span>
+      `;
+  }
+
+  function printCanvasStatistics(canvas) {
+      document.querySelector('#videoStatistics').innerHTML = `
+      <span>${canvas.width}</span><span>x</span><span>${canvas.height}</span>
       `;
   }
 
@@ -166,6 +200,42 @@ function determineOrientation() {
                   }
               });
           });
+      },
+      fromCanvas: function(input) {
+          var $canvas = null;
+          if (typeof input === 'string') {
+              $canvas = document.querySelector(input);
+          } else if (input instanceof HTMLCanvasElement) {
+              $canvas = input;
+          } else {
+              return Promise.reject("fromCanvas needs a selector or HTMLCanvasElement");
+          }
+
+          return waitForCanvas($canvas)
+          .then(printCanvasStatistics.bind(null, $canvas))
+          .then(function() {
+              return {
+                  type: "CANVAS",
+                  getWidth: function() {
+                      return $canvas.width;
+                  },
+                  getHeight: function() {
+                      return $canvas.height;
+                  },
+                  getDrawable: function() {
+                      return $canvas;
+                  },
+                  getLabel: function() {
+                      return $canvas.getAttribute('id');
+                  },
+                  getConstraints: function() {
+                      return {};
+                  },
+                  applyConstraints: function() {
+                      console.log('CanvasSource.applyConstraints not implemented');
+                  }
+              }
+          });
       }
   }
 
@@ -201,6 +271,11 @@ function determineOrientation() {
           if (drawable instanceof HTMLVideoElement) {
               canvas = document.querySelector('#input');
               ctx = canvas.getContext('2d');
+          }
+
+          if (drawable instanceof HTMLCanvasElement) {
+              canvas = drawable;
+              ctx = drawable.getContext('2d');
           }
 
           function nextAvailableBuffer() {
@@ -248,7 +323,9 @@ function determineOrientation() {
                       console.log('canvas not initialized. Waiting 100ms and then continuing');
                       return sleep(100).then(grabFrameData);
                   }
-                  ctx.drawImage(drawable, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                  if (!(drawable instanceof HTMLCanvasElement)) {
+                      ctx.drawImage(drawable, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                  }
                   var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
                   var buffer = nextAvailableBuffer();
                   computeGray(imageData, buffer);
@@ -257,6 +334,9 @@ function determineOrientation() {
                       height: canvas.height,
                       data: buffer,
                   });
+              },
+              getSource: function() {
+                  return source;
               }
           }
       }
@@ -286,10 +366,11 @@ function determineOrientation() {
   }
 
   function start(pixelCapturer) {
+      const source = pixelCapturer.getSource();
       return pixelCapturer.grabFrameData()
       .then(bitmap => {
-          adjustCanvasSize(bitmap, output.canvas);
-          drawImage(bitmap, output.ctx);
+          adjustCanvasSize(bitmap, output[source.type].canvas);
+          drawImage(bitmap, output[source.type].ctx);
           console.log(bitmap.width, bitmap.height, bitmap.data.length);
       })
       .then(sleep.bind(null, 200))
@@ -342,27 +423,20 @@ function determineOrientation() {
 
 // user code
 
-  document.querySelector('#hdReady').addEventListener('click', function(e) {
-      cameraSource.applyConstraints({width: {ideal: 1280}, height: {ideal: 1280}, facingMode: 'environment'});
-  });
+async function initCameraSource() {
+    cameraSource = await Source.fromCamera();
+    const pixelCapturer = PixelCapture.fromSource(cameraSource);
+    updateVideoDeviceSelection(cameraSource);
+    start(pixelCapturer);
+}
 
-  document.querySelector('#camera').addEventListener('click', function(e) {
-      var constraints = cameraSource.getConstraints();
-      constraints.facingMode = 'user';
-      cameraSource.applyConstraints(constraints);
-  });
-
-  Source
-    .fromCamera()
-    .then((source) => {
-        cameraSource = source;
-        var pixelCapturer = PixelCapture.fromSource(cameraSource);
-        start(pixelCapturer);
-        return {source, pixelCapturer};
-    })
-    .then(function(opts) {
-        updateVideoDeviceSelection(opts.source);
-    });
+async function initCanvasSource() {
+    await initCameraSource();
+    const canvasSource = await Source.fromCanvas('#input');
+    const pixelCapturer = PixelCapture.fromSource(canvasSource);
+    start(pixelCapturer);
+}
+initCanvasSource();
 
   document.querySelector('#cameraSelect').addEventListener('change', function(e) {
       var selectedDeviceId = e.target.value;
@@ -375,6 +449,16 @@ function determineOrientation() {
       var oldConstraints = cameraSource.getConstraints();
       oldConstraints.zoom = {exact: 2};
       cameraSource.applyConstraints(oldConstraints);
+  });
+
+  document.querySelector('#hdReady').addEventListener('click', function(e) {
+      cameraSource.applyConstraints({width: {ideal: 1280}, height: {ideal: 1280}, facingMode: 'environment'});
+  });
+
+  document.querySelector('#camera').addEventListener('click', function(e) {
+      var constraints = cameraSource.getConstraints();
+      constraints.facingMode = 'user';
+      cameraSource.applyConstraints(constraints);
   });
 
 
