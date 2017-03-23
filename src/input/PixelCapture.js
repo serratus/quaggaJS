@@ -73,7 +73,7 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
     }
 
     return {
-        grabFrameData: function grabFrameData() {
+        grabFrameData: function grabFrameData({buffer, clipping}) {
             const {viewport, canvas: canvasSize} = source.getDimensions();
             const sx = viewport.x;
             const sy = viewport.y;
@@ -93,12 +93,12 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
                 ctx.drawImage(drawable, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
             }
             var imageData = ctx.getImageData(0, 0, $canvas.width, $canvas.height).data;
-            var buffer = nextAvailableBuffer();
-            computeGray(imageData, buffer);
+            var imageBuffer = buffer ? buffer : nextAvailableBuffer();
+            computeGray(imageData, imageBuffer);
             return Promise.resolve({
                 width: $canvas.width,
                 height: $canvas.height,
-                data: buffer,
+                data: imageBuffer,
             });
         },
         getSource: function() {
@@ -107,5 +107,9 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
         getCanvas: function() {
             return $canvas;
         },
+        getCaptureSize() {
+            return source.getDimensions().canvas;
+        },
+
     };
 }

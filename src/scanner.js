@@ -35,53 +35,43 @@ function createScanner(pixelCapturer) {
         _config = {},
         _events = createEventedElement(),
         _locator;
-    const source = pixelCapturer.getSource();
+
+    const source = pixelCapturer ? pixelCapturer.getSource() : {};
+
+    function setup() {
+        // checkImageConstraints(_inputStream, _config.locator);
+        return adjustWorkerPool(_config.numOfWorkers)
+        .then(() => {
+            if (_config.numOfWorkers === 0) {
+                initializeData();
+            }
+        });
+    }
 
     function initializeData(imageWrapper) {
         initBuffers(imageWrapper);
         _decoder = BarcodeDecoder.create(_config.decoder, _inputImageWrapper);
     }
 
-
-
-    function canRecord(cb) {
-        // checkImageConstraints(_inputStream, _config.locator);
-        // initCanvas();
-        // _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
-
-        adjustWorkerPool(_config.numOfWorkers, function() {
-            if (_config.numOfWorkers === 0) {
-                initializeData();
-            }
-            ready(cb);
-        });
-    }
-
-    function ready(cb){
-        // _inputStream.play();
-        cb();
-    }
-
     function initBuffers(imageWrapper) {
-        // if (imageWrapper) {
-        //     _inputImageWrapper = imageWrapper;
-        // } else {
-        const {canvas} = source.getDimensions();
-        _inputImageWrapper = new ImageWrapper({
-            x: canvas.width,
-            y: canvas.height,
-        });
-        // }
-        //
-        // if (ENV.development) {
-        //     console.log(_inputImageWrapper.size);
-        // }
-        // _boxSize = [
-        //     vec2.clone([0, 0]),
-        //     vec2.clone([0, _inputImageWrapper.size.y]),
-        //     vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
-        //     vec2.clone([_inputImageWrapper.size.x, 0])
-        // ];
+        if (imageWrapper) {
+            _inputImageWrapper = imageWrapper;
+        } else {
+            const captureSize = pixelCapturer.getCaptureSize();
+            _inputImageWrapper = new ImageWrapper({
+                x: captureSize.width,
+                y: captureSize.height,
+            });
+        }
+        if (ENV.development) {
+            console.log(_inputImageWrapper.size);
+        }
+        _boxSize = [
+            vec2.clone([0, 0]),
+            vec2.clone([0, _inputImageWrapper.size.y]),
+            vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
+            vec2.clone([_inputImageWrapper.size.x, 0])
+        ];
         _locator = createLocator(_inputImageWrapper, _config.locator);
     }
 
@@ -201,19 +191,14 @@ function createScanner(pixelCapturer) {
                 availableWorker = _workerPool.filter(function(workerThread) {
                     return !workerThread.busy;
                 })[0];
-                if (availableWorker) {
-                    //_framegrabber.attachData(availableWorker.imageData);
-                } else {
-                    return; // all workers are busy
+                if (!availableWorker) {
+                    return Promise.resolve();
                 }
-            } else {
-                //_framegrabber.attachData(_inputImageWrapper.data);
             }
-
-            return pixelCapturer.grabFrameData()
+            const buffer = availableWorker ? availableWorker.imageData : _inputImageWrapper.data;
+            return pixelCapturer.grabFrameData({buffer})
             .then((bitmap) => {
                 if (bitmap) {
-                    _inputImageWrapper.data = bitmap.data;
                     if (availableWorker) {
                         availableWorker.busy = true;
                         availableWorker.worker.postMessage({
@@ -230,7 +215,7 @@ function createScanner(pixelCapturer) {
             });
         }
 
-        return locateAndDecode();
+        return Promise.resolve(locateAndDecode());
     }
 
     function startContinuousUpdate() {
@@ -262,14 +247,14 @@ function createScanner(pixelCapturer) {
     }
 
     function initWorker(cb) {
-        var blobURL,
-            workerThread = {
-                worker: undefined,
-                imageData: new Uint8Array(_inputStream.getWidth() * _inputStream.getHeight()),
-                busy: true
-            };
+        const captureSize = pixelCapturer.getCaptureSize();
+        const workerThread = {
+            worker: undefined,
+            imageData: new Uint8Array(captureSize.width * captureSize.height),
+            busy: true
+        };
 
-        blobURL = generateWorkerBlob();
+        const blobURL = generateWorkerBlob();
         workerThread.worker = new Worker(blobURL);
 
         workerThread.worker.onmessage = function(e) {
@@ -294,7 +279,7 @@ function createScanner(pixelCapturer) {
 
         workerThread.worker.postMessage({
             cmd: 'init',
-            size: {x: _inputStream.getWidth(), y: _inputStream.getHeight()},
+            size: {x: captureSize.width, y: captureSize.height},
             imageData: workerThread.imageData,
             config: configForWorker(_config)
         }, [workerThread.imageData.buffer]);
@@ -375,33 +360,35 @@ function createScanner(pixelCapturer) {
         }
     }
 
-    function adjustWorkerPool(capacity, cb) {
-        const increaseBy = capacity - _workerPool.length;
-        if (increaseBy === 0) {
-            return cb && cb();
-        }
-        if (increaseBy < 0) {
-            const workersToTerminate = _workerPool.slice(increaseBy);
-            workersToTerminate.forEach(function(workerThread) {
-                workerThread.worker.terminate();
-                if (ENV.development) {
-                    console.log("Worker terminated!");
-                }
-            });
-            _workerPool = _workerPool.slice(0, increaseBy);
-            return cb && cb();
-        } else {
-            for (var i = 0; i < increaseBy; i++) {
-                initWorker(workerInitialized);
+    function adjustWorkerPool(capacity) {
+        return new Promise((resolve) => {
+            const increaseBy = capacity - _workerPool.length;
+            if (increaseBy === 0) {
+                return resolve();
             }
+            if (increaseBy < 0) {
+                const workersToTerminate = _workerPool.slice(increaseBy);
+                workersToTerminate.forEach(function(workerThread) {
+                    workerThread.worker.terminate();
+                    if (ENV.development) {
+                        console.log("Worker terminated!");
+                    }
+                });
+                _workerPool = _workerPool.slice(0, increaseBy);
+                return resolve();
+            } else {
+                for (var i = 0; i < increaseBy; i++) {
+                    initWorker(workerInitialized);
+                }
 
-            function workerInitialized(workerThread) {
-                _workerPool.push(workerThread);
-                if (_workerPool.length >= capacity){
-                    cb && cb();
+                function workerInitialized(workerThread) {
+                    _workerPool.push(workerThread);
+                    if (_workerPool.length >= capacity){
+                        resolve();
+                    }
                 }
             }
-        }
+        });
     }
 
     return {
@@ -413,7 +400,7 @@ function createScanner(pixelCapturer) {
                 initializeData(imageWrapper);
                 return cb();
             } else {
-                canRecord(cb);
+                return setup().then(cb);
             }
         },
         start: function() {

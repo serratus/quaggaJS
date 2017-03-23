@@ -3,11 +3,11 @@ $(function() {
         init : function() {
             this.overlay = document.querySelector('#interactive canvas.drawing');
 
-            this.state.inputStream.constraints.zoom = {exact: 2};
             Quagga.fromCamera({
                 constraints: this.state.inputStream.constraints,
                 locator: this.state.locator,
                 decoder: this.state.decoder,
+                numOfWorkers: this.state.numOfWorkers,
             }).then(function(scanner) {
                 this.scanner = scanner;
                 this.scanner
