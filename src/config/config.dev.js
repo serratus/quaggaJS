@@ -1,14 +1,15 @@
 module.exports = {
-    inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        constraints: {
-            width: 640,
-            height: 480,
-            // aspectRatio: 640/480, // optional
-            facingMode: "environment", // or user
-            // deviceId: "38745983457387598375983759834"
-        },
+    numOfWorkers: 0,
+    locate: true,
+    target: '#interactive.viewport',
+    constraints: {
+        width: 640,
+        height: 640,
+        // aspectRatio: 640/480, // optional
+        facingMode: "environment", // or user
+        // deviceId: "38745983457387598375983759834"
+    },
+    detector: {
         area: {
             top: "0%",
             right: "0%",
@@ -17,8 +18,6 @@ module.exports = {
         },
         singleChannel: false // true: only the red color-channel is read
     },
-    locate: true,
-    numOfWorkers: 2,
     decoder: {
         readers: [
             'code_128_reader'
@@ -31,7 +30,7 @@ module.exports = {
         }
     },
     locator: {
-        halfSample: true,
+        halfSample: false,
         patchSize: "medium", // x-small, small, medium, large, x-large
         debug: {
             showCanvas: false,

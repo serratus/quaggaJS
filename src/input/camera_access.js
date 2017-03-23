@@ -8,7 +8,7 @@ const facingMatching = {
 
 var streamRef;
 
-function waitForVideo(video) {
+function waitForVideo(video, stream) {
     return new Promise((resolve, reject) => {
         let attempts = 10;
 
@@ -18,7 +18,7 @@ function waitForVideo(video) {
                     if (ENV.development) {
                         console.log(video.videoWidth + "px x " + video.videoHeight + "px");
                     }
-                    resolve();
+                    resolve(stream);
                 } else {
                     window.setTimeout(checkVideo, 500);
                 }
@@ -46,7 +46,7 @@ function initCamera(video, constraints) {
             video.srcObject = stream;
             video.addEventListener('loadedmetadata', () => {
                 video.play();
-                resolve();
+                resolve(stream);
             });
         });
     })

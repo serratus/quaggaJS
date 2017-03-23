@@ -36,7 +36,7 @@ export function createConfigFromSource(config, sourceConfig, source) {
     }
 }
 
-function createConfigForImage(config, source, inputConfig = {}) {
+export function createConfigForImage(config, source, inputConfig = {}) {
     const staticImageConfig = {
         inputStream: merge({
             type: "ImageStream",

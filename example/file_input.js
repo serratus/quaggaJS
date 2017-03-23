@@ -55,12 +55,16 @@ $(function() {
         },
         decode: function(file) {
             this.detachListeners();
+            var size = this.state.inputStream.size;
             console.log("decode...");
-            var scanner = Quagga
-                .config(this.state)
-                .fromSource(file, {size: this.state.inputStream.size});
-            scanner
-                .toPromise()
+
+            Quagga.fromImage(file, {
+                constraints: {width: size, height: size},
+                locator: this.state.locator,
+                decoder: this.state.decoder,
+            })
+            .then(function(scanner) {
+                scanner.detect()
                 .then(function(result) {
                     console.log(result);
                     addToResults(scanner, result);
@@ -74,6 +78,11 @@ $(function() {
                     drawResult(scanner, result);
                     this.attachListeners();
                 }.bind(this));
+            }.bind(this));
+
+            // Quagga.fromCamera(constraints)
+            // Quagga.fromSource();
+            // Quagga.fromPixelCapture();
         },
         setState: function(path, value) {
             var self = this;

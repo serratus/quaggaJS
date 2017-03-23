@@ -5,10 +5,13 @@ import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
 import {merge} from 'lodash';
-import {createConfigFromSource} from './input/config_factory';
+import {createConfigForImage} from './input/config_factory';
+import * as PixelCapture from './input/PixelCapture';
+import * as Source from './input/Source';
 
-function fromConfig(config) {
-    const scanner = createScanner();
+function fromConfig(pixelCapturer, config) {
+    const scanner = createScanner(pixelCapturer);
+    const source = pixelCapturer.getSource();
     let pendingStart = null;
     let initialized = false;
     return {
@@ -50,9 +53,9 @@ function fromConfig(config) {
             initialized = false;
             return this;
         },
-        toPromise() {
-            if (config.inputStream.type === 'LiveStream'
-                    || config.inputStream.type === 'VideoStream') {
+        detect() {
+            if (source.type === 'CAMERA'
+                    || source.type === 'VIDEO') {
                 let cancelRequested = false;
                 return {
                     cancel() {
@@ -90,14 +93,14 @@ function fromConfig(config) {
             scanner.registerResultCollector(resultCollector);
         },
         getCanvas() {
-            return scanner.canvas.dom.image;
+            return pixelCapturer.getCanvas();
         },
     };
 }
 
-function fromSource(config, source, inputConfig = {}) {
-    config = createConfigFromSource(config, inputConfig, source);
-    return fromConfig(config);
+function fromSource(config, source) {
+    const pixelCapturer = PixelCapture.fromSource(source, {target: config.target});
+    return fromConfig(pixelCapturer, config);
 }
 
 function setConfig(configuration = {}, key, config = {}) {
@@ -105,8 +108,14 @@ function setConfig(configuration = {}, key, config = {}) {
     return createApi(mergedConfig);
 }
 
-function createApi(configuration = Config) {
+function createApi() {
     return {
+        fromImage(image, options) {
+            const config = merge({}, Config, options);
+            return Source
+                .fromImage(image, config.constraints)
+                .then(fromSource.bind(null, config));
+        },
         fromSource(src, inputConfig) {
             return fromSource(configuration, src, inputConfig);
         },

@@ -14,7 +14,7 @@ const vec2 = {
 };
 
 
-function createScanner() {
+function createScanner(pixelCapturer) {
     var _inputStream,
         _framegrabber,
         _stopped = true,
@@ -35,58 +35,19 @@ function createScanner() {
         _config = {},
         _events = createEventedElement(),
         _locator;
+    const source = pixelCapturer.getSource();
 
     function initializeData(imageWrapper) {
         initBuffers(imageWrapper);
         _decoder = BarcodeDecoder.create(_config.decoder, _inputImageWrapper);
     }
 
-    function initInputStream(cb) {
-        var video;
-        if (_config.inputStream.type === "VideoStream") {
-            video = document.createElement("video");
-            _inputStream = InputStream.createVideoStream(video);
-        } else if (_config.inputStream.type === "ImageStream") {
-            _inputStream = InputStream.createImageStream();
-        } else if (_config.inputStream.type === "LiveStream") {
-            var $viewport = getViewPort();
-            if ($viewport) {
-                video = $viewport.querySelector("video");
-                if (!video) {
-                    video = document.createElement("video");
-                    $viewport.appendChild(video);
-                }
-            }
-            _inputStream = InputStream.createLiveStream(video);
-            CameraAccess.request(video, _config.inputStream.constraints)
-            .then(() => {
-                _inputStream.trigger("canrecord");
-            }).catch((err) => {
-                return cb(err);
-            });
-        }
 
-        _inputStream.setAttribute("preload", "auto");
-        _inputStream.setInputStream(_config.inputStream);
-        _inputStream.addEventListener("canrecord", canRecord.bind(undefined, cb));
-    }
-
-    function getViewPort() {
-        var target = _config.inputStream.target;
-        // Check if target is already a DOM element
-        if (target && target.nodeName && target.nodeType === 1) {
-            return target;
-        } else {
-            // Use '#interactive.viewport' as a fallback selector (backwards compatibility)
-            var selector = typeof target === 'string' ? target : '#interactive.viewport';
-            return document.querySelector(selector);
-        }
-    }
 
     function canRecord(cb) {
-        checkImageConstraints(_inputStream, _config.locator);
-        initCanvas(_config);
-        _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
+        // checkImageConstraints(_inputStream, _config.locator);
+        // initCanvas();
+        // _framegrabber = FrameGrabber.create(_inputStream, _canvasContainer.dom.image);
 
         adjustWorkerPool(_config.numOfWorkers, function() {
             if (_config.numOfWorkers === 0) {
@@ -97,46 +58,30 @@ function createScanner() {
     }
 
     function ready(cb){
-        _inputStream.play();
+        // _inputStream.play();
         cb();
     }
 
-    function initCanvas() {
-        if (typeof document !== "undefined") {
-            var $viewport = getViewPort();
-            _canvasContainer.dom.image = document.querySelector("canvas.imgBuffer");
-            if (!_canvasContainer.dom.image) {
-                _canvasContainer.dom.image = document.createElement("canvas");
-                _canvasContainer.dom.image.className = "imgBuffer";
-                if ($viewport && _config.inputStream.type === "ImageStream") {
-                    $viewport.appendChild(_canvasContainer.dom.image);
-                }
-            }
-            _canvasContainer.ctx.image = _canvasContainer.dom.image.getContext("2d");
-            _canvasContainer.dom.image.width = _inputStream.getCanvasSize().x;
-            _canvasContainer.dom.image.height = _inputStream.getCanvasSize().y;
-        }
-    }
-
     function initBuffers(imageWrapper) {
-        if (imageWrapper) {
-            _inputImageWrapper = imageWrapper;
-        } else {
-            _inputImageWrapper = new ImageWrapper({
-                x: _inputStream.getWidth(),
-                y: _inputStream.getHeight()
-            });
-        }
-
-        if (ENV.development) {
-            console.log(_inputImageWrapper.size);
-        }
-        _boxSize = [
-            vec2.clone([0, 0]),
-            vec2.clone([0, _inputImageWrapper.size.y]),
-            vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
-            vec2.clone([_inputImageWrapper.size.x, 0])
-        ];
+        // if (imageWrapper) {
+        //     _inputImageWrapper = imageWrapper;
+        // } else {
+        const {canvas} = source.getDimensions();
+        _inputImageWrapper = new ImageWrapper({
+            x: canvas.width,
+            y: canvas.height,
+        });
+        // }
+        //
+        // if (ENV.development) {
+        //     console.log(_inputImageWrapper.size);
+        // }
+        // _boxSize = [
+        //     vec2.clone([0, 0]),
+        //     vec2.clone([0, _inputImageWrapper.size.y]),
+        //     vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
+        //     vec2.clone([_inputImageWrapper.size.x, 0])
+        // ];
         _locator = createLocator(_inputImageWrapper, _config.locator);
     }
 
@@ -153,9 +98,9 @@ function createScanner() {
     }
 
     function transformResult(result) {
-        var topRight = _inputStream.getTopRight(),
-            xOffset = topRight.x,
-            yOffset = topRight.y,
+        const {viewport} = source.getDimensions();
+        let xOffset = viewport.x,
+            yOffset = viewport.y,
             i;
 
         if (xOffset === 0 && yOffset === 0) {
@@ -257,24 +202,31 @@ function createScanner() {
                     return !workerThread.busy;
                 })[0];
                 if (availableWorker) {
-                    _framegrabber.attachData(availableWorker.imageData);
+                    //_framegrabber.attachData(availableWorker.imageData);
                 } else {
                     return; // all workers are busy
                 }
             } else {
-                _framegrabber.attachData(_inputImageWrapper.data);
+                //_framegrabber.attachData(_inputImageWrapper.data);
             }
-            if (_framegrabber.grab()) {
-                if (availableWorker) {
-                    availableWorker.busy = true;
-                    availableWorker.worker.postMessage({
-                        cmd: 'process',
-                        imageData: availableWorker.imageData
-                    }, [availableWorker.imageData.buffer]);
-                } else {
-                    locateAndDecode();
+            pixelCapturer.grabFrameData()
+            .then((bitmap) => {
+                _inputImageWrapper.data = bitmap.data;
+                if (bitmap) {
+                    if (availableWorker) {
+                        availableWorker.busy = true;
+                        availableWorker.worker.postMessage({
+                            cmd: 'process',
+                            imageData: availableWorker.imageData
+                        }, [availableWorker.imageData.buffer]);
+                    } else {
+                        locateAndDecode();
+                    }
                 }
-            }
+            })
+            .catch(err => {
+                console.error(err);
+            })
         } else {
             locateAndDecode();
         }
@@ -298,7 +250,7 @@ function createScanner() {
     }
 
     function start() {
-        if (_onUIThread && _config.inputStream.type === "LiveStream") {
+        if (_onUIThread && source.type === "CAMERA") {
             startContinuousUpdate();
         } else {
             update();
@@ -457,7 +409,7 @@ function createScanner() {
                 initializeData(imageWrapper);
                 return cb();
             } else {
-                initInputStream(cb);
+                canRecord(cb);
             }
         },
         start: function() {
@@ -469,10 +421,9 @@ function createScanner() {
         stop: function() {
             _stopped = true;
             adjustWorkerPool(0);
-            if (_config.inputStream.type === "LiveStream") {
+            if (source.type === "CAMERA") {
                 CameraAccess.release();
             }
-            _inputStream.clearEventHandlers();
         },
         pause: function() {
             _stopped = true;
