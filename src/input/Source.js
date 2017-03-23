@@ -1,21 +1,40 @@
+import {clone} from 'lodash';
 import {determineOrientation, PORTRAIT} from '../common/device';
 import CameraAccess from './camera_access';
+import {getViewport} from '../common/utils';
+
+function getOrCreateVideo(source, target) {
+    const $viewport = getViewport(target);
+    if ($viewport) {
+        let $video = $viewport.querySelector("video");
+        if (!$video) {
+            $video = document.createElement("video");
+            $viewport.appendChild($video);
+        }
+        return $video;
+    }
+    return document.createElement("video");
+}
 
 export function fromCamera(constraints) {
-    if (!constraints) {
-        constraints = {width: {ideal: 540}, height: {ideal: 540}, aspectRatio: {ideal: 1}, facingMode: 'environment'};
-    }
     var orientation = determineOrientation();
-    var videoConstraints = constraints;
+    var videoConstraints = clone(constraints);
     if (orientation === PORTRAIT) {
-        constraints = Object.assign({}, constraints, {
-            width: constraints.height,
-            height: constraints.width,
+        videoConstraints = Object.assign({}, videoConstraints, {
+            width: videoConstraints.height,
+            height: videoConstraints.width,
         });
     }
 
-    const video = document.querySelector('video');
-    CameraAccess.request(videoConstraints, video)
+    if (videoConstraints.zoom && videoConstraints.zoom.exact > 1) {
+        videoConstraints.width.ideal = Math.floor(videoConstraints.width.ideal * videoConstraints.zoom.exact);
+        videoConstraints.height.ideal = Math.floor(videoConstraints.height.ideal * videoConstraints.zoom.exact);
+        delete videoConstraints.zoom;
+    }
+    console.log(videoConstraints);
+
+    const video = getOrCreateVideo();
+    return CameraAccess.request(video, videoConstraints)
     .then(function(mediastream) {
         const track = mediastream.getVideoTracks()[0];
         return {
@@ -39,8 +58,8 @@ export function fromCamera(constraints) {
                 return {
                     viewport,
                     canvas: {
-                        width: constraints.width,     // AR
-                        height: constraints.height,   // AR
+                        width: viewport.width,     // AR
+                        height: viewport.height,   // AR
                     },
                 };
             },
@@ -65,7 +84,7 @@ export function fromCamera(constraints) {
                     constraints.height.ideal = Math.floor(constraints.height.ideal * constraints.zoom.exact);
                     delete constraints.zoom;
                 }
-                return CameraAccess.request(videoConstraints, video);
+                return CameraAccess.request(video, videoConstraints);
             },
             getLabel: function() {
                 return track.label;

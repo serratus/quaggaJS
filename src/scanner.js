@@ -209,10 +209,11 @@ function createScanner(pixelCapturer) {
             } else {
                 //_framegrabber.attachData(_inputImageWrapper.data);
             }
-            pixelCapturer.grabFrameData()
+
+            return pixelCapturer.grabFrameData()
             .then((bitmap) => {
-                _inputImageWrapper.data = bitmap.data;
                 if (bitmap) {
+                    _inputImageWrapper.data = bitmap.data;
                     if (availableWorker) {
                         availableWorker.busy = true;
                         availableWorker.worker.postMessage({
@@ -226,15 +227,15 @@ function createScanner(pixelCapturer) {
             })
             .catch(err => {
                 console.error(err);
-            })
-        } else {
-            locateAndDecode();
+            });
         }
+
+        return locateAndDecode();
     }
 
     function startContinuousUpdate() {
         var next = null,
-            delay = 1000 / (_config.frequency === 0 ? 60 : (_config.frequency || 60));
+            delay = 1000 / (_config.frequency === 0 ? 10 : (_config.frequency || 10));
 
         _stopped = false;
         (function frame(timestamp) {
@@ -242,9 +243,12 @@ function createScanner(pixelCapturer) {
             if (!_stopped) {
                 if (timestamp >= next) {
                     next += delay;
-                    update();
+                    update().then(() => {
+                        window.requestAnimFrame(frame);
+                    });
+                } else {
+                    window.requestAnimFrame(frame);
                 }
-                window.requestAnimFrame(frame);
             }
         }(performance.now()));
     }

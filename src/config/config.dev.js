@@ -30,7 +30,7 @@ module.exports = {
         }
     },
     locator: {
-        halfSample: false,
+        halfSample: true,
         patchSize: "medium", // x-small, small, medium, large, x-large
         debug: {
             showCanvas: false,

@@ -2,6 +2,7 @@ import {
     computeGray
 } from '../common/cv_utils';
 import {sleep} from '../common/utils';
+import {getViewport} from '../common/utils';
 
 function adjustCanvasSize(input, canvas) {
     if (input instanceof HTMLVideoElement) {
@@ -25,18 +26,8 @@ function adjustCanvasSize(input, canvas) {
     }
 }
 
-function getViewPort(target) {
-    if (target && target.nodeName && target.nodeType === 1) {
-        return target;
-    } else {
-        // Use '#interactive.viewport' as a fallback selector (backwards compatibility)
-        var selector = typeof target === 'string' ? target : '#interactive.viewport';
-        return document.querySelector(selector);
-    }
-}
-
 function getOrCreateCanvas(source, target) {
-    const $viewport = getViewPort(target);
+    const $viewport = getViewport(target);
     let $canvas = $viewport.querySelector("canvas.imgBuffer");
     if (!$canvas) {
         $canvas = document.createElement("canvas");

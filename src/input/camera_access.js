@@ -10,7 +10,7 @@ var streamRef;
 
 function waitForVideo(video, stream) {
     return new Promise((resolve, reject) => {
-        let attempts = 10;
+        let attempts = 20;
 
         function checkVideo() {
             if (attempts > 0) {
@@ -20,7 +20,7 @@ function waitForVideo(video, stream) {
                     }
                     resolve(stream);
                 } else {
-                    window.setTimeout(checkVideo, 500);
+                    window.setTimeout(checkVideo, 200);
                 }
             } else {
                 reject('Unable to play video stream. Is webcam working?');

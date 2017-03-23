@@ -5,13 +5,14 @@ import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
 import {merge} from 'lodash';
-import {createConfigForImage} from './input/config_factory';
+import CameraAccess from './input/camera_access';
 import * as PixelCapture from './input/PixelCapture';
 import * as Source from './input/Source';
 
 function fromConfig(pixelCapturer, config) {
     const scanner = createScanner(pixelCapturer);
     const source = pixelCapturer.getSource();
+    let currentConfig = config;
     let pendingStart = null;
     let initialized = false;
     return {
@@ -35,7 +36,7 @@ function fromConfig(pixelCapturer, config) {
                 return Promise.resolve(true);
             }
             pendingStart = new Promise((resolve, reject) => {
-                scanner.init(config, (error) => {
+                scanner.init(currentConfig, (error) => {
                     if (error) {
                         console.log(error);
                         reject(error);
@@ -80,7 +81,7 @@ function fromConfig(pixelCapturer, config) {
                 };
             } else {
                 return new Promise((resolve, reject) => {
-                    scanner.decodeSingle(config, (result) => {
+                    scanner.decodeSingle(currentConfig, (result) => {
                         if (result && result.codeResult && result.codeResult.code) {
                             return resolve(result);
                         }
@@ -95,6 +96,21 @@ function fromConfig(pixelCapturer, config) {
         getCanvas() {
             return pixelCapturer.getCanvas();
         },
+        applyConfig(newConfig) {
+            // during runtime?
+            // running scanners must know that!
+            // apply constraints to source, only if changed
+
+            const normalizedConfig = merge({}, Config, newConfig);
+            this.stop();
+            currentConfig = normalizedConfig;
+
+            return source.applyConstraints(currentConfig.constraints)
+            .then(() => this.start());
+        },
+        getSource() {
+            return pixelCapturer.getSource();
+        }
     };
 }
 
@@ -116,6 +132,12 @@ function createApi() {
                 .fromImage(image, config.constraints)
                 .then(fromSource.bind(null, config));
         },
+        fromCamera(options) {
+            const config = merge({}, Config, options);
+            return Source
+                .fromCamera(config.constraints)
+                .then(fromSource.bind(null, config));
+        },
         fromSource(src, inputConfig) {
             return fromSource(configuration, src, inputConfig);
         },
@@ -134,6 +156,7 @@ function createApi() {
         config(conf) {
             return createApi(merge({}, configuration, conf));
         },
+        CameraAccess,
         ImageWrapper,
         ImageDebug,
         ResultCollector,

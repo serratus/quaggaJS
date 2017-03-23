@@ -3,24 +3,29 @@ $(function() {
         init : function() {
             this.overlay = document.querySelector('#interactive canvas.drawing');
 
-            this.scanner = Quagga
-                .fromConfig(this.state);
+            this.state.inputStream.constraints.zoom = {exact: 2};
+            Quagga.fromCamera({
+                constraints: this.state.inputStream.constraints,
+                locator: this.state.locator,
+                decoder: this.state.decoder,
+            }).then(function(scanner) {
+                this.scanner = scanner;
+                this.scanner
+                    .addEventListener("processed", drawResult.bind(this, this.scanner))
+                    .addEventListener("detected", addToResults.bind(this, this.scanner));
 
-            this.scanner
-                .addEventListener("processed", drawResult.bind(this, this.scanner))
-                .addEventListener("detected", addToResults.bind(this, this.scanner));
-
-            this.scanner.start()
-            .then(function (){
-                console.log("started");
-                this.attachListeners();
-            }.bind(this))
-            .catch(function(err) {
-                console.log("Error: " + err);
-            });
+                this.scanner.start()
+                .then(function (){
+                    console.log("started");
+                    this.attachListeners();
+                }.bind(this))
+                .catch(function(err) {
+                    console.error(err);
+                });
+            }.bind(this));
         },
-        initCameraSelection: function(){
-            var streamLabel = Quagga.CameraAccess.getActiveStreamLabel();
+        initCameraSelection: function() {
+            var streamLabel = this.scanner.getSource().getLabel();
 
             return Quagga.CameraAccess.enumerateVideoDevices()
             .then(function(devices) {
@@ -106,8 +111,8 @@ $(function() {
                     if (/^(\d+)x(\d+)$/.test(value)) {
                         var values = value.split('x');
                         return {
-                            width: {min: parseInt(values[0])},
-                            height: {min: parseInt(values[1])}
+                            width: {ideal: parseInt(values[0])},
+                            height: {ideal: parseInt(values[1])}
                         };
                     }
                     return {
@@ -141,8 +146,8 @@ $(function() {
             inputStream: {
                 type : "LiveStream",
                 constraints: {
-                    width: {min: 640},
-                    height: {min: 480},
+                    width: {ideal: 640},
+                    height: {ideal: 480},
                     facingMode: "environment",
                     aspectRatio: {min: 1, max: 2}
                 }
