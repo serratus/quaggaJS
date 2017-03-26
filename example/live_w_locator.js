@@ -146,11 +146,20 @@ $(function() {
             inputStream: {
                 type : "LiveStream",
                 constraints: {
-                    width: {ideal: 480},
-                    height: {ideal: 480},
-                    zoom: {exact: 2},
+                    width: {ideal: 800},
+                    height: {ideal: 800},
                     facingMode: "environment",
-                    aspectRatio: 1,
+                    landscape: {
+                        width: {ideal: 640},
+                        height: {ideal: 480},
+                        zoom: 1.5,
+                    },
+                    portrait: {
+                        width: {ideal: 640},
+                        height: {ideal: 640},
+                        zoom: 1.5,
+                        aspectRatio: 1,
+                    }
                 }
             },
             locator: {

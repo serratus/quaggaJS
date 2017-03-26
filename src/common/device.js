@@ -1,5 +1,6 @@
 export const PORTRAIT = "portrait";
 export const LANDSCAPE = "landscape";
+export const SQUARE = "square";
 
 const matchingScreens = {
     [PORTRAIT]: /portrait/i,

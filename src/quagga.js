@@ -8,6 +8,7 @@ import {merge} from 'lodash';
 import CameraAccess from './input/camera_access';
 import * as PixelCapture from './input/PixelCapture';
 import * as Source from './input/Source';
+import {PORTRAIT, LANDSCAPE, SQUARE} from './common/device';
 
 function fromConfig(pixelCapturer, config) {
     const scanner = createScanner(pixelCapturer);
@@ -162,6 +163,11 @@ function createApi() {
         ResultCollector,
         _worker: {
             createScanner
+        },
+        Orientation: {
+            PORTRAIT,
+            LANDSCAPE,
+            SQUARE,
         }
     };
 }
