@@ -1,23 +1,33 @@
+import {merge, memoize} from 'lodash';
+
 import ImageWrapper from './common/image_wrapper';
 import createLocator, {checkImageConstraints} from './locator/barcode_locator';
 import BarcodeDecoder from './decoder/barcode_decoder';
 import createEventedElement from './common/events';
-import CameraAccess from './input/camera_access';
-import ImageDebug from './common/image_debug';
-import ResultCollector from './analytics/result_collector';
+import {release, aquire, releaseAll} from './common/buffers';
 import Config from './config/config';
-import InputStream from 'input_stream';
-import FrameGrabber from 'frame_grabber';
-import {merge} from 'lodash';
+import CameraAccess from './input/camera_access';
+
+
+
 const vec2 = {
     clone: require('gl-vec2/clone')
 };
 
+const getDecoder = memoize((decoderConfig, _inputImageWrapper) => {
+    return BarcodeDecoder.create(decoderConfig, _inputImageWrapper);
+}, (decoderConfig, _inputImageWrapper) => {
+    return JSON.stringify(Object.assign({}, decoderConfig, {width: _inputImageWrapper.size.x, height: _inputImageWrapper.size.y}));
+});
+
+const _checkImageConstraints = memoize((opts) => {
+    return checkImageConstraints(opts);
+}, (opts) => {
+    return JSON.stringify(opts);
+});
 
 function createScanner(pixelCapturer) {
-    var _inputStream,
-        _framegrabber,
-        _stopped = true,
+    var _stopped = true,
         _canvasContainer = {
             ctx: {
                 image: null
@@ -28,7 +38,6 @@ function createScanner(pixelCapturer) {
         },
         _inputImageWrapper,
         _boxSize,
-        _decoder,
         _workerPool = [],
         _onUIThread = true,
         _resultCollector,
@@ -39,18 +48,12 @@ function createScanner(pixelCapturer) {
     const source = pixelCapturer ? pixelCapturer.getSource() : {};
 
     function setup() {
-        // checkImageConstraints(_inputStream, _config.locator);
         return adjustWorkerPool(_config.numOfWorkers)
         .then(() => {
             if (_config.numOfWorkers === 0) {
-                initializeData();
+                initBuffers();
             }
         });
-    }
-
-    function initializeData(imageWrapper) {
-        initBuffers(imageWrapper);
-        _decoder = BarcodeDecoder.create(_config.decoder, _inputImageWrapper);
     }
 
     function initBuffers(imageWrapper) {
@@ -174,13 +177,22 @@ function createScanner(pixelCapturer) {
 
         boxes = getBoundingBoxes();
         if (boxes) {
-            result = _decoder.decodeFromBoundingBoxes(boxes);
+            result = getDecoder(_config.decoder, _inputImageWrapper)
+                .decodeFromBoundingBoxes(boxes);
             result = result || {};
             result.boxes = boxes;
             publishResult(result, _inputImageWrapper.data);
         } else {
             publishResult();
         }
+    }
+
+    function calculateClipping(canvasSize) {
+        const area = _config.detector.area;
+        const patchSize = _config.locator.patchSize || "medium";
+        const halfSample = _config.locator.halfSample || true;
+
+        return _checkImageConstraints({area, patchSize, canvasSize, halfSample});
     }
 
     function update() {
@@ -195,17 +207,20 @@ function createScanner(pixelCapturer) {
                     return Promise.resolve();
                 }
             }
-            const buffer = availableWorker ? availableWorker.imageData : _inputImageWrapper.data;
-            return pixelCapturer.grabFrameData({buffer})
+            return pixelCapturer.grabFrameData({clipping: calculateClipping})
             .then((bitmap) => {
                 if (bitmap) {
+                    console.log(bitmap.dimensions);
+                    // adjust image size!
                     if (availableWorker) {
+                        availableWorker.imageData = bitmap.data;
                         availableWorker.busy = true;
                         availableWorker.worker.postMessage({
                             cmd: 'process',
                             imageData: availableWorker.imageData
                         }, [availableWorker.imageData.buffer]);
                     } else {
+                        _inputImageWrapper.data = bitmap.data;
                         locateAndDecode();
                     }
                 }
@@ -250,7 +265,7 @@ function createScanner(pixelCapturer) {
         const captureSize = pixelCapturer.getCaptureSize();
         const workerThread = {
             worker: undefined,
-            imageData: new Uint8Array(captureSize.width * captureSize.height),
+            imageData: new Uint8Array(aquire(captureSize.width * captureSize.height)),
             busy: true
         };
 
@@ -261,13 +276,13 @@ function createScanner(pixelCapturer) {
             if (e.data.event === 'initialized') {
                 URL.revokeObjectURL(blobURL);
                 workerThread.busy = false;
-                workerThread.imageData = new Uint8Array(e.data.imageData);
+                release(e.data.imageData);
                 if (ENV.development) {
                     console.log("Worker initialized");
                 }
                 return cb(workerThread);
             } else if (e.data.event === 'processed') {
-                workerThread.imageData = new Uint8Array(e.data.imageData);
+                release(e.data.imageData);
                 workerThread.busy = false;
                 publishResult(e.data.result, workerThread.imageData);
             } else if (e.data.event === 'error') {
@@ -350,16 +365,6 @@ function createScanner(pixelCapturer) {
         return window.URL.createObjectURL(blob);
     }
 
-    function setReaders(readers) {
-        if (_decoder) {
-            _decoder.setReaders(readers);
-        } else if (_onUIThread && _workerPool.length > 0) {
-            _workerPool.forEach(function(workerThread) {
-                workerThread.worker.postMessage({cmd: 'setReaders', readers: readers});
-            });
-        }
-    }
-
     function adjustWorkerPool(capacity) {
         return new Promise((resolve) => {
             const increaseBy = capacity - _workerPool.length;
@@ -397,7 +402,7 @@ function createScanner(pixelCapturer) {
 
             if (imageWrapper) {
                 _onUIThread = false;
-                initializeData(imageWrapper);
+                initBuffers(imageWrapper);
                 return cb();
             } else {
                 return setup().then(cb);
@@ -412,6 +417,7 @@ function createScanner(pixelCapturer) {
         stop: function() {
             _stopped = true;
             adjustWorkerPool(0);
+            releaseAll();
             if (source.type === "CAMERA") {
                 CameraAccess.release();
             }

@@ -14,6 +14,11 @@ import ImageDebug from '../common/image_debug';
 import Rasterizer from './rasterizer';
 import Tracer from './tracer';
 import skeletonizer from './skeletonizer';
+import {DEBUG, log} from '../common/log';
+
+const debug = log.bind(null, DEBUG, "barcode_locator.js");
+
+
 const vec2 = {
     clone: require('gl-vec2/clone'),
     dot: require('gl-vec2/dot'),
@@ -563,38 +568,44 @@ export default function createLocator(inputImageWrapper, config) {
         }
     };
 }
-export function checkImageConstraints(inputStream, config) {
+export function checkImageConstraints({canvasSize, area, patchSize, halfSample: half}) {
     var patchSize,
-        width = inputStream.getWidth(),
-        height = inputStream.getHeight(),
-        halfSample = config.halfSample ? 0.5 : 1,
+        width = canvasSize.width,
+        height = canvasSize.height,
+        half = half ? 0.5 : 1,
         size,
-        area;
+        clipping = {
+            x: 0,
+            y: 0,
+            width,
+            height,
+        };
 
-    // calculate width and height based on area
-    if (inputStream.getConfig().area) {
-        area = computeImageArea(width, height, inputStream.getConfig().area);
-        inputStream.setTopRight({x: area.sx, y: area.sy});
-        inputStream.setCanvasSize({x: width, y: height});
-        width = area.sw;
-        height = area.sh;
+    if (area) {
+        const imageArea = computeImageArea(width, height, area);
+        clipping.x = imageArea.sx;
+        clipping.y = imageArea.sy;
+        clipping.width = width = imageArea.sw;
+        clipping.height = height = imageArea.sh;
     }
 
     size = {
-        x: Math.floor(width * halfSample),
-        y: Math.floor(height * halfSample)
+        x: Math.floor(width * half),
+        y: Math.floor(height * half)
     };
 
-    patchSize = calculatePatchSize(config.patchSize, size);
+    patchSize = calculatePatchSize(patchSize, size);
     if (ENV.development) {
-        console.log("Patch-Size: " + JSON.stringify(patchSize));
+        debug("Patch-Size: " + JSON.stringify(patchSize));
     }
 
-    inputStream.setWidth(Math.floor(Math.floor(size.x / patchSize.x) * (1 / halfSample) * patchSize.x));
-    inputStream.setHeight(Math.floor(Math.floor(size.y / patchSize.y) * (1 / halfSample) * patchSize.y));
+    clipping.width = Math.floor(Math.floor(size.x / patchSize.x) * (1 / half) * patchSize.x);
+    clipping.height = Math.floor(Math.floor(size.y / patchSize.y) * (1 / half) * patchSize.y);
+    clipping.x = Math.floor((canvasSize.width - clipping.width) / 2);
+    clipping.y = Math.floor((canvasSize.height - clipping.height) / 2);
 
-    if ((inputStream.getWidth() % patchSize.x) === 0 && (inputStream.getHeight() % patchSize.y) === 0) {
-        return true;
+    if ((clipping.width % patchSize.x) === 0 && (clipping.height % patchSize.y) === 0) {
+        return clipping;
     }
 
     throw new Error("Image dimensions do not comply with the current settings: Width (" +

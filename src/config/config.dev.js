@@ -2,6 +2,7 @@ module.exports = {
     numOfWorkers: 0,
     locate: true,
     target: '#interactive.viewport',
+    frequency: 5,
     constraints: {
         width: 640,
         height: 640,

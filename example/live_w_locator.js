@@ -146,10 +146,11 @@ $(function() {
             inputStream: {
                 type : "LiveStream",
                 constraints: {
-                    width: {ideal: 640},
+                    width: {ideal: 480},
                     height: {ideal: 480},
+                    zoom: {exact: 2},
                     facingMode: "environment",
-                    aspectRatio: {min: 1, max: 2}
+                    aspectRatio: 1,
                 }
             },
             locator: {
@@ -157,10 +158,10 @@ $(function() {
                 halfSample: true
             },
             numOfWorkers: 2,
-            frequency: 10,
+            frequency: 2,
             decoder: {
                 readers : [{
-                    format: "code_128_reader",
+                    format: "ean_reader",
                     config: {}
                 }]
             },
