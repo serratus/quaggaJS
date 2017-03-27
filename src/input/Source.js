@@ -153,7 +153,6 @@ function adjustWithZoom(videoConstraints) {
 
 export function fromCamera(constraints) {
     var {video: videoConstraints, zoom} = adjustWithZoom(constraints);
-    console.log(videoConstraints);
 
     const video = getOrCreateVideo();
     return CameraAccess.request(video, videoConstraints)
@@ -246,7 +245,7 @@ export function fromCanvas(input) {
     });
 }
 
-export function fromImage(input, constraints = {width: 800, height: 800}) {
+export function fromImage(input, constraints = {width: 800, height: 800, channels: 3}) {
     var $image = null;
     var src = null;
     if (typeof input === 'string') {
@@ -285,9 +284,11 @@ export function fromImage(input, constraints = {width: 800, height: 800}) {
 
         const calculatedWidth = imageAR > 1 ? constraints.width : Math.floor((imageAR) * constraints.width);
         const calculatedHeight = imageAR > 1 ? Math.floor((1 / imageAR) * constraints.width) : constraints.width;
+        const colorChannels = constraints.channels || 3;
 
         return {
             type: "IMAGE",
+            colorChannels,
             getDimensions() {
                 return {
                     viewport: {
@@ -313,7 +314,7 @@ export function fromImage(input, constraints = {width: 800, height: 800}) {
             },
             applyConstraints: function() {
                 console.log('ImageSource.applyConstraints not implemented');
-            }
+            },
         };
     });
 }

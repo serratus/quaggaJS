@@ -74,8 +74,7 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
             const dy = 0;
             const dWidth = canvasSize.width;
             const dHeight = canvasSize.height;
-
-            console.time("clipp")
+            const {colorChannels = 3} = source;
 
             clipping = clipping ? clipping(canvasSize) : {
                 x: 0,
@@ -98,7 +97,7 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
                 clipping.height
             ).data;
             var imageBuffer = nextAvailableBuffer(clipping.width * clipping.height);
-            computeGray(imageData, imageBuffer);
+            computeGray(imageData, imageBuffer, {singleChannel: colorChannels === 1});
             return Promise.resolve({
                 width: clipping.width,
                 height: clipping.height,
