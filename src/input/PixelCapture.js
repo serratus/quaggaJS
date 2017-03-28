@@ -41,6 +41,39 @@ function getOrCreateCanvas(source, target) {
     return $canvas;
 }
 
+function drawImage(
+    canvasSize,
+    ctx,
+    source,
+    type,
+    drawable,
+    ...drawImageArgs,
+) {
+    let drawAngle = 0;
+    if (source.type === 'IMAGE') {
+        if (source.tags && source.tags.orientation) {
+            switch(source.tags.orientation) {
+            case 6:
+                drawAngle = 90 * TO_RADIANS;
+                break;
+            case 8:
+                drawAngle = -90 * TO_RADIANS;
+                break;
+            }
+        }
+    }
+
+    if (drawAngle !== 0) {
+        ctx.translate(canvasSize.width / 2, canvasSize.height / 2);
+        ctx.rotate(drawAngle);
+        ctx.drawImage(drawable, -canvasSize.height / 2, -canvasSize.width / 2, canvasSize.height, canvasSize.width);
+        ctx.rotate(-drawAngle);
+        ctx.translate(-canvasSize.width / 2, -canvasSize.height / 2);
+    } else {
+        ctx.drawImage(drawable, ...drawImageArgs);
+    }
+}
+
 export function fromSource(source, {target = "#interactive.viewport"} = {}) {
     var drawable = source.getDrawable();
     var $canvas = null;
@@ -60,8 +93,6 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
     function nextAvailableBuffer(bytesRequired) {
         return new Uint8Array(aquire(bytesRequired));
     }
-
-
 
     return {
         grabFrameData: function grabFrameData({clipping} = {}) {
@@ -87,8 +118,22 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
             if ($canvas.height < 10 || $canvas.width < 10) {
                 return sleep(100).then(grabFrameData);
             }
+
             if (!(drawable instanceof HTMLCanvasElement)) {
-                ctx.drawImage(drawable, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                drawImage(
+                    canvasSize,
+                    ctx,
+                    source,
+                    drawable,
+                    sx,
+                    sy,
+                    sWidth,
+                    sHeight,
+                    dx,
+                    dy,
+                    dWidth,
+                    dHeight
+                );
             }
             var imageData = ctx.getImageData(
                 clipping.x,
