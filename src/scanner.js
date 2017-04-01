@@ -14,10 +14,10 @@ const vec2 = {
     clone: require('gl-vec2/clone')
 };
 
-const getDecoder = memoize((decoderConfig, _inputImageWrapper) => {
-    return BarcodeDecoder.create(decoderConfig, _inputImageWrapper);
-}, (decoderConfig, _inputImageWrapper) => {
-    return JSON.stringify(Object.assign({}, decoderConfig, {width: _inputImageWrapper.size.x, height: _inputImageWrapper.size.y}));
+const getDecoder = memoize(decoderConfig => {
+    return BarcodeDecoder.create(decoderConfig);
+}, decoderConfig => {
+    return JSON.stringify(decoderConfig);
 });
 
 const _checkImageConstraints = memoize((opts) => {
@@ -177,8 +177,8 @@ function createScanner(pixelCapturer) {
 
         boxes = getBoundingBoxes();
         if (boxes) {
-            result = getDecoder(_config.decoder, _inputImageWrapper)
-                .decodeFromBoundingBoxes(boxes);
+            result = getDecoder(_config.decoder)
+                .decodeFromBoundingBoxes(_inputImageWrapper, boxes);
             result = result || {};
             result.boxes = boxes;
             publishResult(result, _inputImageWrapper.data);

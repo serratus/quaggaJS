@@ -6,6 +6,8 @@ import {
 import {sleep, getViewport} from '../common/utils';
 import {aquire} from '../common/buffers';
 
+const TO_RADIANS = Math.PI / 180;
+
 function adjustCanvasSize(input, canvas) {
     if (input instanceof HTMLVideoElement) {
         if (canvas.height !== input.videoHeight || canvas.width !== input.videoWidth) {
@@ -45,9 +47,8 @@ function drawImage(
     canvasSize,
     ctx,
     source,
-    type,
     drawable,
-    ...drawImageArgs,
+    ...drawImageArgs
 ) {
     let drawAngle = 0;
     if (source.type === 'IMAGE') {
@@ -63,10 +64,11 @@ function drawImage(
         }
     }
 
+    const [,,,,,, dWidth, dHeight] = drawImageArgs;
     if (drawAngle !== 0) {
         ctx.translate(canvasSize.width / 2, canvasSize.height / 2);
         ctx.rotate(drawAngle);
-        ctx.drawImage(drawable, -canvasSize.height / 2, -canvasSize.width / 2, canvasSize.height, canvasSize.width);
+        ctx.drawImage(drawable, -dHeight / 2, -dWidth / 2, dHeight, dWidth);
         ctx.rotate(-drawAngle);
         ctx.translate(-canvasSize.width / 2, -canvasSize.height / 2);
     } else {

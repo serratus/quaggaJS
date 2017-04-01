@@ -26,7 +26,7 @@ const READERS = {
     i2of5_reader: I2of5Reader
 };
 export default {
-    create: function(config, inputImageWrapper) {
+    create: function(config) {
         var _canvas = {
                 ctx: {
                     frequency: null,
@@ -136,7 +136,7 @@ export default {
          * @param {Array} line
          * @param {Number} angle
          */
-        function getExtendedLine(line, angle, ext) {
+        function getExtendedLine(inputImageWrapper, line, angle, ext) {
             function extendLine(amount) {
                 var extension = {
                     y: amount * Math.sin(angle),
@@ -169,7 +169,7 @@ export default {
             }];
         }
 
-        function tryDecode(line) {
+        function tryDecode(inputImageWrapper, line) {
             var result = null,
                 i,
                 barcodeLine = Bresenham.getBarcodeLine(inputImageWrapper, line[0], line[1]);
@@ -204,7 +204,7 @@ export default {
          * @param {Array} line
          * @param {Number} lineAngle
          */
-        function tryDecodeBruteForce(box, line, lineAngle) {
+        function tryDecodeBruteForce(inputImageWrapper, box, line, lineAngle) {
             var sideLength = Math.sqrt(Math.pow(box[1][0] - box[0][0], 2) + Math.pow((box[1][1] - box[0][1]), 2)),
                 i,
                 slices = 16,
@@ -226,7 +226,7 @@ export default {
                 line[1].y += extension.x;
                 line[1].x -= extension.y;
 
-                result = tryDecode(line);
+                result = tryDecode(inputImageWrapper, line);
             }
             return result;
         }
@@ -243,7 +243,7 @@ export default {
          * @param {Object} box The area to search in
          * @returns {Object} the result {codeResult, line, angle, pattern, threshold}
          */
-        function decodeFromBoundingBox(box) {
+        function decodeFromBoundingBox(inputImageWrapper, box) {
             var line,
                 lineAngle,
                 ctx = _canvas.ctx.overlay,
@@ -259,14 +259,14 @@ export default {
             line = getLine(box);
             lineLength = getLineLength(line);
             lineAngle = Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x);
-            line = getExtendedLine(line, lineAngle, Math.floor(lineLength * 0.1));
+            line = getExtendedLine(inputImageWrapper, line, lineAngle, Math.floor(lineLength * 0.1));
             if (line === null){
                 return null;
             }
 
-            result = tryDecode(line);
+            result = tryDecode(inputImageWrapper, line);
             if (result === null) {
-                result = tryDecodeBruteForce(box, line, lineAngle);
+                result = tryDecodeBruteForce(inputImageWrapper, box, line, lineAngle);
             }
 
             if (result === null) {
@@ -287,17 +287,14 @@ export default {
         }
 
         return {
-            decodeFromBoundingBox: function(box) {
-                return decodeFromBoundingBox(box);
-            },
-            decodeFromBoundingBoxes: function(boxes) {
+            decodeFromBoundingBoxes: function(inputImageWrapper, boxes) {
                 var i, result,
                     barcodes = [],
                     multiple = config.multiple;
 
                 for ( i = 0; i < boxes.length; i++) {
                     const box = boxes[i];
-                    result = decodeFromBoundingBox(box) || {};
+                    result = decodeFromBoundingBox(inputImageWrapper, box) || {};
                     result.box = box;
 
                     if (multiple) {
