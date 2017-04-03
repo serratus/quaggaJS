@@ -8,8 +8,6 @@ import {release, aquire, releaseAll} from './common/buffers';
 import Config from './config/config';
 import CameraAccess from './input/camera_access';
 
-
-
 const vec2 = {
     clone: require('gl-vec2/clone')
 };
@@ -48,7 +46,11 @@ function createScanner(pixelCapturer) {
     const source = pixelCapturer ? pixelCapturer.getSource() : {};
 
     function setup() {
-        return adjustWorkerPool(_config.numOfWorkers)
+        let {numOfWorkers} = _config;
+        if (source.type === 'IMAGE') {
+            numOfWorkers = numOfWorkers >= 1 ? 1 : 0;
+        }
+        return adjustWorkerPool(numOfWorkers)
         .then(() => {
             if (_config.numOfWorkers === 0) {
                 initBuffers();
@@ -146,7 +148,7 @@ function createScanner(pixelCapturer) {
             result.barcodes.filter(barcode => barcode.codeResult)
                 .forEach(barcode => addResult(barcode, imageData));
         } else if (result.codeResult) {
-            _resultCollector.addResult(imageData, _inputStream.getCanvasSize(), result.codeResult);
+            _resultCollector.addResult(imageData, source.getDimensions().canvas, result.codeResult);
         }
     }
 

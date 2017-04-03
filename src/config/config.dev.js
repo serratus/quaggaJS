@@ -1,5 +1,5 @@
 module.exports = {
-    numOfWorkers: 0,
+    numOfWorkers: 2,
     locate: true,
     target: '#interactive.viewport',
     frequency: 5,
