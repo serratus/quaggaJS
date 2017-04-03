@@ -78,7 +78,7 @@ function resolveMinWidthToAdvanced({aspectRatio, minPixels}) {
     .map(({pre}) => pre);
 }
 
-function getOrCreateVideo(source, target) {
+function getOrCreateVideo(target) {
     const $viewport = getViewport(target);
     if ($viewport) {
         let $video = $viewport.querySelector("video");
@@ -153,10 +153,10 @@ function adjustWithZoom(videoConstraints) {
     };
 }
 
-export function fromCamera(constraints) {
+export function fromCamera(constraints, {target} = {}) {
     var {video: videoConstraints, zoom} = adjustWithZoom(constraints);
 
-    const video = getOrCreateVideo();
+    const video = getOrCreateVideo(target);
     return CameraAccess.request(video, videoConstraints)
     .then(function(mediastream) {
         const track = mediastream.getVideoTracks()[0];

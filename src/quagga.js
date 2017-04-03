@@ -136,7 +136,7 @@ function createApi() {
         fromCamera(options) {
             const config = merge({}, Config, options);
             return Source
-                .fromCamera(config.constraints)
+                .fromCamera(config.constraints, {target: config.target})
                 .then(fromSource.bind(null, config));
         },
         fromSource(src, inputConfig) {

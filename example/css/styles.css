@@ -278,10 +278,10 @@ footer {
 }
 
 #interactive.viewport > canvas, #interactive.viewport > video {
-    max-width: 100%;
     width: 100%;
 }
 
 canvas.drawing {
     position: absolute;
+    z-index: 2;
 }

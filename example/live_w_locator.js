@@ -170,7 +170,7 @@ $(function() {
             frequency: 2,
             decoder: {
                 readers : [{
-                    format: "ean_reader",
+                    format: "code_128_reader",
                     config: {}
                 }]
             },

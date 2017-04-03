@@ -7,6 +7,7 @@ import createEventedElement from './common/events';
 import {release, aquire, releaseAll} from './common/buffers';
 import Config from './config/config';
 import CameraAccess from './input/camera_access';
+import {getViewport} from './common/utils';
 
 const vec2 = {
     clone: require('gl-vec2/clone')
@@ -45,17 +46,33 @@ function createScanner(pixelCapturer) {
 
     const source = pixelCapturer ? pixelCapturer.getSource() : {};
 
-    function setup() {
-        let {numOfWorkers} = _config;
+    function updateViewportStyle(target) {
+        const $video = source.getDrawable();
+        const $viewport = getViewport(target);
+
+        const {viewport} = source.getDimensions();
+        const zoom = Math.floor((((2 * viewport.x) + viewport.width) / viewport.width) * 100) / 100;
+        const videoWidth = zoom * viewport.width;
+        const translate = ((viewport.x / videoWidth) * (-100)).toFixed(5);
+
+        $video.style.width = `${zoom * 100}%`;
+        $video.style.transform = `translate(${translate}%, ${translate}%)`;
+        $viewport.style.paddingBottom = `${(viewport.height * 100 / viewport.width).toFixed(5)}%`;
+        $viewport.style.overflow = "hidden";
+        $viewport.style.height = 0;
+    }
+
+    function setup({numOfWorkers, target}) {
         if (source.type === 'IMAGE') {
             numOfWorkers = numOfWorkers >= 1 ? 1 : 0;
         }
         return adjustWorkerPool(numOfWorkers)
         .then(() => {
-            if (_config.numOfWorkers === 0) {
+            if (numOfWorkers === 0) {
                 initBuffers();
             }
-        });
+        })
+        .then(updateViewportStyle.bind(null, target));
     }
 
     function initBuffers(imageWrapper) {
@@ -92,10 +109,10 @@ function createScanner(pixelCapturer) {
         }
     }
 
-    function transformResult(result) {
-        const {viewport} = source.getDimensions();
-        let xOffset = viewport.x,
-            yOffset = viewport.y,
+    function transformResult(result, dimensions = {}) {
+        const {clipping = {x: 0, y: 0}} = dimensions;
+        let xOffset = clipping.x,
+            yOffset = clipping.y,
             i;
 
         if (xOffset === 0 && yOffset === 0) {
@@ -104,7 +121,7 @@ function createScanner(pixelCapturer) {
 
         if (result.barcodes) {
             for (i = 0; i < result.barcodes.length; i++) {
-                transformResult(result.barcodes[i]);
+                transformResult(result.barcodes[i], dimensions);
             }
         }
 
@@ -158,11 +175,11 @@ function createScanner(pixelCapturer) {
           result.codeResult);
     }
 
-    function publishResult(result, imageData) {
+    function publishResult(result, imageData, bitmap) {
         let resultToPublish = result;
 
         if (result && _onUIThread) {
-            transformResult(result);
+            transformResult(result, bitmap.dimensions);
             addResult(result, imageData);
             resultToPublish = result.barcodes || result;
         }
@@ -173,7 +190,7 @@ function createScanner(pixelCapturer) {
         }
     }
 
-    function locateAndDecode() {
+    function locateAndDecode(bitmap) {
         var result,
             boxes;
 
@@ -183,9 +200,9 @@ function createScanner(pixelCapturer) {
                 .decodeFromBoundingBoxes(_inputImageWrapper, boxes);
             result = result || {};
             result.boxes = boxes;
-            publishResult(result, _inputImageWrapper.data);
+            publishResult(result, _inputImageWrapper.data, bitmap);
         } else {
-            publishResult();
+            publishResult(undefined, undefined, bitmap);
         }
     }
 
@@ -212,10 +229,11 @@ function createScanner(pixelCapturer) {
             return pixelCapturer.grabFrameData({clipping: calculateClipping})
             .then((bitmap) => {
                 if (bitmap) {
-                    console.log(bitmap.dimensions);
+                    //console.log(bitmap.dimensions);
                     // adjust image size!
                     if (availableWorker) {
                         availableWorker.imageData = bitmap.data;
+                        availableWorker.dimensions = bitmap.dimensions;
                         availableWorker.busy = true;
                         availableWorker.worker.postMessage({
                             cmd: 'process',
@@ -223,7 +241,7 @@ function createScanner(pixelCapturer) {
                         }, [availableWorker.imageData.buffer]);
                     } else {
                         _inputImageWrapper.data = bitmap.data;
-                        locateAndDecode();
+                        locateAndDecode(bitmap);
                     }
                 }
             })
@@ -286,7 +304,7 @@ function createScanner(pixelCapturer) {
             } else if (e.data.event === 'processed') {
                 release(e.data.imageData);
                 workerThread.busy = false;
-                publishResult(e.data.result, workerThread.imageData);
+                publishResult(e.data.result, workerThread.imageData, workerThread.dimensions);
             } else if (e.data.event === 'error') {
                 if (ENV.development) {
                     console.log("Worker error: " + e.data.message);
@@ -407,7 +425,7 @@ function createScanner(pixelCapturer) {
                 initBuffers(imageWrapper);
                 return cb();
             } else {
-                return setup().then(cb);
+                return setup(_config).then(cb);
             }
         },
         start: function() {
