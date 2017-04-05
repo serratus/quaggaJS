@@ -6,8 +6,8 @@ import BarcodeDecoder from './decoder/barcode_decoder';
 import createEventedElement from './common/events';
 import {release, aquire, releaseAll} from './common/buffers';
 import Config from './config/config';
-import CameraAccess from './input/camera_access';
 import {getViewport} from './common/utils';
+import {Scope} from './input/SourceScope';
 
 const vec2 = {
     clone: require('gl-vec2/clone')
@@ -438,8 +438,8 @@ function createScanner(pixelCapturer) {
             _stopped = true;
             adjustWorkerPool(0);
             releaseAll();
-            if (source.type === "CAMERA") {
-                CameraAccess.release();
+            if (source.getScope() === Scope.INTERNAL) {
+                source.stop();
             }
         },
         applyConfig(newConfig) {

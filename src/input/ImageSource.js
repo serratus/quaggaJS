@@ -1,4 +1,5 @@
 import {findTagsInObjectURL} from './exif_helper';
+import {generateSourceInterface} from './SourceInterface';
 
 export function fromImage(input, constraints = {width: 800, height: 800, channels: 3}) {
     var $image = null;
@@ -49,7 +50,7 @@ export function fromImage(input, constraints = {width: 800, height: 800, channel
         const calculatedHeight = imageAR > 1 ? Math.floor((1 / imageAR) * constraints.width) : constraints.width;
         const colorChannels = constraints.channels || 3;
 
-        return {
+        return Object.assign(generateSourceInterface(), {
             type: "IMAGE",
             colorChannels,
             tags,
@@ -76,9 +77,6 @@ export function fromImage(input, constraints = {width: 800, height: 800, channel
             getConstraints: function() {
                 return constraints;
             },
-            applyConstraints: function() {
-                console.log('ImageSource.applyConstraints not implemented');
-            },
-        };
+        });
     });
 }

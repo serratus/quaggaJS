@@ -1,5 +1,6 @@
 export * from './ImageSource';
 export * from './CameraSource';
+export * from './SourceScope';
 
 export function fromCanvas(input) {
     var $canvas = null;

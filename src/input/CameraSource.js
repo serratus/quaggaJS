@@ -1,7 +1,9 @@
 import {clone} from 'lodash';
-import {determineOrientation, PORTRAIT} from '../common/device';
+import {determineOrientation} from '../common/device';
 import CameraAccess from './camera_access';
 import {getViewport} from '../common/utils';
+import {generateSourceInterface} from './SourceInterface';
+import {Scope} from './input/SourceScope';
 
 const ConstraintPresets = [
     {
@@ -151,14 +153,14 @@ function adjustWithZoom(videoConstraints) {
     };
 }
 
-export function fromCamera(constraints, {target} = {}) {
+export function fromCamera(constraints, {target, scope = Scope.EXTERNAL} = {}) {
     let {video: videoConstraints, zoom} = adjustWithZoom(constraints);
 
     const video = getOrCreateVideo(target);
     return CameraAccess.request(video, videoConstraints)
     .then((mediastream) => {
         let track = mediastream.getVideoTracks()[0];
-        return {
+        return Object.assign(generateSourceInterface(), {
             type: "CAMERA",
             getDimensions() {
                 const viewport = {
@@ -182,13 +184,13 @@ export function fromCamera(constraints, {target} = {}) {
                     },
                 };
             },
-            getConstraints: function() {
+            getConstraints() {
                 return videoConstraints;
             },
-            getDrawable: function() {
+            getDrawable() {
                 return video;
             },
-            applyConstraints: function(newConstraints) {
+            applyConstraints(newConstraints) {
                 track.stop();
                 constraints = newConstraints;
                 const adjustment = adjustWithZoom(constraints);
@@ -200,9 +202,15 @@ export function fromCamera(constraints, {target} = {}) {
                     track = mediastream.getVideoTracks()[0];
                 });
             },
-            getLabel: function() {
+            getLabel() {
                 return track.label;
+            },
+            stop() {
+                track.stop();
+            },
+            getScope() {
+                return scope;
             }
-        };
+        });
     });
 }
