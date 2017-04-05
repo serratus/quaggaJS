@@ -100,10 +100,14 @@ $(function() {
             this._accessByPath(this.state, path, value);
 
             console.log(JSON.stringify(this.state));
-            this.detachListeners();
-            this.scanner.stop();
-            this.scanner.removeEventListener();
-            App.init();
+
+            this.scanner.applyConfig({
+                constraints: this.state.inputStream.constraints,
+                locator: this.state.locator,
+                decoder: this.state.decoder,
+                numOfWorkers: this.state.numOfWorkers,
+            })
+            .catch(e => console.error(e));
         },
         inputMapper: {
             inputStream: {
@@ -111,6 +115,17 @@ $(function() {
                     if (/^(\d+)x(\d+)$/.test(value)) {
                         var values = value.split('x');
                         return {
+                            landscape: {
+                                width: {ideal: parseInt(values[0])},
+                                height: {ideal: parseInt(values[1])},
+                                zoom: 1.5,
+                            },
+                            portrait: {
+                                width: {ideal: parseInt(values[0])},
+                                height: {ideal: parseInt(values[0])},
+                                zoom: 1.5,
+                                aspectRatio: 1,
+                            },
                             width: {ideal: parseInt(values[0])},
                             height: {ideal: parseInt(values[1])}
                         };

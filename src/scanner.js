@@ -442,6 +442,12 @@ function createScanner(pixelCapturer) {
                 CameraAccess.release();
             }
         },
+        applyConfig(newConfig) {
+            _stopped = true;
+            adjustWorkerPool(0);
+            _config = merge({}, Config, _config, newConfig);
+            return setup(_config).then(start);
+        },
         pause: function() {
             _stopped = true;
         },

@@ -4,11 +4,18 @@ import ImageWrapper from './common/image_wrapper';
 import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
-import {merge} from 'lodash';
+import {merge, isEqual} from 'lodash';
 import CameraAccess from './input/camera_access';
 import * as PixelCapture from './input/PixelCapture';
 import * as Source from './input/Source';
 import {PORTRAIT, LANDSCAPE, SQUARE} from './common/device';
+
+function hasConfigChanged(currentConfig, newConfig, prop) {
+    if (!prop) {
+        return !isEqual(currentConfig, newConfig);
+    }
+    return newConfig[prop] && !isEqual(currentConfig[prop], newConfig[prop]);
+}
 
 function fromConfig(pixelCapturer, config) {
     const scanner = createScanner(pixelCapturer);
@@ -98,16 +105,21 @@ function fromConfig(pixelCapturer, config) {
             return pixelCapturer.getCanvas();
         },
         applyConfig(newConfig) {
-            // during runtime?
-            // running scanners must know that!
-            // apply constraints to source, only if changed
-
-            const normalizedConfig = merge({}, Config, newConfig);
-            this.stop();
+            const normalizedConfig = merge({}, Config, currentConfig, newConfig);
+            let promise = Promise.resolve();
+            if (hasConfigChanged(currentConfig, normalizedConfig, "constraints")) {
+                console.log("constraints changed!", currentConfig.constraints, normalizedConfig.constraints);
+                promise = promise.then(() => {
+                    scanner.pause();
+                    return source.applyConstraints(normalizedConfig.constraints);
+                });
+            }
+            if (hasConfigChanged(currentConfig, normalizedConfig)) {
+                console.log("config changed!");
+                promise = promise.then(() => scanner.applyConfig(normalizedConfig));
+            }
             currentConfig = normalizedConfig;
-
-            return source.applyConstraints(currentConfig.constraints)
-            .then(() => this.start());
+            return promise;
         },
         getSource() {
             return pixelCapturer.getSource();
@@ -118,11 +130,6 @@ function fromConfig(pixelCapturer, config) {
 function fromSource(config, source) {
     const pixelCapturer = PixelCapture.fromSource(source, {target: config.target});
     return fromConfig(pixelCapturer, config);
-}
-
-function setConfig(configuration = {}, key, config = {}) {
-    var mergedConfig = merge({}, configuration, {[key]: config});
-    return createApi(mergedConfig);
 }
 
 function createApi() {
@@ -141,21 +148,6 @@ function createApi() {
         },
         fromSource(src, inputConfig) {
             return fromSource(configuration, src, inputConfig);
-        },
-        fromConfig(conf) {
-            return fromConfig(merge({}, configuration, conf));
-        },
-        decoder(conf) {
-            return setConfig(configuration, "decoder", conf);
-        },
-        locator(conf) {
-            return setConfig(configuration, "locator", conf);
-        },
-        throttle(timeInMs) {
-            return setConfig(configuration, "frequency", 1000 / parseInt(timeInMs));
-        },
-        config(conf) {
-            return createApi(merge({}, configuration, conf));
         },
         CameraAccess,
         ImageWrapper,
