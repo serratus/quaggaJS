@@ -47,16 +47,20 @@ function createScanner(pixelCapturer) {
     const source = pixelCapturer ? pixelCapturer.getSource() : {};
 
     function updateViewportStyle(target) {
-        const $video = source.getDrawable();
+        const $drawable = source.getDrawable();
         const $viewport = getViewport(target);
+
+        if (!$viewport) {
+            return;
+        }
 
         const {viewport} = source.getDimensions();
         const zoom = Math.floor((((2 * viewport.x) + viewport.width) / viewport.width) * 100) / 100;
         const videoWidth = zoom * viewport.width;
         const translate = ((viewport.x / videoWidth) * (-100)).toFixed(5);
 
-        $video.style.width = `${zoom * 100}%`;
-        $video.style.transform = `translate(${translate}%, ${translate}%)`;
+        $drawable.style.width = `${zoom * 100}%`;
+        $drawable.style.transform = `translate(${translate}%, ${translate}%)`;
         $viewport.style.paddingBottom = `${(viewport.height * 100 / viewport.width).toFixed(5)}%`;
         $viewport.style.overflow = "hidden";
         $viewport.style.height = 0;

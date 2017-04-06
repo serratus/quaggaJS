@@ -39,7 +39,6 @@
             <ul>
                 <li>Use static image as source</li>
                 <li>Configuring EAN-Reader</li>
-                <li>Use custom mount-point (Query-Selector)</li>
             </ul>
         </p>
         <div class="source-code">
@@ -53,21 +52,23 @@ var App = {
     init: function() {
         this.attachListeners();
     },
-    decode: function(src) {
-        Quagga
-            .decoder({readers: ['ean_reader']})
-            .locator({patchSize: 'medium'})
-            .fromImage(src, {size: 800})
-            .toPromise()
-            .then(function(result) {
-                document.querySelector('input.isbn').value = result.codeResult.code;
-            })
-            .catch(function() {
-                document.querySelector('input.isbn').value = "Not Found";
-            })
-            .then(function() {
-                this.attachListeners();
-            }.bind(this));
+    decode: function(file) {
+        Quagga.fromImage({
+            constraints: {src: file, width: 800, height: 800},
+            decoder: {readers: ['ean_reader']},
+        })
+        .then(function(scanner) {
+            return scanner.detect();
+        })
+        .then(function(result) {
+            document.querySelector('input.isbn').value = result.codeResult.code;
+        })
+        .catch(function() {
+            document.querySelector('input.isbn').value = "Not Found";
+        })
+        .then(function() {
+            this.attachListeners();
+        }.bind(this));
     },
     attachListeners: function() {
         var self = this,
@@ -84,7 +85,7 @@ var App = {
             e.preventDefault();
             fileInput.removeEventListener("change", onChange);
             if (e.target.files && e.target.files.length) {
-                self.decode(URL.createObjectURL(e.target.files[0]));
+                self.decode(e.target.files[0]);
             }
         });
     }

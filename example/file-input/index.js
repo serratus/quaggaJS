@@ -5,20 +5,23 @@ var App = {
         this.attachListeners();
     },
     decode: function(file) {
-        Quagga
-            .decoder({readers: ['ean_reader']})
-            .locator({patchSize: 'medium'})
-            .fromSource(file, {size: 800})
-            .toPromise()
-            .then(function(result) {
-                document.querySelector('input.isbn').value = result.codeResult.code;
-            })
-            .catch(function() {
-                document.querySelector('input.isbn').value = "Not Found";
-            })
-            .then(function() {
-                this.attachListeners();
-            }.bind(this));
+        Quagga.fromImage({
+            constraints: {src: file, width: 800, height: 800},
+            decoder: {readers: ['ean_reader']},
+        })
+        .then(function(scanner) {
+            return scanner.detect();
+        })
+        .then(function(result) {
+            document.querySelector('input.isbn').value = result.codeResult.code;
+        })
+        .catch(function(e) {
+            console.error(e);
+            document.querySelector('input.isbn').value = "Not Found";
+        })
+        .then(function() {
+            this.attachListeners();
+        }.bind(this));
     },
     attachListeners: function() {
         var self = this,

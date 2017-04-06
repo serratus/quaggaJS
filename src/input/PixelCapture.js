@@ -32,7 +32,11 @@ function adjustCanvasSize(input, canvas) {
 
 function getOrCreateCanvas(source, target) {
     const $viewport = getViewport(target);
-    let $canvas = $viewport.querySelector("canvas.imgBuffer");
+    let $canvas = null;
+    if ($viewport) {
+        $canvas = $viewport.querySelector("canvas.imgBuffer");
+    }
+
     if (!$canvas) {
         $canvas = document.createElement("canvas");
         $canvas.className = "imgBuffer";
