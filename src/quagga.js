@@ -23,6 +23,7 @@ function fromConfig(pixelCapturer, config) {
     let currentConfig = config;
     let pendingStart = null;
     let initialized = false;
+    let cancelRequested = false;
     return {
         addEventListener(eventType, cb) {
             scanner.subscribe(eventType, cb);
@@ -52,6 +53,7 @@ function fromConfig(pixelCapturer, config) {
             return pendingStart;
         },
         stop() {
+            cancelRequested = true;
             scanner.stop();
             initialized = false;
             return this;
@@ -59,28 +61,27 @@ function fromConfig(pixelCapturer, config) {
         detect() {
             if (source.type === 'CAMERA'
                     || source.type === 'VIDEO') {
-                let cancelRequested = false;
-                return {
-                    cancel() {
-                        cancelRequested = true;
-                    },
-                    promise: new Promise((resolve, reject) => {
+                cancelRequested = false;
+                return this.start()
+                .then(() => {
+                    return new Promise((resolve, reject) => {
                         function onProcessed(result) {
                             if (result && result.codeResult && result.codeResult.code) {
                                 scanner.stop();
                                 scanner.unsubscribe("processed", onProcessed);
+                                scanner.unsubscribe("stopped", onProcessed);
                                 resolve(result);
                             }
                             if (cancelRequested) {
-                                scanner.stop();
                                 scanner.unsubscribe("processed", onProcessed);
+                                scanner.unsubscribe("stopped", onProcessed);
                                 reject("cancelled!");
                             }
                         }
                         scanner.subscribe("processed", onProcessed);
-                        this.start();
-                    })
-                };
+                        scanner.subscribe("stopped", onProcessed, true);
+                    });
+                });
             } else {
                 let pendingDecodeSingle = Promise.resolve();
                 if (!initialized) {

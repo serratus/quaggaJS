@@ -3,22 +3,24 @@ var App = {
     _scanner: null,
     init: function() {
         this.attachListeners();
+        this._overlay = document.querySelector('.overlay');
     },
     activateScanner: function() {
-        var scanner = this.configureScanner('.overlay__content'),
-            onDetected = function (result) {
-                document.querySelector('input.isbn').value = result.codeResult.code;
-                stop();
-            }.bind(this),
-            stop = function() {
-                scanner.stop();  // should also clear all event-listeners?
-                scanner.removeEventListener('detected', onDetected);
-                this.hideOverlay();
-                this.attachListeners();
-            }.bind(this);
-
-        this.showOverlay(stop);
-        scanner.addEventListener('detected', onDetected).start();
+        this.configureScanner('.overlay__content')
+        .then(function(scanner) {
+            this.showOverlay(scanner.stop.bind(scanner));
+            return scanner.detect();
+        }.bind(this))
+        .then(function(result) {
+            document.querySelector('input.isbn').value = result.codeResult.code;
+        })
+        .catch((e) => {
+            console.log(e);
+        })
+        .then(function() {
+            this.hideOverlay();
+            this.attachListeners();
+        }.bind(this));
     },
     attachListeners: function() {
         var self = this,
@@ -31,29 +33,11 @@ var App = {
         });
     },
     showOverlay: function(cancelCb) {
-        if (!this._overlay) {
-            var content = document.createElement('div'),
-                closeButton = document.createElement('div');
-
-            closeButton.appendChild(document.createTextNode('X'));
-            content.className = 'overlay__content';
-            closeButton.className = 'overlay__close';
-            this._overlay = document.createElement('div');
-            this._overlay.className = 'overlay';
-            this._overlay.appendChild(content);
-            content.appendChild(closeButton);
-            closeButton.addEventListener('click', function closeClick() {
-                closeButton.removeEventListener('click', closeClick);
-                cancelCb();
-            });
-            document.body.appendChild(this._overlay);
-        } else {
-            var closeButton = document.querySelector('.overlay__close');
-            closeButton.addEventListener('click', function closeClick() {
-                closeButton.removeEventListener('click', closeClick);
-                cancelCb();
-            });
-        }
+        var closeButton = document.querySelector('.overlay__close');
+        closeButton.addEventListener('click', function closeClick() {
+            closeButton.removeEventListener('click', closeClick);
+            cancelCb();
+        });
         this._overlay.style.display = "block";
     },
     hideOverlay: function() {
@@ -62,20 +46,18 @@ var App = {
         }
     },
     configureScanner: function(selector) {
-        if (!this._scanner) {
-            this._scanner = Quagga
-                .decoder({readers: ['ean_reader']})
-                .locator({patchSize: 'medium'})
-                .fromSource({
-                    target: selector,
-                    constraints: {
-                        width: 800,
-                        height: 600,
-                        facingMode: "environment"
-                    }
-                });
+        if (this._scanner) {
+            return Promise.resolve(this._scanner);
         }
-        return this._scanner;
+
+        return Quagga.fromCamera({
+            decoder: {readers: ['ean_reader']},
+            target: selector,
+        })
+        .then((scanner) => {
+            this._scanner = scanner;
+            return scanner;
+        });
     }
 };
 App.init();

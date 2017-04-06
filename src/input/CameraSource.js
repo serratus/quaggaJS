@@ -208,6 +208,12 @@ export function fromCamera(constraints, {target, scope = Scope.EXTERNAL} = {}) {
             stop() {
                 track.stop();
             },
+            waitUntilReady() {
+                if (track.readyState === "live") {
+                    return Promise.resolve();
+                }
+                return this.applyConstraints(constraints);
+            },
             getScope() {
                 return scope;
             }

@@ -61,6 +61,7 @@ function createScanner(pixelCapturer) {
 
         $drawable.style.width = `${zoom * 100}%`;
         $drawable.style.transform = `translate(${translate}%, ${translate}%)`;
+        $drawable.style.position = 'absolute';
         $viewport.style.paddingBottom = `${(viewport.height * 100 / viewport.width).toFixed(5)}%`;
         $viewport.style.overflow = "hidden";
         $viewport.style.height = 0;
@@ -233,8 +234,6 @@ function createScanner(pixelCapturer) {
             return pixelCapturer.grabFrameData({clipping: calculateClipping})
             .then((bitmap) => {
                 if (bitmap) {
-                    //console.log(bitmap.dimensions);
-                    // adjust image size!
                     if (availableWorker) {
                         availableWorker.imageData = bitmap.data;
                         availableWorker.dimensions = bitmap.dimensions;
@@ -428,13 +427,16 @@ function createScanner(pixelCapturer) {
             if (imageWrapper) {
                 _onUIThread = false;
                 initBuffers(imageWrapper);
-                return Promise.resolve();
-            } else {
-                adjustWorkerPool(0);
-                return setup(_config);
             }
+            return Promise.resolve();
         },
         start: function() {
+            if (_onUIThread) {
+                adjustWorkerPool(0);
+                return source.waitUntilReady()
+                .then(setup.bind(null, _config))
+                .then(start);
+            }
             start();
         },
         isRunning: function() {
@@ -447,6 +449,7 @@ function createScanner(pixelCapturer) {
             if (source.getScope() === Scope.INTERNAL) {
                 source.stop();
             }
+            _events.publish("stopped");
         },
         applyConfig(newConfig) {
             return this.init(newConfig);
@@ -454,8 +457,11 @@ function createScanner(pixelCapturer) {
         pause: function() {
             _stopped = true;
         },
-        subscribe(eventName, callback) {
-            _events.subscribe(eventName, callback);
+        subscribe(eventName, callback, once = false) {
+            if (!once) {
+                return _events.subscribe(eventName, callback);
+            }
+            _events.once(eventName, callback);
         },
         unsubscribe(eventName, callback) {
             _events.unsubscribe(eventName, callback);
@@ -474,7 +480,7 @@ function createScanner(pixelCapturer) {
                     }
                     return reject(result);
                 }, true);
-                start();
+                this.start();
             });
         },
         canvas: _canvasContainer

@@ -48,6 +48,7 @@
 }
 
 .overlay {
+    display: none;
     overflow: hidden;
     position: fixed;
     top: 0;
@@ -58,7 +59,7 @@
     background-color: rgba(0, 0, 0, 0.3);
 }
 
-.overlay__content {
+.overlay__container {
     top: 50%;
     position: absolute;
     left: 50%;

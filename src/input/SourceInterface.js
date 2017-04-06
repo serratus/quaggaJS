@@ -9,6 +9,9 @@ class Source {
     getLabel() {}
     stop() {}
     getScope() {}
+    waitUntilReady() {
+        return Promise.resolve();
+    }
 }
 
 export {Source};
@@ -23,5 +26,8 @@ export function generateSourceInterface() {
         getLabel() {},
         stop() {},
         getScope() {},
+        waitUntilReady() {
+            return Promise.resolve();
+        },
     };
 };
