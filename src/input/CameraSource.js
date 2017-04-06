@@ -3,7 +3,7 @@ import {determineOrientation} from '../common/device';
 import CameraAccess from './camera_access';
 import {getViewport} from '../common/utils';
 import {generateSourceInterface} from './SourceInterface';
-import {Scope} from './input/SourceScope';
+import {Scope} from './SourceScope';
 
 const ConstraintPresets = [
     {

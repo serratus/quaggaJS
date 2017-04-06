@@ -346,7 +346,7 @@ function createScanner(pixelCapturer) {
                     x: e.data.size.x,
                     y: e.data.size.y
                 }, new Uint8Array(e.data.imageData));
-                scanner.init(config, ready, imageWrapper);
+                scanner.init(config, imageWrapper).then(ready);
                 scanner.subscribe("processed", onProcessed);
             } else if (e.data.cmd === 'process') {
                 imageWrapper.data = new Uint8Array(e.data.imageData);
@@ -417,15 +417,17 @@ function createScanner(pixelCapturer) {
     }
 
     return {
-        init: function(config, cb, imageWrapper) {
+        init: function(config, imageWrapper) {
+            _stopped = true;
             _config = merge({}, Config, config);
 
             if (imageWrapper) {
                 _onUIThread = false;
                 initBuffers(imageWrapper);
-                return cb();
+                return Promise.resolve();
             } else {
-                return setup(_config).then(cb);
+                adjustWorkerPool(0);
+                return setup(_config);
             }
         },
         start: function() {
@@ -443,10 +445,7 @@ function createScanner(pixelCapturer) {
             }
         },
         applyConfig(newConfig) {
-            _stopped = true;
-            adjustWorkerPool(0);
-            _config = merge({}, Config, _config, newConfig);
-            return setup(_config).then(start);
+            return this.init(newConfig);
         },
         pause: function() {
             _stopped = true;
@@ -462,11 +461,14 @@ function createScanner(pixelCapturer) {
                 _resultCollector = resultCollector;
             }
         },
-        decodeSingle: function(config, resultCallback) {
-            this.init(config, () => {
+        decodeSingle() {
+            return new Promise((resolve, reject) => {
                 _events.once("processed", (result) => {
                     this.stop();
-                    resultCallback.call(null, result);
+                    if (result && result.codeResult && result.codeResult.code) {
+                        return resolve(result);
+                    }
+                    return reject(result);
                 }, true);
                 start();
             });

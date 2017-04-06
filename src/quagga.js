@@ -43,17 +43,11 @@ function fromConfig(pixelCapturer, config) {
                 scanner.start();
                 return Promise.resolve(true);
             }
-            pendingStart = new Promise((resolve, reject) => {
-                scanner.init(currentConfig, (error) => {
-                    if (error) {
-                        console.log(error);
-                        reject(error);
-                    }
-                    initialized = true;
-                    scanner.start();
-                    resolve();
-                    pendingStart = null;
-                });
+            pendingStart = scanner.init(currentConfig)
+            .then(() => {
+                initialized = true;
+                scanner.start();
+                pendingStart = null;
             });
             return pendingStart;
         },
@@ -88,14 +82,14 @@ function fromConfig(pixelCapturer, config) {
                     })
                 };
             } else {
-                return new Promise((resolve, reject) => {
-                    scanner.decodeSingle(currentConfig, (result) => {
-                        if (result && result.codeResult && result.codeResult.code) {
-                            return resolve(result);
-                        }
-                        return reject(result);
-                    });
-                });
+                let pendingDecodeSingle = Promise.resolve();
+                if (!initialized) {
+                    pendingDecodeSingle = pendingDecodeSingle
+                    .then(scanner.init.bind(scanner, currentConfig))
+                    .then(() => {initialized = true;});
+                }
+                return pendingDecodeSingle
+                    .then(scanner.decodeSingle.bind(scanner));
             }
         },
         registerResultCollector(resultCollector) {
@@ -106,6 +100,7 @@ function fromConfig(pixelCapturer, config) {
         },
         applyConfig(newConfig) {
             const normalizedConfig = merge({}, Config, currentConfig, newConfig);
+            const wasRunning = scanner.isRunning();
             let promise = Promise.resolve();
             if (hasConfigChanged(currentConfig, normalizedConfig, "constraints")) {
                 console.log("constraints changed!", currentConfig.constraints, normalizedConfig.constraints);
@@ -117,6 +112,9 @@ function fromConfig(pixelCapturer, config) {
             if (hasConfigChanged(currentConfig, normalizedConfig)) {
                 console.log("config changed!");
                 promise = promise.then(() => scanner.applyConfig(normalizedConfig));
+                if (wasRunning) {
+                    promise = promise.then(scanner.start.bind(scanner));
+                }
             }
             currentConfig = normalizedConfig;
             return promise;
@@ -134,10 +132,13 @@ function fromSource(config, source) {
 
 function createApi() {
     return {
-        fromImage(image, options) {
+        fromImage(options) {
             const config = merge({}, Config, options);
             return Source
-                .fromImage(image, config.constraints)
+                .fromImage(config.constraints, {
+                    target: config.target,
+                    scope: Source.Scope.INTERNAL,
+                })
                 .then(fromSource.bind(null, config));
         },
         fromCamera(options) {

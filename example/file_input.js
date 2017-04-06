@@ -53,34 +53,47 @@ $(function() {
             $(".controls .reader-config-group").off("change", "input, select");
             $(".controls button").off("click");
         },
+        detect: function() {
+            var scanner = this.scanner;
+            scanner.detect()
+            .then(function(result) {
+                console.log(result);
+                addToResults(scanner, result);
+                return result;
+            })
+            .catch(function(result) {
+                console.log('Not found', result);
+                return result;
+            })
+            .then(function(result) {
+                drawResult(scanner, result);
+                this.attachListeners();
+            }.bind(this));
+        },
         decode: function(file) {
             this.detachListeners();
             var size = this.state.inputStream.size;
             console.log("decode...");
 
-            Quagga.fromImage(file, {
-                constraints: {width: size, height: size},
-                locator: this.state.locator,
-                decoder: this.state.decoder,
-            })
-            .then(function(scanner) {
-                scanner.detect()
-                .then(function(result) {
-                    console.log(result);
-                    addToResults(scanner, result);
-                    return result;
+            if (!this.scanner) {
+                Quagga.fromImage({
+                    constraints: {src: file, width: size, height: size},
+                    locator: this.state.locator,
+                    decoder: this.state.decoder,
                 })
-                .catch(function(result) {
-                    console.log('Not found', result);
-                    return result;
-                })
-                .then(function(result) {
-                    drawResult(scanner, result);
-                    this.attachListeners();
+                .then(function(scanner) {
+                    this.scanner = scanner;
+                    this.detect();
                 }.bind(this));
-            }.bind(this));
+            } else {
+                this.scanner.applyConfig({
+                    constraints: {src: file, width: size, height: size},
+                    locator: this.state.locator,
+                    decoder: this.state.decoder,
+                })
+                .then(this.detect.bind(this));
+            }
 
-            // Quagga.fromCamera(constraints)
             // Quagga.fromSource();
             // Quagga.fromPixelCapture();
         },

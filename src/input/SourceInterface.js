@@ -1,24 +1,22 @@
-const viewport = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-};
+class Source {
+    constructor(type) {
+        this.type = type;
+    }
+    getDimensions() {}
+    getConstraints() {}
+    getDrawable() {}
+    applyConstraints() {}
+    getLabel() {}
+    stop() {}
+    getScope() {}
+}
 
-const canvas = {
-    height: 0,
-    width: 0,
-};
+export {Source};
 
 export function generateSourceInterface() {
     return {
         type: "INTERFACE",
-        getDimensions() {
-            return {
-                viewport,
-                canvas,
-            };
-        },
+        getDimensions() {},
         getConstraints() {},
         getDrawable() {},
         applyConstraints() {},
@@ -26,4 +24,4 @@ export function generateSourceInterface() {
         stop() {},
         getScope() {},
     };
-}
+};

@@ -101,7 +101,8 @@ $(function() {
 
             console.log(JSON.stringify(this.state));
 
-            this.scanner.applyConfig({
+            this.scanner
+            .applyConfig({
                 constraints: this.state.inputStream.constraints,
                 locator: this.state.locator,
                 decoder: this.state.decoder,

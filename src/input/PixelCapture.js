@@ -98,6 +98,7 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
 
     return {
         grabFrameData: function grabFrameData({clipping} = {}) {
+            const frame = source.getDrawable();
             const {viewport, canvas: canvasSize} = source.getDimensions();
             const sx = viewport.x;
             const sy = viewport.y;
@@ -121,12 +122,12 @@ export function fromSource(source, {target = "#interactive.viewport"} = {}) {
                 return sleep(100).then(grabFrameData);
             }
 
-            if (!(drawable instanceof HTMLCanvasElement)) {
+            if (!(frame instanceof HTMLCanvasElement)) {
                 drawImage(
                     canvasSize,
                     ctx,
                     source,
-                    drawable,
+                    frame,
                     sx,
                     sy,
                     sWidth,
