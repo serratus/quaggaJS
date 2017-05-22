@@ -14,6 +14,9 @@ module.exports = function(config) {
             'test/test-main-integration.js': ['webpack']
         },
         webpack: {
+            entry: [
+                './src/quagga.js'
+            ],
             module: {
                 loaders: [{
                     test: /\.jsx?$/,
@@ -45,7 +48,7 @@ module.exports = function(config) {
         reporters: ['progress'],
         port: 9876,
         colors: true,
-        logLevel: config.LOG_INFO,
+        logLevel: config.LOG_INFO, // LOG_DEBUG
         autoWatch: true,
         browsers: ['Chrome'],
         singleRun: false

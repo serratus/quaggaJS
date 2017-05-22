@@ -11,6 +11,7 @@ import EAN2Reader from '../reader/ean_2_reader';
 import EAN5Reader from '../reader/ean_5_reader';
 import UPCEReader from '../reader/upc_e_reader';
 import I2of5Reader from '../reader/i2of5_reader';
+import TwoOfFiveReader from '../reader/2of5_reader';
 
 const READERS = {
     code_128_reader: Code128Reader,
@@ -23,7 +24,8 @@ const READERS = {
     codabar_reader: CodabarReader,
     upc_reader: UPCReader,
     upc_e_reader: UPCEReader,
-    i2of5_reader: I2of5Reader
+    i2of5_reader: I2of5Reader,
+    '2of5_reader': TwoOfFiveReader,
 };
 export default {
     create: function(config, inputImageWrapper) {
