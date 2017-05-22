@@ -153,21 +153,6 @@ describe("camera_access", () => {
                     done();
                 });
             });
-
-            it("should set deviceId if facingMode is set to environment", (done) => {
-                setDevices([{deviceId: "front", kind: "videoinput", label: "front Facing"},
-                    {deviceId: "back", label: "back Facing", kind: "videoinput"}]);
-                const givenConstraints = {width: 180, facingMode: "environment"};
-                return pickConstraints(givenConstraints).then((actualConstraints) => {
-                    expect(actualConstraints.video).to.deep.equal({width: 180, deviceId: "back"});
-                    done();
-                })
-                .catch((err) => {
-                    console.log(err);
-                    expect(err).to.equal(null);
-                    done();
-                });
-            });
         });
     });
 });

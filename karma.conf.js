@@ -13,6 +13,9 @@ module.exports = function(config) {
             'test/test-main.js': ['webpack']
         },
         webpack: {
+            entry: [
+                './src/quagga.js'
+            ],
             module: {
                 loaders: [{
                     test: /\.jsx?$/,

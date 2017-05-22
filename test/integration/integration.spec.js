@@ -304,4 +304,41 @@ describe('decodeSingle', function () {
         });
         _runTestSet(testSet, config);
     });
+
+    describe("2of5", function() {
+        var config = config = {
+                inputStream: {
+                    size: 800,
+                    singleChannel: false
+                },
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true
+                },
+                numOfWorkers: 0,
+                decoder: {
+                    readers: ["2of5_reader"]
+                },
+                locate: true,
+                src: null
+            },
+            testSet = [
+                {"name": "image-001.jpg", "result": "9577149002"},
+                {"name": "image-002.jpg", "result": "9577149002"},
+                {"name": "image-003.jpg", "result": "5776158811"},
+                {"name": "image-004.jpg", "result": "0463381455"},
+                {"name": "image-005.jpg", "result": "3261594101"},
+                {"name": "image-006.jpg", "result": "3261594101"},
+                {"name": "image-007.jpg", "result": "3261594101"},
+                {"name": "image-008.jpg", "result": "6730705801"},
+                {"name": "image-009.jpg", "result": "5776158811"},
+                {"name": "image-010.jpg", "result": "5776158811"}
+            ];
+
+        testSet.forEach(function(sample) {
+            sample.format = "2of5";
+        });
+
+        _runTestSet(testSet, config);
+    });
 });

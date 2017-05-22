@@ -2,7 +2,19 @@ $(function() {
     var resultCollector = Quagga.ResultCollector.create({
         capture: true,
         capacity: 20,
-        blacklist: [{code: "2167361334", format: "i2of5"}],
+        blacklist: [{
+            code: "9577149002", format: "2of5"
+        }, {
+            code: "5776158811", format: "2of5"
+        }, {
+            code: "0463381455", format: "2of5"
+        }, {
+            code: "3261594101", format: "2of5"
+        }, {
+            code: "6730705801", format: "2of5"
+        }, {
+            code: "8568166929", format: "2of5"
+        }],
         filter: function(codeResult) {
             // only store results which match this constraint
             // e.g.: codeResult
@@ -169,7 +181,8 @@ $(function() {
                 patchSize: "medium",
                 halfSample: true
             },
-            numOfWorkers: 4,
+            numOfWorkers: 2,
+            frequency: 10,
             decoder: {
                 readers : [{
                     format: "code_128_reader",
