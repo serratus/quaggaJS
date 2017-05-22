@@ -24,7 +24,6 @@ var N = 1,
         ]},
         SINGLE_CODE_ERROR: {value: 0.78, writable: true},
         AVG_CODE_ERROR: {value: 0.30, writable: true},
-        MAX_CORRECTION_FACTOR: {value: 5},
         FORMAT: {value: "2of5"}
     };
 
@@ -47,7 +46,6 @@ TwoOfFiveReader.prototype._findPattern = function(pattern, offset, isWhite, tryH
         error,
         j,
         sum,
-        normalized,
         epsilon = self.AVG_CODE_ERROR;
 
     isWhite = isWhite || false;
@@ -242,8 +240,7 @@ TwoOfFiveReader.prototype._decode = function() {
     if (!code) {
         return null;
     }
-    if (result.length % 2 !== 0 ||
-            result.length < 6) {
+    if (result.length < 5) {
         return null;
     }
 
