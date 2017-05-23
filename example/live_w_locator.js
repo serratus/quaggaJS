@@ -3,17 +3,17 @@ $(function() {
         capture: true,
         capacity: 20,
         blacklist: [{
-            code: "9577149002", format: "2of5"
+            code: "WIWV8ETQZ1", format: "code_93"
         }, {
-            code: "5776158811", format: "2of5"
+            code: "EH3C-%GU23RK3", format: "code_93"
         }, {
-            code: "0463381455", format: "2of5"
+            code: "O308SIHQOXN5SA/PJ", format: "code_93"
         }, {
-            code: "3261594101", format: "2of5"
+            code: "DG7Q$TV8JQ/EN", format: "code_93"
         }, {
-            code: "6730705801", format: "2of5"
+            code: "VOFD1DB5A.1F6QU", format: "code_93"
         }, {
-            code: "8568166929", format: "2of5"
+            code: "4SO64P4X8 U4YUU1T-", format: "code_93"
         }],
         filter: function(codeResult) {
             // only store results which match this constraint

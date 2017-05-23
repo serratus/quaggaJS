@@ -1,3 +1,5 @@
+import ArrayHelper from '../common/array_helper';
+
 function BarcodeReader(config, supplements) {
     this._row = [];
     this.config = config || {};
@@ -193,6 +195,33 @@ BarcodeReader.prototype._fillCounters = function(offset, end, isWhite) {
         }
     }
     return counters;
+};
+
+BarcodeReader.prototype._toCounters = function(start, counter) {
+    var self = this,
+        numCounters = counter.length,
+        end = self._row.length,
+        isWhite = !self._row[start],
+        i,
+        counterPos = 0;
+
+    ArrayHelper.init(counter, 0);
+
+    for ( i = start; i < end; i++) {
+        if (self._row[i] ^ isWhite) {
+            counter[counterPos]++;
+        } else {
+            counterPos++;
+            if (counterPos === numCounters) {
+                break;
+            } else {
+                counter[counterPos] = 1;
+                isWhite = !isWhite;
+            }
+        }
+    }
+
+    return counter;
 };
 
 Object.defineProperty(BarcodeReader.prototype, "FORMAT", {

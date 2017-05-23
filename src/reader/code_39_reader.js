@@ -20,33 +20,6 @@ var properties = {
 Code39Reader.prototype = Object.create(BarcodeReader.prototype, properties);
 Code39Reader.prototype.constructor = Code39Reader;
 
-Code39Reader.prototype._toCounters = function(start, counter) {
-    var self = this,
-        numCounters = counter.length,
-        end = self._row.length,
-        isWhite = !self._row[start],
-        i,
-        counterPos = 0;
-
-    ArrayHelper.init(counter, 0);
-
-    for ( i = start; i < end; i++) {
-        if (self._row[i] ^ isWhite) {
-            counter[counterPos]++;
-        } else {
-            counterPos++;
-            if (counterPos === numCounters) {
-                break;
-            } else {
-                counter[counterPos] = 1;
-                isWhite = !isWhite;
-            }
-        }
-    }
-
-    return counter;
-};
-
 Code39Reader.prototype._decode = function() {
     var self = this,
         counters = [0, 0, 0, 0, 0, 0, 0, 0, 0],
