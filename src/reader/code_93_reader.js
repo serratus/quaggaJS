@@ -24,33 +24,6 @@ var properties = {
 Code93Reader.prototype = Object.create(BarcodeReader.prototype, properties);
 Code93Reader.prototype.constructor = Code93Reader;
 
-Code93Reader.prototype._toCounters = function(start, counter) {
-    var self = this,
-        numCounters = counter.length,
-        end = self._row.length,
-        isWhite = !self._row[start],
-        i,
-        counterPos = 0;
-
-    ArrayHelper.init(counter, 0);
-
-    for ( i = start; i < end; i++) {
-        if (self._row[i] ^ isWhite) {
-            counter[counterPos]++;
-        } else {
-            counterPos++;
-            if (counterPos === numCounters) {
-                break;
-            } else {
-                counter[counterPos] = 1;
-                isWhite = !isWhite;
-            }
-        }
-    }
-
-    return counter;
-};
-
 Code93Reader.prototype._decode = function() {
     var self = this,
         counters = [0, 0, 0, 0, 0, 0],
@@ -235,7 +208,7 @@ Code93Reader.prototype._decodeExtended = function(charArray) {
             case 'c':
                 if (nextChar >= 'A' && nextChar <= 'O') {
                     decodedChar = String.fromCharCode(nextCharCode - 32);
-                } else if (nextChar == 'Z') {
+                } else if (nextChar === 'Z') {
                     decodedChar = ':';
                 } else {
                     return null;
