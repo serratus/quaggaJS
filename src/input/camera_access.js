@@ -14,7 +14,7 @@ function waitForVideo(video, stream) {
 
         function checkVideo() {
             if (attempts > 0) {
-                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                if (video.videoWidth > 10 && video.videoHeight > 10) {
                     if (ENV.development) {
                         console.log(video.videoWidth + "px x " + video.videoHeight + "px");
                     }

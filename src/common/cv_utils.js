@@ -488,7 +488,7 @@ export function grayAndHalfSampleFromCanvasData(canvasData, size, outArray) {
 
     while (bottomRowIdx < endIdx) {
         for ( i = 0; i < outWidth; i++) {
-            outArray[outImgIdx] = Math.floor((
+            outArray[outImgIdx] = (
                 (0.299 * canvasData[topRowIdx * 4 + 0] +
                  0.587 * canvasData[topRowIdx * 4 + 1] +
                  0.114 * canvasData[topRowIdx * 4 + 2]) +
@@ -500,7 +500,7 @@ export function grayAndHalfSampleFromCanvasData(canvasData, size, outArray) {
                  0.114 * canvasData[(bottomRowIdx) * 4 + 2]) +
                 (0.299 * canvasData[(bottomRowIdx + 1) * 4 + 0] +
                  0.587 * canvasData[(bottomRowIdx + 1) * 4 + 1] +
-                 0.114 * canvasData[(bottomRowIdx + 1) * 4 + 2])) / 4);
+                 0.114 * canvasData[(bottomRowIdx + 1) * 4 + 2])) / 4;
             outImgIdx++;
             topRowIdx = topRowIdx + 2;
             bottomRowIdx = bottomRowIdx + 2;
@@ -521,8 +521,8 @@ export function computeGray(imageData, outArray, config) {
         }
     } else {
         for (i = 0; i < l; i++) {
-            outArray[i] = Math.floor(
-                0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2]);
+            outArray[i] =
+                0.299 * imageData[i * 4 + 0] + 0.587 * imageData[i * 4 + 1] + 0.114 * imageData[i * 4 + 2];
         }
     }
 };
