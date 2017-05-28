@@ -570,7 +570,7 @@ property `numOfWorkers` must be explicitly set to `0`.
 var Quagga = require('quagga').default;
 
 Quagga.decodeSingle({
-    src: "image-abc-123.jpg",
+    src: "image-abc-123.jpg",Using node
     numOfWorkers: 0,  // Needs to be 0 when used within node
     inputStream: {
         size: 800  // restrict input-size to be 800px in width (long-side)
