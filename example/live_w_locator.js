@@ -116,7 +116,7 @@ $(function() {
         },
         setState: function(path, value) {
             if (typeof this._accessByPath(this.inputMapper, path) === "function") {
-                value = this._accessByPath(this.inputMapper, path)(value);
+                value = this._accessByPath(this.inputMapper, path)(value, this.state);
             }
 
             this._accessByPath(this.state, path, value);
@@ -134,24 +134,30 @@ $(function() {
         },
         inputMapper: {
             inputStream: {
-                constraints: function(value){
+                constraints: function(value, state){
                     if (/^(\d+)x(\d+)$/.test(value)) {
                         var values = value.split('x');
                         return {
-                            landscape: {
+                            landscape: Object.assign({}, state.inputStream.constraints.landscape, {
                                 width: {ideal: parseInt(values[0])},
                                 height: {ideal: parseInt(values[1])},
-                                zoom: 1.5,
-                            },
-                            portrait: {
+                            }),
+                            portrait: Object.assign({}, state.inputStream.constraints.portrait, {
                                 width: {ideal: parseInt(values[0])},
                                 height: {ideal: parseInt(values[0])},
-                                zoom: 1.5,
-                                aspectRatio: 1,
-                            },
+                            }),
                             width: {ideal: parseInt(values[0])},
                             height: {ideal: parseInt(values[1])}
                         };
+                    } else if (/^(\d+)\.?(\d+)?$/.test(value)) {
+                        return Object.assign({}, state.inputStream.constraints, {
+                            landscape: Object.assign({}, state.inputStream.constraints.landscape, {
+                                zoom: {ideal: parseFloat(value)},
+                            }),
+                            portrait: Object.assign({}, state.inputStream.constraints.portrait, {
+                                zoom: {ideal: parseFloat(value)},
+                            }),
+                        });
                     }
                     return {
                         deviceId: value
@@ -190,12 +196,10 @@ $(function() {
                     landscape: {
                         width: {ideal: 640},
                         height: {ideal: 480},
-                        zoom: 1.5,
                     },
                     portrait: {
                         width: {ideal: 640},
                         height: {ideal: 640},
-                        zoom: 1.5,
                         aspectRatio: 1,
                     }
                 }
