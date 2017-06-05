@@ -31,11 +31,57 @@ $(function() {
                 }
                 //Quagga.registerResultCollector(resultCollector);
                 App.attachListeners();
+                App.checkCapabilities();
                 Quagga.start();
             });
         },
         handleError: function(err) {
             console.log(err);
+        },
+        checkCapabilities: function() {
+            var track = Quagga.CameraAccess.getActiveTrack();
+            var capabilities = {};
+            if (typeof track.getCapabilities === 'function') {
+                capabilities = track.getCapabilities();
+            }
+            this.applySettingsVisibility('zoom', capabilities.zoom);
+            this.applySettingsVisibility('torch', capabilities.torch);
+        },
+        updateOptionsForMediaRange: function(node, range) {
+            console.log('updateOptionsForMediaRange', node, range);
+            var NUM_STEPS = 6;
+            var stepSize = (range.max - range.min) / NUM_STEPS;
+            var option;
+            var value;
+            while (node.firstChild) {
+                node.removeChild(node.firstChild);
+            }
+            for (var i = 0; i <= NUM_STEPS; i++) {
+                value = range.min + (stepSize * i);
+                option = document.createElement('option');
+                option.value = value;
+                option.innerHTML = value;
+                node.appendChild(option);
+            }
+        },
+        applySettingsVisibility: function(setting, capability) {
+            // depending on type of capability
+            if (typeof capability === 'boolean') {
+                var node = document.querySelector('input[name="settings_' + setting + '"]');
+                if (node) {
+                    node.parentNode.style.display = capability ? 'block' : 'none';
+                }
+                return;
+            }
+            if (window.MediaSettingsRange && capability instanceof window.MediaSettingsRange) {
+                var node = document.querySelector('select[name="settings_' + setting + '"]');
+                if (node) {
+                    this.updateOptionsForMediaRange(node, capability);
+                    node.parentNode.style.display = 'block';
+                }
+                return;
+            }
+            node.parentNode.style.display = 'none';
         },
         initCameraSelection: function(){
             var streamLabel = Quagga.CameraAccess.getActiveStreamLabel();
@@ -116,6 +162,17 @@ $(function() {
             $(".controls").off("click", "button.stop");
             $(".controls .reader-config-group").off("change", "input, select");
         },
+        applySetting: function(setting, value) {
+            var track = Quagga.CameraAccess.getActiveTrack();
+            if (track && typeof track.getCapabilities === 'function') {
+                switch (setting) {
+                case 'zoom':
+                    return track.applyConstraints({advanced: [{zoom: parseFloat(value)}]});
+                case 'torch':
+                    return track.applyConstraints({advanced: [{torch: !!value}]});
+                }
+            }
+        },
         setState: function(path, value) {
             var self = this;
 
@@ -123,6 +180,10 @@ $(function() {
                 value = self._accessByPath(self.inputMapper, path)(value);
             }
 
+            if (path.startsWith('settings.')) {
+                var setting = path.substring(9);
+                return self.applySetting(setting, value);
+            }
             self._accessByPath(self.state, path, value);
 
             console.log(JSON.stringify(self.state));

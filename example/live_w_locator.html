@@ -8,7 +8,7 @@
     <meta name="description" content="" />
     <meta name="author" content="Christoph Oberhofer" />
 
-    <meta name="viewport" content="width=device-width; initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no" />
     <link rel="stylesheet" type="text/css" href="css/styles.css" />
   </head>
 
@@ -49,7 +49,7 @@
                     </select>
                 </label>
                 <label>
-                    <span>Resolution (long side)</span>
+                    <span>Resolution (width)</span>
                     <select name="input-stream_constraints">
                         <option value="320x240">320px</option>
                         <option selected="selected" value="640x480">640px</option>
@@ -87,6 +87,14 @@
                     <span>Camera</span>
                     <select name="input-stream_constraints" id="deviceSelection">
                     </select>
+                </label>
+                <label style="display: none">
+                    <span>Zoom</span>
+                    <select name="settings_zoom"></select>
+                </label>
+                <label style="display: none">
+                    <span>Torch</span>
+                    <input type="checkbox" name="settings_torch" />
                 </label>
             </fieldset>
         </div>
