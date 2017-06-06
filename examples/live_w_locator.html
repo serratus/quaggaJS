@@ -29,6 +29,8 @@ showInMenu: false
                     <option value="upc_e">UPC-E</option>
                     <option value="codabar">Codabar</option>
                     <option value="i2of5">I2of5</option>
+                    <option value="2of5">Standard 2 of 5</option>
+                    <option value="code_93">Code 93</option>
                 </select>
             </label>
             <label>
@@ -71,6 +73,14 @@ showInMenu: false
                 <select name="input-stream_constraints" id="deviceSelection">
                 </select>
             </label>
+            <label style="display: none">
+                <span>Zoom</span>
+                <select name="settings_zoom"></select>
+            </label>
+            <label style="display: none">
+                <span>Torch</span>
+                <input type="checkbox" name="settings_torch" />
+            </label>
         </fieldset>
     </div>
     <div id="result_strip">
@@ -80,5 +90,6 @@ showInMenu: false
 </section>
 
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//webrtc.github.io/adapter/adapter-latest.js" type="text/javascript"></script>
 <script src="js/quagga.min.js" type="text/javascript"></script>
 <script src="live_w_locator.js" type="text/javascript"></script>

@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2017-01-08)
+- [Changelog](#changelog) (2017-06-06)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
@@ -18,11 +18,11 @@ quaggaJS
 
 QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-
 time localization and decoding of various types of barcodes such as __EAN__,
-__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__, __I2of5__ and
-__CODABAR__. The library is also capable of using `getUserMedia` to get direct
-access to the user's camera stream. Although the code relies on heavy image-
-processing even recent smartphones are capable of locating and decoding
-barcodes in real-time.
+__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__, __I2of5__,
+__2of5__, __CODE 93__ and __CODABAR__. The library is also capable of using
+`getUserMedia` to get direct access to the user's camera stream. Although the
+code relies on heavy image-processing even recent smartphones are capable of
+locating and decoding barcodes in real-time.
 
 Try some [examples](https://serratus.github.io/quaggaJS/examples) and check out
 the blog post ([How barcode-localization works in QuaggaJS][oberhofer_co_how])
@@ -420,6 +420,8 @@ barcodes which should be decoded during the session. Possible values are:
 - upc_reader
 - upc_e_reader
 - i2of5_reader
+- 2of5_reader
+- code_93_reader
 
 Why are not all types activated by default? Simply because one should
 explicitly define the set of barcodes for their use-case. More decoders means
@@ -641,6 +643,19 @@ calling ``decodeSingle`` with the same configuration as used during recording
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
 ## <a name="changelog">Changelog</a>
+
+### 2017-06-06
+- Features
+  - Support for Standard 2of5 barcodes (See
+      [\#194](https://github.com/serratus/quaggaJS/issues/194))
+  - Support for Code 93 barcodes (See
+      [\#194](https://github.com/serratus/quaggaJS/issues/195))
+  - Exposing `Quagga.CameraAccess.getActiveTrack()` to get access to the
+      currently used `MediaStreamTrack`
+    - Example can be viewed here: [example/live_w_locator.js](https://github.com/serratus/quaggaJS/blob/master/example/live_w_locator.js) and a [demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+
+Take a look at the release-notes (
+    [0.12.0](https://github.com/serratus/quaggaJS/releases/tag/v0.12.0))
 
 ### 2017-01-08
 - Improvements

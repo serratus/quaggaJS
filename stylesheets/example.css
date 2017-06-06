@@ -104,6 +104,8 @@ canvas.drawing, canvas.drawingBuffer {
 /* line 16, ../sass/_viewport.scss */
 .controls fieldset {
   border: none;
+  margin: 0;
+  padding: 0;
 }
 /* line 19, ../sass/_viewport.scss */
 .controls .input-group {
@@ -123,7 +125,7 @@ canvas.drawing, canvas.drawingBuffer {
 }
 /* line 30, ../sass/_viewport.scss */
 .controls .reader-config-group label span {
-  width: 11rem;
+  width: 9rem;
   display: inline-block;
   text-align: right;
 }
@@ -196,6 +198,18 @@ canvas.drawing, canvas.drawingBuffer {
 }
 @media (max-width: 603px) {
   /* line 5, ../sass/phone/_viewport.scss */
+  .reader-config-group {
+    width: 100%;
+  }
+
+  .reader-config-group label > span {
+      width: 50%;
+  }
+
+  .reader-config-group label > select, .reader-config-group label > input {
+      max-width: calc(50% - 2px);
+  }
+
   #interactive.viewport {
     width: 100%;
     height: auto;
