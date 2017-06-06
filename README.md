@@ -7,6 +7,8 @@ quaggaJS
 - [Getting Started](#gettingstarted)
 - [API](#api)
 - [Configuration](#configobject)
+- [Tips & Tricks](#tipsandtricks)
+- [Sponsors](#sponsors)
 
 ## What is QuaggaJS?
 
@@ -589,6 +591,36 @@ Quagga.decodeSingle({
 });
 ```
 
+## <a name="tipsandtricks">Tips & Tricks</a>
+
+A growing collection of tips & tricks to improve the various aspects of Quagga.
+
+### Barcodes too small?
+
+Barcodes too far away from the camera, or a lens too close to the object
+result in poor recognition rates and Quagga might respond with a lot of
+false-positives.
+
+Starting in Chrome 59 you can now make use of `capabilities` and directly
+control the zoom of the camera. Head over to the
+[web-cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+and check out the __Zoom__ feature.
+
+You can read more about those `capabilities` in
+[Let's light a torch and explore MediaStreamTrack's capabilities](https://www.oberhofer.co/mediastreamtrack-and-its-capabilities)
+
+### Video too dark?
+
+Dark environments usually result in noisy images and therefore mess with the
+recognition logic.
+
+Since Chrome 59 you can turn on/off the __Torch__ of our device and vastly
+improve the quality of the images. Head over to the
+[web-cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+and check out the __Torch__ feature.
+
+To find out more about this feature [read on](https://www.oberhofer.co/mediastreamtrack-and-its-capabilities).
+
 ## Tests
 
 Unit Tests can be run with [Karma][karmaUrl] and written using
@@ -664,6 +696,10 @@ Now, having the frames available on disk, you can load each single image by
 calling ``decodeSingle`` with the same configuration as used during recording
 . In order to reproduce the exact same result, you have to make sure to turn
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
+
+## <a name="sponsors">Sponsors</a>
+
+- [Maintenance Connection Canada (Asset Pro Solutions Inc.](http://maintenanceconnection.ca/)
 
 ## <a name="changelog">Changelog</a>
 
