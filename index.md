@@ -7,7 +7,7 @@ showInMenu: true
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2017-06-06)
+- [Changelog](#changelog) (2017-06-07)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
@@ -679,6 +679,13 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 - [Maintenance Connection Canada (Asset Pro Solutions Inc.](http://maintenanceconnection.ca/)
 
 ## <a name="changelog">Changelog</a>
+
+### 2017-06-07
+- Improvements
+  - added `muted` and `playsinline` to `<video/>` to make it work for Safari 11
+  Beta (even iOS)
+- Fixes
+  - Fixed  [example/live_w_locator.js](https://github.com/serratus/quaggaJS/blob/master/example/live_w_locator.js)
 
 ### 2017-06-06
 - Features
