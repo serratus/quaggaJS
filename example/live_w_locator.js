@@ -81,7 +81,6 @@ $(function() {
                 }
                 return;
             }
-            node.parentNode.style.display = 'none';
         },
         initCameraSelection: function(){
             var streamLabel = Quagga.CameraAccess.getActiveStreamLabel();
