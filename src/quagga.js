@@ -147,11 +147,15 @@ function initBuffers(imageWrapper) {
     if (ENV.development) {
         console.log(_inputImageWrapper.size);
     }
+    var topRight = _inputStream.getTopRight(),
+        xOffset = topRight.x,
+        yOffset = topRight.y;
+
     _boxSize = [
-        vec2.clone([0, 0]),
-        vec2.clone([0, _inputImageWrapper.size.y]),
-        vec2.clone([_inputImageWrapper.size.x, _inputImageWrapper.size.y]),
-        vec2.clone([_inputImageWrapper.size.x, 0])
+        vec2.clone([xOffset, yOffset]),
+        vec2.clone([xOffset, _inputImageWrapper.size.y + yOffset]),
+        vec2.clone([_inputImageWrapper.size.x + xOffset, _inputImageWrapper.size.y + yOffset]),
+        vec2.clone([_inputImageWrapper.size.x + xOffset, yOffset])
     ];
     BarcodeLocator.init(_inputImageWrapper, _config.locator);
 }
