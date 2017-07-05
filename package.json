@@ -4,6 +4,7 @@
   "description": "An advanced barcode-scanner written in JavaScript",
   "main": "lib/quagga.js",
   "browser": "dist/quagga.min.js",
+  "types": "type-definitions/quagga.d.ts",
   "devDependencies": {
     "async": "^1.4.2",
     "babel-cli": "^6.5.1",
