@@ -42,7 +42,9 @@ function initCamera(video, constraints) {
     .then((stream) => {
         return new Promise((resolve) => {
             streamRef = stream;
-            video.setAttribute("autoplay", 'true');
+            video.setAttribute("autoplay", true);
+            video.setAttribute('muted', true);
+            video.setAttribute('playsinline', true);
             video.srcObject = stream;
             video.addEventListener('loadedmetadata', () => {
                 video.play();
@@ -87,6 +89,15 @@ function enumerateVideoDevices() {
     .then(devices => devices.filter(device => device.kind === 'videoinput'));
 }
 
+function getActiveTrack() {
+    if (streamRef) {
+        const tracks = streamRef.getVideoTracks();
+        if (tracks && tracks.length) {
+            return tracks[0];
+        }
+    }
+}
+
 export default {
     request: function(video, videoConstraints) {
         return pickConstraints(videoConstraints)
@@ -101,11 +112,8 @@ export default {
     },
     enumerateVideoDevices,
     getActiveStreamLabel: function() {
-        if (streamRef) {
-            const tracks = streamRef.getVideoTracks();
-            if (tracks && tracks.length) {
-                return tracks[0].label;
-            }
-        }
-    }
+        const track = getActiveTrack();
+        return track ? track.label : '';
+    },
+    getActiveTrack
 };

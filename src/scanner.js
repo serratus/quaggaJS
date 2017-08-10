@@ -212,11 +212,19 @@ function createScanner(pixelCapturer) {
     }
 
     function calculateClipping(canvasSize) {
-        const area = _config.detector.area;
-        const patchSize = _config.locator.patchSize || "medium";
-        const halfSample = _config.locator.halfSample || true;
+        if (_config.detector && _config.detector.area) {
+            const area = _config.detector.area;
+            const patchSize = _config.locator.patchSize || "medium";
+            const halfSample = _config.locator.halfSample || true;
 
-        return _checkImageConstraints({area, patchSize, canvasSize, halfSample});
+            return _checkImageConstraints({area, patchSize, canvasSize, halfSample});
+        }
+        return {
+            x: 0,
+            y: 0,
+            width: canvasSize.width,
+            height: canvasSize.height,
+        };
     }
 
     function update() {

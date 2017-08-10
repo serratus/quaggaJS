@@ -3475,7 +3475,9 @@ function initCamera(video, constraints) {
     return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_mediaDevices__["a" /* getUserMedia */])(constraints).then(function (stream) {
         return new Promise(function (resolve) {
             streamRef = stream;
-            video.setAttribute("autoplay", 'true');
+            video.setAttribute("autoplay", true);
+            video.setAttribute('muted', true);
+            video.setAttribute('playsinline', true);
             video.srcObject = stream;
             video.addEventListener('loadedmetadata', function () {
                 video.play();
@@ -3519,6 +3521,15 @@ function enumerateVideoDevices() {
     });
 }
 
+function getActiveTrack() {
+    if (streamRef) {
+        var tracks = streamRef.getVideoTracks();
+        if (tracks && tracks.length) {
+            return tracks[0];
+        }
+    }
+}
+
 /* harmony default export */ __webpack_exports__["a"] = {
     request: function request(video, videoConstraints) {
         return pickConstraints(videoConstraints).then(initCamera.bind(null, video));
@@ -3532,13 +3543,10 @@ function enumerateVideoDevices() {
     },
     enumerateVideoDevices: enumerateVideoDevices,
     getActiveStreamLabel: function getActiveStreamLabel() {
-        if (streamRef) {
-            var tracks = streamRef.getVideoTracks();
-            if (tracks && tracks.length) {
-                return tracks[0].label;
-            }
-        }
-    }
+        var track = getActiveTrack();
+        return track ? track.label : '';
+    },
+    getActiveTrack: getActiveTrack
 };
 
 /***/ }),
@@ -9756,11 +9764,19 @@ function createScanner(pixelCapturer) {
     }
 
     function calculateClipping(canvasSize) {
-        var area = _config.detector.area;
-        var patchSize = _config.locator.patchSize || "medium";
-        var halfSample = _config.locator.halfSample || true;
+        if (_config.detector && _config.detector.area) {
+            var area = _config.detector.area;
+            var patchSize = _config.locator.patchSize || "medium";
+            var halfSample = _config.locator.halfSample || true;
 
-        return _checkImageConstraints({ area: area, patchSize: patchSize, canvasSize: canvasSize, halfSample: halfSample });
+            return _checkImageConstraints({ area: area, patchSize: patchSize, canvasSize: canvasSize, halfSample: halfSample });
+        }
+        return {
+            x: 0,
+            y: 0,
+            width: canvasSize.width,
+            height: canvasSize.height
+        };
     }
 
     function update() {

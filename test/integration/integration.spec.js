@@ -22,7 +22,7 @@ describe('decodeSingle', function () {
         };
     }
 
-    this.timeout(10000);
+    this.timeout(5000);
 
     function _runTestSet(testSet, config) {
         var readers = config.decoder.readers.slice(),
@@ -43,18 +43,32 @@ describe('decodeSingle', function () {
 
         it('should decode ' + folder + " correctly", function(done) {
             async.eachSeries(testSet, function (sample, callback) {
-                config.src = folder + sample.name;
-                config.readers = readers;
                 Quagga
-                    .config(config)
-                    .fromSource(config.src)
-                    .addEventListener('processed', function(result){
-                        console.log(sample.name);
-                        expect(result.codeResult.code).to.equal(sample.result);
-                        expect(result.codeResult.format).to.equal(sample.format);
-                        callback();
+                    .fromImage({
+                        constraints: {
+                            src: folder + sample.name,
+                            width: config.inputStream.size,
+                            height: config.inputStream.size,
+                        },
+                        locator: config.locator,
+                        decoder: {
+                            readers: readers,
+                        },
+                        numOfWorkers: config.numOfWorkers,
                     })
-                    .start();
+                    .then(scanner => {
+                        console.log('Scanner created', scanner);
+                        scanner.detect()
+                        .then((result) => {
+                            console.log(sample.name);
+                            expect(result.codeResult.code).to.equal(sample.result);
+                            expect(result.codeResult.format).to.equal(sample.format);
+                        })
+                        .catch(err => {
+                            console.log(sample.name, err);
+                        })
+                        .then(callback);
+                    });
             }, function() {
                 done();
             });
