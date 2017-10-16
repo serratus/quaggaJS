@@ -89,7 +89,13 @@ The above condition evaluates to:
 | Chrome        | `true`  |
 | Firefox       | `true`  |
 | IE 11         | `false` |
-| Safari iOS    | `false` |
+| Safari iOS    | `true`  |
+| iOS WebView   | `false` |
+
+While `getUserMedia` is supported in Safari on iOS, it is disabled in any WebView
+(including UIWebView, WKWebView, and SFSafariViewController), as well as if the
+website has a `<meta name="apple-mobile-web-app-capable" content="yes">` tag and
+has been added to the homescreen. [More info here](https://stackoverflow.com/questions/46276130/ios11-getusermedia-with-apple-web-app-not-working/46717491?noredirect=1#comment80428262_46717491)
 
 ## <a name="installing">Installing</a>
 
