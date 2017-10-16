@@ -89,7 +89,7 @@ The above condition evaluates to:
 | Chrome        | `true`  |
 | Firefox       | `true`  |
 | IE 11         | `false` |
-| Safari iOS    | `true`  |
+| Safari iOS 11+| `true`  |
 | iOS WebView   | `false` |
 
 While `getUserMedia` is supported in Safari on iOS, it is disabled in any WebView
