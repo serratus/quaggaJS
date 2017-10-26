@@ -321,6 +321,8 @@ interface QuaggaJSConfigObject {
          * @default "LiveStream"
          */
         type?: string;
+		
+		target?: HTMLElement,
 
         constraints?: QuaggaJSConstraints;
 
