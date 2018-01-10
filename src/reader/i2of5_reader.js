@@ -38,7 +38,7 @@ var N = 1,
             [N, W, N, W, N]
         ]},
         SINGLE_CODE_ERROR: {value: 0.78, writable: true},
-        AVG_CODE_ERROR: {value: 0.38, writable: true},
+        AVG_CODE_ERROR: {value: 0.25, writable: true},
         MAX_CORRECTION_FACTOR: {value: 5},
         FORMAT: {value: "i2of5"}
     };
