@@ -23,7 +23,7 @@ function waitForVideo(video) {
                     window.setTimeout(checkVideo, 500);
                 }
             } else {
-                reject('Unable to play video stream. Is webcam working?');
+                reject(new Error('Unable to play video stream. Is webcam working?'));
             }
             attempts--;
         }
