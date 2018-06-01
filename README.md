@@ -1,6 +1,8 @@
 quaggaJS
 ========
 
+[![Join the chat at https://gitter.im/quaggaJS/Lobby](https://badges.gitter.im/quaggaJS/Lobby.svg)](https://gitter.im/quaggaJS/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 - [Changelog](#changelog) (2017-06-07)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
