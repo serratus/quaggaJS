@@ -28,7 +28,6 @@
     "grunt-requirejs": "^0.4.2",
     "karma": "latest",
     "karma-chai": "latest",
-    "karma-chrome-launcher": "^0.1.12",
     "karma-coverage": "^0.3.1",
     "karma-mocha": "latest",
     "karma-phantomjs-launcher": "^0.1.4",
