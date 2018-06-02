@@ -45,8 +45,10 @@ describe('decodeSingle', function () {
             async.eachSeries(testSet, function (sample, callback) {
                 config.src = folder + sample.name;
                 config.readers = readers;
+                console.log(sample.name);
                 Quagga.decodeSingle(config, function(result) {
-                    console.log(sample.name);
+                    expect(result).to.be.an('Object');
+                    expect(result.codeResult).to.be.an('Object');
                     expect(result.codeResult.code).to.equal(sample.result);
                     expect(result.codeResult.format).to.equal(sample.format);
                     callback();
