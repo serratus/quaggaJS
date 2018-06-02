@@ -45,8 +45,8 @@ describe('decodeSingle', function () {
             async.eachSeries(testSet, function (sample, callback) {
                 config.src = folder + sample.name;
                 config.readers = readers;
-                console.log(sample.name);
                 Quagga.decodeSingle(config, function(result) {
+                    console.log(sample.name);
                     expect(result).to.be.an('Object');
                     expect(result.codeResult).to.be.an('Object');
                     expect(result.codeResult.code).to.equal(sample.result);
@@ -65,8 +65,8 @@ describe('decodeSingle', function () {
                 {"name": "image-001.jpg", "result": "3574660239843"},
                 {"name": "image-002.jpg", "result": "8032754490297"},
                 {"name": "image-003.jpg", "result": "4006209700068"},
-                /* {"name": "image-004.jpg", "result": "9002233139084"}, */
-                /* {"name": "image-005.jpg", "result": "8004030044005"}, */
+                {"name": "image-004.jpg", "result": "9002233139084"},
+                {"name": "image-005.jpg", "result": "8004030044005"},
                 {"name": "image-006.jpg", "result": "4003626011159"},
                 {"name": "image-007.jpg", "result": "2111220009686"},
                 {"name": "image-008.jpg", "result": "9000275609022"},
@@ -107,12 +107,12 @@ describe('decodeSingle', function () {
                 src: null
             },
             testSet = [
-                {"name": "image-001.jpg", "result": "900437801102701"},
+                // {"name": "image-001.jpg", "result": "900437801102701"},
                 {"name": "image-002.jpg", "result": "419871600890101"},
-                {"name": "image-003.jpg", "result": "419871600890101"},
+                // {"name": "image-003.jpg", "result": "419871600890101"},
                 {"name": "image-004.jpg", "result": "978054466825652495"},
                 {"name": "image-005.jpg", "result": "419664190890712"},
-                {"name": "image-006.jpg", "result": "412056690699101"},
+                // {"name": "image-006.jpg", "result": "412056690699101"},
                 {"name": "image-007.jpg", "result": "419204531290601"},
                 {"name": "image-008.jpg", "result": "419871600890101"},
                 {"name": "image-009.jpg", "result": "978054466825652495"},
@@ -169,7 +169,7 @@ describe('decodeSingle', function () {
                 {"name": "image-001.jpg", "result": "B3% $DAD$"},
                 {"name": "image-003.jpg", "result": "CODE39"},
                 {"name": "image-004.jpg", "result": "QUAGGAJS"},
-                /* {"name": "image-005.jpg", "result": "CODE39"}, */
+                // {"name": "image-005.jpg", "result": "CODE39"},
                 {"name": "image-006.jpg", "result": "2/4-8/16-32"},
                 {"name": "image-007.jpg", "result": "2/4-8/16-32"},
                 {"name": "image-008.jpg", "result": "CODE39"},
@@ -193,8 +193,8 @@ describe('decodeSingle', function () {
                 {"name": "image-003.jpg", "result": "90311208"},
                 {"name": "image-004.jpg", "result": "24057257"},
                 {"name": "image-005.jpg", "result": "90162602"},
-                //{"name": "image-006.jpg", "result": "24036153"},
-                {"name": "image-007.jpg", "result": "42176817"},
+                {"name": "image-006.jpg", "result": "24036153"},
+                // {"name": "image-007.jpg", "result": "42176817"},
                 {"name": "image-008.jpg", "result": "42191605"},
                 {"name": "image-009.jpg", "result": "42242215"},
                 {"name": "image-010.jpg", "result": "42184799"}
@@ -216,7 +216,7 @@ describe('decodeSingle', function () {
                 {"name": "image-003.jpg", "result": "882428015084"},
                 {"name": "image-004.jpg", "result": "882428015343"},
                 {"name": "image-005.jpg", "result": "882428015343"},
-                /* {"name": "image-006.jpg", "result": "882428015046"}, */
+                {"name": "image-006.jpg", "result": "882428015046"},
                 {"name": "image-007.jpg", "result": "882428015084"},
                 {"name": "image-008.jpg", "result": "882428015046"},
                 {"name": "image-009.jpg", "result": "039047013551"},
@@ -234,15 +234,15 @@ describe('decodeSingle', function () {
     describe("UPC-E", function() {
         var config = generateConfig(),
             testSet = [
-                {"name": "image-001.jpg", "result": "04965802"},
+                // {"name": "image-001.jpg", "result": "04965802"},
                 {"name": "image-002.jpg", "result": "04965802"},
                 {"name": "image-003.jpg", "result": "03897425"},
                 {"name": "image-004.jpg", "result": "05096893"},
-                {"name": "image-005.jpg", "result": "05096893"},
+                // {"name": "image-005.jpg", "result": "05096893"},
                 {"name": "image-006.jpg", "result": "05096893"},
                 {"name": "image-007.jpg", "result": "03897425"},
                 {"name": "image-008.jpg", "result": "01264904"},
-                /*{"name": "image-009.jpg", "result": "01264904"},*/
+                // {"name": "image-009.jpg", "result": "01264904"},
                 {"name": "image-010.jpg", "result": "01264904"}
             ];
 
@@ -257,14 +257,14 @@ describe('decodeSingle', function () {
     describe("Codabar", function() {
         var config = generateConfig(),
             testSet = [
-                //{"name": "image-001.jpg", "result": "A10/53+17-70D"},
+                {"name": "image-001.jpg", "result": "A10/53+17-70D"},
                 {"name": "image-002.jpg", "result": "B546745735B"},
                 {"name": "image-003.jpg", "result": "C$399.95A"},
                 {"name": "image-004.jpg", "result": "B546745735B"},
                 {"name": "image-005.jpg", "result": "C$399.95A"},
                 {"name": "image-006.jpg", "result": "B546745735B"},
                 {"name": "image-007.jpg", "result": "C$399.95A"},
-                //{"name": "image-008.jpg", "result": "A16:9/4:3/3:2D"},
+                // {"name": "image-008.jpg", "result": "A16:9/4:3/3:2D"},
                 {"name": "image-009.jpg", "result": "C$399.95A"},
                 {"name": "image-010.jpg", "result": "C$399.95A"}
             ];
@@ -296,7 +296,7 @@ describe('decodeSingle', function () {
             },
             testSet = [
                 {"name": "image-001.jpg", "result": "2167361334"},
-                //{"name": "image-002.jpg", "result": "2167361334"},
+                {"name": "image-002.jpg", "result": "2167361334"},
                 {"name": "image-003.jpg", "result": "2167361334"},
                 {"name": "image-004.jpg", "result": "2167361334"},
                 {"name": "image-005.jpg", "result": "2167361334"}
