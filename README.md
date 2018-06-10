@@ -1,22 +1,26 @@
 quaggaJS
 ========
 
-- [Changelog](#changelog) (2017-01-08)
+[![Join the chat at https://gitter.im/quaggaJS/Lobby](https://badges.gitter.im/quaggaJS/Lobby.svg)](https://gitter.im/quaggaJS/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+- [Changelog](#changelog) (2017-06-07)
 - [Browser Support](#browser-support)
 - [Installing](#installing)
 - [Getting Started](#gettingstarted)
 - [API](#api)
 - [Configuration](#configobject)
+- [Tips & Tricks](#tipsandtricks)
+- [Sponsors](#sponsors)
 
 ## What is QuaggaJS?
 
 QuaggaJS is a barcode-scanner entirely written in JavaScript supporting real-
 time localization and decoding of various types of barcodes such as __EAN__,
-__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__, __I2of5__ and
-__CODABAR__. The library is also capable of using `getUserMedia` to get direct
-access to the user's camera stream. Although the code relies on heavy image-
-processing even recent smartphones are capable of locating and decoding
-barcodes in real-time.
+__CODE 128__, __CODE 39__, __EAN 8__, __UPC-A__, __UPC-C__, __I2of5__,
+__2of5__, __CODE 93__ and __CODABAR__. The library is also capable of using
+`getUserMedia` to get direct access to the user's camera stream. Although the
+code relies on heavy image-processing even recent smartphones are capable of
+locating and decoding barcodes in real-time.
 
 Try some [examples](https://serratus.github.io/quaggaJS/examples) and check out
 the blog post ([How barcode-localization works in QuaggaJS][oberhofer_co_how])
@@ -443,6 +447,8 @@ barcodes which should be decoded during the session. Possible values are:
 - upc_reader
 - upc_e_reader
 - i2of5_reader
+- 2of5_reader
+- code_93_reader
 
 Why are not all types activated by default? Simply because one should
 explicitly define the set of barcodes for their use-case. More decoders means
@@ -567,7 +573,7 @@ that node does not support web-workers out of the box. Therefore the config
 property `numOfWorkers` must be explicitly set to `0`.
 
 ```javascript
-var Quagga = require('quagga');
+var Quagga = require('quagga').default;
 
 Quagga.decodeSingle({
     src: "image-abc-123.jpg",
@@ -586,6 +592,36 @@ Quagga.decodeSingle({
     }
 });
 ```
+
+## <a name="tipsandtricks">Tips & Tricks</a>
+
+A growing collection of tips & tricks to improve the various aspects of Quagga.
+
+### Barcodes too small?
+
+Barcodes too far away from the camera, or a lens too close to the object
+result in poor recognition rates and Quagga might respond with a lot of
+false-positives.
+
+Starting in Chrome 59 you can now make use of `capabilities` and directly
+control the zoom of the camera. Head over to the
+[web-cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+and check out the __Zoom__ feature.
+
+You can read more about those `capabilities` in
+[Let's light a torch and explore MediaStreamTrack's capabilities](https://www.oberhofer.co/mediastreamtrack-and-its-capabilities)
+
+### Video too dark?
+
+Dark environments usually result in noisy images and therefore mess with the
+recognition logic.
+
+Since Chrome 59 you can turn on/off the __Torch__ of our device and vastly
+improve the quality of the images. Head over to the
+[web-cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+and check out the __Torch__ feature.
+
+To find out more about this feature [read on](https://www.oberhofer.co/mediastreamtrack-and-its-capabilities).
 
 ## Tests
 
@@ -663,7 +699,31 @@ calling ``decodeSingle`` with the same configuration as used during recording
 . In order to reproduce the exact same result, you have to make sure to turn
 on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 
+## <a name="sponsors">Sponsors</a>
+
+- [Maintenance Connection Canada (Asset Pro Solutions Inc.](http://maintenanceconnection.ca/)
+
 ## <a name="changelog">Changelog</a>
+
+### 2017-06-07
+- Improvements
+  - added `muted` and `playsinline` to `<video/>` to make it work for Safari 11
+  Beta (even iOS)
+- Fixes
+  - Fixed  [example/live_w_locator.js](https://github.com/serratus/quaggaJS/blob/master/example/live_w_locator.js)
+
+### 2017-06-06
+- Features
+  - Support for Standard 2of5 barcodes (See
+      [\#194](https://github.com/serratus/quaggaJS/issues/194))
+  - Support for Code 93 barcodes (See
+      [\#194](https://github.com/serratus/quaggaJS/issues/195))
+  - Exposing `Quagga.CameraAccess.getActiveTrack()` to get access to the
+      currently used `MediaStreamTrack`
+    - Example can be viewed here: [example/live_w_locator.js](https://github.com/serratus/quaggaJS/blob/master/example/live_w_locator.js) and a [demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+
+Take a look at the release-notes (
+    [0.12.0](https://github.com/serratus/quaggaJS/releases/tag/v0.12.0))
 
 ### 2017-01-08
 - Improvements
