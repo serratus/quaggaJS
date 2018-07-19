@@ -2,7 +2,7 @@ export default {
     drawRect: function(pos, size, ctx, style){
         ctx.strokeStyle = style.color;
         ctx.fillStyle = style.color;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = style.lineWidth || 1;
         ctx.beginPath();
         ctx.strokeRect(pos.x, pos.y, size.x, size.y);
     },
