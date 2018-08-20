@@ -1,6 +1,6 @@
-// Type definitions for QuaggaJS v2015.05.20 Project:
-// http://serratus.github.io/quaggaJS/ Definitions by: Cam Birch, Peter
-// Horwood aka Madman Pierre
+// Type definitions for QuaggaJS v0.12.1 (2017-10-19)
+// Project: http://serratus.github.io/quaggaJS/
+// Definitions by: Cam Birch, Peter Horwood aka Madman Pierre, Dan Manastireanu <https://github.com/danmana>
 
 declare var Quagga: QuaggaJSStatic;
 export default Quagga;
@@ -72,7 +72,7 @@ interface QuaggaJSStatic {
 
     ResultCollector: QuaggaJSResultCollector;
     registerResultCollector(resultCollector: QuaggaJSResultCollector): void;
-    setReaders(readers: any): void;
+    setReaders(readers: (QuaggaJSReaderConfig | string)[]): void;
 
     /**
      * In contrast to the calls described
@@ -108,6 +108,24 @@ interface QuaggaJSStatic {
             overlay: HTMLCanvasElement
         }
     };
+
+    CameraAccess: QuaggaJSCameraAccess;
+}
+
+
+/**
+ * Used for accessing information about the active stream track and available video devices.
+ */
+interface QuaggaJSCameraAccess {
+    request(video: HTMLVideoElement, videoConstraints: QuaggaJSConstraints): Promise<void>;
+
+    release(): void;
+
+    enumerateVideoDevices(): Promise<MediaDeviceInfo[]>;
+
+    getActiveStreamLabel(): string;
+
+    getActiveTrack(): MediaStreamTrack;
 }
 
 /**
@@ -291,7 +309,9 @@ interface QuaggaJSConfigObject {
      * Ex: '/test/fixtures/code_128/image-001.jpg'
      * or: 'data:image/jpg;base64,' + data
      */
-    src?: string; inputStream?: {
+    src?: string;
+
+    inputStream?: {
         /**
          * @default "Live"
          */
@@ -301,33 +321,10 @@ interface QuaggaJSConfigObject {
          * @default "LiveStream"
          */
         type?: string;
+		
+		target?: HTMLElement,
 
-        constraints?: {
-            /**
-             * @default 640
-             */
-            width?: number;
-
-            /**
-             * @default 480
-             */
-            height?: number;
-
-            /**
-             * In cases where height/width does not suffice
-             */
-            aspectRatio?: number
-
-            /**
-             * @default "environment"
-             */
-            facingMode?: string;
-
-            /**
-             * Explicitly set the camera to the user's choice
-             */
-            deviceId?: string
-        };
+        constraints?: QuaggaJSConstraints;
 
         /**
          * defines rectangle of the detection/localization area. Useful when you
@@ -380,11 +377,19 @@ interface QuaggaJSConfigObject {
      */
     numOfWorkers?: number;
 
+    /**
+     * This top-level property controls the scan-frequency of the video-stream.
+     * It’s optional and defines the maximum number of scans per second.
+     * This renders useful for cases where the scan-session is long-running and
+     * resources such as CPU power are of concern.
+     */
+    frequency?: number;
+
     decoder?: {
         /**
          * @default [ "code_128_reader" ]
          */
-        readers?: string[];
+        readers?: (QuaggaJSReaderConfig | string)[];
 
         debug?: {
             /**
@@ -406,7 +411,15 @@ interface QuaggaJSConfigObject {
              * @default false
              */
             showPattern?: boolean;
-        }
+        };
+
+        /**
+         * The multiple property tells the decoder if it should continue decoding after finding a valid barcode.
+         * If multiple is set to true, the results will be returned as an array of result objects.
+         * Each object in the array will have a box, and may have a codeResult
+         * depending on the success of decoding the individual box.
+         */
+        multiple?: boolean;
     };
 
     locator?: {
@@ -475,4 +488,41 @@ interface QuaggaJSConfigObject {
             };
         }
     };
+}
+
+interface QuaggaJSConstraints {
+    /**
+     * @default 640
+     */
+    width?: number;
+
+    /**
+     * @default 480
+     */
+    height?: number;
+
+    /**
+     * In cases where height/width does not suffice
+     */
+    aspectRatio?: number
+
+    /**
+     * @default "environment"
+     */
+    facingMode?: string;
+
+    /**
+     * Explicitly set the camera to the user's choice
+     */
+    deviceId?: string
+}
+
+/**
+ * Used for extending a reader with supplements (ex: EAN-2, EAN-5)
+ */
+interface QuaggaJSReaderConfig {
+    format: string;
+    config: {
+        supplements: string[];
+    }
 }
