@@ -2,8 +2,10 @@
 // Project: http://serratus.github.io/quaggaJS/
 // Definitions by: Cam Birch, Peter Horwood aka Madman Pierre, Dan Manastireanu <https://github.com/danmana>
 
-declare var Quagga: QuaggaJSStatic;
-export default Quagga;
+declare module "quagga" {
+    var Quagga: QuaggaJSStatic;
+    export default Quagga;
+}
 
 interface QuaggaJSStatic {
     /**
@@ -235,7 +237,7 @@ interface QuaggaJSResultCollector {
     /*
      * a static function that returns you a ResultCollector
      */
-    create?(QuaggaJSResultCollector): QuaggaJSResultCollector;
+    create?(param: QuaggaJSResultCollector): QuaggaJSResultCollector;
 
     getResults?(): QuaggaJSCodeResult[];
 }
