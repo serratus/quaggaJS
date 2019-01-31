@@ -26,8 +26,6 @@ module.exports = function(config) {
             },
             resolve: {
                 modules: [
-                    path.resolve('./src/input/'),
-                    path.resolve('./src/common/'),
                     'node_modules'
                 ]
             },

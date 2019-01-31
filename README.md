@@ -623,6 +623,14 @@ and check out the __Torch__ feature.
 
 To find out more about this feature [read on](https://www.oberhofer.co/mediastreamtrack-and-its-capabilities).
 
+### Build too big?
+
+When use `webpack` in you project you can parse yourself this library.
+Use import like that : 
+```
+import Quagga from 'quagga/src/quagga';
+```
+
 ## Tests
 
 Unit Tests can be run with [Karma][karmaUrl] and written using
