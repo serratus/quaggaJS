@@ -91,7 +91,7 @@ The above condition evaluates to:
 | Chrome        | `true`  |
 | Firefox       | `true`  |
 | IE 11         | `false` |
-| Safari iOS    | `false` |
+| Safari iOS    | `true` |
 
 ## <a name="installing">Installing</a>
 
