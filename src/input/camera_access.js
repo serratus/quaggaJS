@@ -1,10 +1,5 @@
-import {omit, pick} from 'lodash';
-import {getUserMedia, enumerateDevices} from 'mediaDevices';
-
-const facingMatching = {
-    "user": /front/i,
-    "environment": /back/i
-};
+import {pick} from 'lodash';
+import {getUserMedia, enumerateDevices} from '../common/mediaDevices';
 
 var streamRef;
 

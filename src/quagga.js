@@ -7,8 +7,8 @@ import CameraAccess from './input/camera_access';
 import ImageDebug from './common/image_debug';
 import ResultCollector from './analytics/result_collector';
 import Config from './config/config';
-import InputStream from 'input_stream';
-import FrameGrabber from 'frame_grabber';
+import InputStream from './input/input_stream';
+import FrameGrabber from './input/frame_grabber';
 import {merge} from 'lodash';
 const vec2 = {
     clone: require('gl-vec2/clone')
