@@ -23,7 +23,7 @@ function waitForVideo(video) {
                     window.setTimeout(checkVideo, 500);
                 }
             } else {
-                reject('Unable to play video stream. Is webcam working?');
+                reject(new Error('Unable to play video stream. Is webcam working?'));
             }
             attempts--;
         }
@@ -40,15 +40,14 @@ function waitForVideo(video) {
 function initCamera(video, constraints) {
     return getUserMedia(constraints)
     .then((stream) => {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             streamRef = stream;
             video.setAttribute("autoplay", true);
             video.setAttribute('muted', true);
             video.setAttribute('playsinline', true);
             video.srcObject = stream;
             video.addEventListener('loadedmetadata', () => {
-                video.play();
-                resolve();
+                video.play().then(resolve).catch(reject);
             });
         });
     })
