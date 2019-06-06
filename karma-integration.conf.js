@@ -6,6 +6,7 @@ module.exports = function(config) {
         basePath: '',
         frameworks: ['mocha', 'chai', 'sinon', 'sinon-chai'],
         files: [
+            './node_modules/es6-promise/dist/es6-promise.auto.js',
             'test/test-main-integration.js',
             {pattern: 'test/integration/**/*.js', included: false},
             {pattern: 'test/fixtures/**/*.*', included: false}
@@ -38,7 +39,7 @@ module.exports = function(config) {
             ]
         },
         plugins: [
-            'karma-chrome-launcher',
+            'karma-phantomjs-launcher',
             'karma-mocha',
             'karma-chai',
             'karma-sinon',
@@ -50,7 +51,7 @@ module.exports = function(config) {
         colors: true,
         logLevel: config.LOG_INFO, // LOG_DEBUG
         autoWatch: true,
-        browsers: ['Chrome'],
-        singleRun: false
+        browsers: ['PhantomJS'],
+        singleRun: true
     });
 };
