@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        // "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "declaration": true,
+        // "isolatedModules": true,
+        "module": "amd",
+        "outFile": "dist/quagga",
+        "pretty": true,
+        // "strict": true,
+        "target": "esnext"
+    },
+    "include": [
+        "src"
+    ]
+}
