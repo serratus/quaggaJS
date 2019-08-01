@@ -1,47 +1,33 @@
-var path = require('path');
-var webpack = require('webpack');
+const webpackConfig = {
+    mode: 'development',
+    module: {
+        rules: [{
+            test: /\.(js|ts)$/,
+            exclude: /node_modules/,
+            use: {
+                loader: 'babel-loader',
+                options: {
+                    envName: 'test'
+                }
+            }
+        }]
+    },
+    resolve: {
+        extensions: ['.js', '.ts']
+    }
+};
 
-module.exports = function(config) {
+module.exports = config => {
     config.set({
         basePath: '',
-        frameworks: ['source-map-support', 'mocha', 'chai', 'sinon', 'sinon-chai'],
+        frameworks: ['source-map-support', 'mocha', 'chai', 'sinon'],
         files: [
-            'test/test-main.js',
-            {pattern: 'test/spec/**/*.js', included: false}
+            { pattern: 'test/spec/**/*.ts' }
         ],
         preprocessors: {
-            'test/test-main.js': ['webpack']
+            '**/*.ts': ['webpack']
         },
-        webpack: {
-            entry: [
-                './src/quagga.js'
-            ],
-            module: {
-                loaders: [{
-                    test: /\.jsx?$/,
-                    exclude: [
-                        path.resolve('node_modules/')
-                    ],
-                    loader: 'babel-loader'
-                }, {
-                    test: /\.js$/,
-                    include: path.resolve('src'),
-                    loader: 'babel-istanbul-loader'
-                }]
-            },
-            resolve: {
-                modules: [
-                    path.resolve('./src/input/'),
-                    path.resolve('./test/mocks/'),
-                    'node_modules'
-                ]
-            },
-            plugins: [
-                new webpack.DefinePlugin({
-                    ENV: require(path.join(__dirname, './env/production'))
-                })
-            ]
-        },
+        webpack: webpackConfig,
         plugins: [
             'karma-chrome-launcher',
             'karma-firefox-launcher',
@@ -49,9 +35,8 @@ module.exports = function(config) {
             'karma-mocha',
             'karma-chai',
             'karma-sinon',
-            'karma-sinon-chai',
             'karma-source-map-support',
-            require('karma-webpack')
+            'karma-webpack'
         ],
         reporters: ['progress', 'coverage'],
         port: 9876,
@@ -62,7 +47,7 @@ module.exports = function(config) {
         singleRun: false,
         coverageReporter: {
             type: 'html',
-            dir: 'coverage/'
+            dir: './coverage'
         }
     });
 };

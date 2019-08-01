@@ -91,12 +91,11 @@ The above condition evaluates to:
 | Chrome        | `true`  |
 | Firefox       | `true`  |
 | IE 11         | `false` |
-| Safari iOS    | `true` |
+| Safari iOS    | `true`  |
 
 ## <a name="installing">Installing</a>
 
-QuaggaJS can be installed using __npm__, __bower__, or by including it with
-the __script__ tag.
+QuaggaJS can be installed using __npm__ or by including it with the __script__ tag.
 
 ### NPM
 
@@ -114,14 +113,6 @@ const Quagga = require('quagga').default; // Common JS (important: default)
 Currently, the full functionality is only available through the browser. When
 using QuaggaJS within __node__, only file-based decoding is available. See the
 example for [node_examples](#node-example).
-
-### Bower
-
-You can also install QuaggaJS through __bower__:
-
-```console
-> bower install quagga
-```
 
 ### Script-Tag Anno 1998
 
@@ -181,19 +172,19 @@ node.
 ```javascript
 Quagga.init({
     inputStream : {
-      name : "Live",
-      type : "LiveStream",
+      name : 'Live',
+      type : 'LiveStream',
       target: document.querySelector('#yourElement')    // Or '#yourElement' (optional)
     },
     decoder : {
-      readers : ["code_128_reader"]
+      readers : ['code_128_reader']
     }
-  }, function(err) {
+  }, function (err) {
       if (err) {
           console.log(err);
           return
       }
-      console.log("Initialization finished. Ready to start");
+      console.log('Initialization finished. Ready to start');
       Quagga.start();
   });
 ```
@@ -475,7 +466,7 @@ supplements you have to provide them in the configuration as followed:
 ```javascript
 decoder: {
     readers: [{
-        format: "ean_reader",
+        format: 'ean_reader',
         config: {
             supplements: [
                 'ean_5_reader', 'ean_2_reader'
@@ -508,7 +499,7 @@ Only two properties are relevant for the use in Quagga (`halfSample` and
 ```javascript
 {
   halfSample: true,
-  patchSize: "medium", // x-small, small, medium, large, x-large
+  patchSize: 'medium', // x-small, small, medium, large, x-large
   debug: {
     showCanvas: false,
     showPatches: false,
@@ -552,43 +543,43 @@ locating-mechanism for more robust results.
 ```javascript
 Quagga.decodeSingle({
     decoder: {
-        readers: ["code_128_reader"] // List of active readers
+        readers: ['code_128_reader'] // List of active readers
     },
     locate: true, // try to locate the barcode in the image
     src: '/test/fixtures/code_128/image-001.jpg' // or 'data:image/jpg;base64,' + data
-}, function(result){
-    if(result.codeResult) {
-        console.log("result", result.codeResult.code);
+}, function (result) {
+    if (result.codeResult) {
+        console.log('result', result.codeResult.code);
     } else {
-        console.log("not detected");
+        console.log('not detected');
     }
 });
 ```
 
 ### <a name="node-example">Using node</a>
 
-The following example illustrates the use of QuaggaJS within a node
-environment. It's almost identical to the browser version with the difference
-that node does not support web-workers out of the box. Therefore the config
+The following example illustrates the use of QuaggaJS within a node environment.
+It's almost identical to the browser version with the difference
+that node does not support web workers out of the box. Therefore the config
 property `numOfWorkers` must be explicitly set to `0`.
 
 ```javascript
 var Quagga = require('quagga').default;
 
 Quagga.decodeSingle({
-    src: "image-abc-123.jpg",
+    src: 'image-abc-123.jpg',
     numOfWorkers: 0,  // Needs to be 0 when used within node
     inputStream: {
-        size: 800  // restrict input-size to be 800px in width (long-side)
+        size: 800  // restrict input size to be 800px in width (long side)
     },
     decoder: {
-        readers: ["code_128_reader"] // List of active readers
+        readers: ['code_128_reader'] // List of active readers
     },
 }, function(result) {
     if(result.codeResult) {
-        console.log("result", result.codeResult.code);
+        console.log('result', result.codeResult.code);
     } else {
-        console.log("not detected");
+        console.log('not detected');
     }
 });
 ```
@@ -601,11 +592,11 @@ A growing collection of tips & tricks to improve the various aspects of Quagga.
 
 Barcodes too far away from the camera, or a lens too close to the object
 result in poor recognition rates and Quagga might respond with a lot of
-false-positives.
+false positives.
 
 Starting in Chrome 59 you can now make use of `capabilities` and directly
 control the zoom of the camera. Head over to the
-[web-cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+[web cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
 and check out the __Zoom__ feature.
 
 You can read more about those `capabilities` in
@@ -618,7 +609,7 @@ recognition logic.
 
 Since Chrome 59 you can turn on/off the __Torch__ of our device and vastly
 improve the quality of the images. Head over to the
-[web-cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
+[web cam demo](https://serratus.github.io/quaggaJS/examples/live_w_locator.html)
 and check out the __Torch__ feature.
 
 To find out more about this feature [read on](https://www.oberhofer.co/mediastreamtrack-and-its-capabilities).
@@ -626,8 +617,8 @@ To find out more about this feature [read on](https://www.oberhofer.co/mediastre
 ## Tests
 
 Unit Tests can be run with [Karma][karmaUrl] and written using
-[Mocha][mochaUrl], [Chai][chaiUrl] and [SinonJS][sinonUrl]. Coverage reports are
-automatically generated in the coverage/ folder.
+[Mocha][mochaUrl], [Chai][chaiUrl] and [SinonJS][sinonUrl].
+Coverage reports are automatically generated in the coverage/ folder.
 
 ```console
 > npm install
@@ -639,7 +630,7 @@ In case you want to take a deeper dive into the inner workings of Quagga, get to
 know the _debugging_ capabilities of the current implementation. The various
 flags exposed through the `config` object give you the abilily to visualize
 almost every step in the processing. Because of the introduction of the
-web-workers, and their restriction not to have access to the DOM, the
+web workers, and their restriction not to have access to the DOM, the
 configuration must be explicitly set to `config.numOfWorkers = 0` in order to
 work.
 
@@ -652,19 +643,19 @@ bugs in the implementation.
 
 ### Creating a ``ResultCollector``
 
-You can easily create a new ``ResultCollector`` by calling its ``create``
-method with a configuration.
+You can easily create a new ``ResultCollector`` by calling its constructor
+with a configuration.
 
 ```javascript
-var resultCollector = Quagga.ResultCollector.create({
+const resultCollector = new Quagga.ResultCollector({
     capture: true, // keep track of the image producing this result
     capacity: 20,  // maximum number of results to store
     blacklist: [   // list containing codes which should not be recorded
-        {code: "3574660239843", format: "ean_13"}],
-    filter: function(codeResult) {
+        {code: '3574660239843', format: 'ean_13'}],
+    filter: function (codeResult) {
         // only store results which match this constraint
         // returns true/false
-        // e.g.: return codeResult.format === "ean_13";
+        // e.g.: return codeResult.format === 'ean_13';
         return true;
     }
 });
@@ -684,7 +675,7 @@ do not fit into a certain schema. Calling ``getResults`` on the
 ```javascript
 {
     codeResult: {}, // same as in onDetected event
-    frame: "data:image/png;base64,iVBOR..." // dataURL of the gray-scaled image
+    frame: 'data:image/png;base64,iVBOR...' // dataURL of the gray-scaled image
 }
 ```
 
@@ -704,6 +695,18 @@ on the ``singleChannel`` flag in the configuration when using ``decodeSingle``.
 - [Maintenance Connection Canada (Asset Pro Solutions Inc.](http://maintenanceconnection.ca/)
 
 ## <a name="changelog">Changelog</a>
+
+### 2019-07-31
+- Internal Changes
+  - Converted to TypeScript
+  - Upgraded tooling to Webpack 4.38, Babel 7.5, Karma 4.2, Chai 4.2, Sinon 7.3
+  - Removed redundant files
+- Improvements
+  - Removed all 3rd party dependencies for Web version
+  - Changed ImageDebug API
+  - Changed ``Box`` interface to be ``[Point, Point, Point, Point]``
+  - Improved performance by utilizing ES2015+ features, bitwise operators, etc.
+  - Added support for ``area`` measured in pixels (px)
 
 ### 2017-06-07
 - Improvements
@@ -759,18 +762,15 @@ Take a look at the release-notes (
     [0.10.0](https://github.com/serratus/quaggaJS/releases/tag/v0.10.0))
 
 ### 2016-02-18
-
 - Internal Changes
   - Restructuring into meaningful folders
   - Removing debug-code in production build
-
 
 ### 2016-02-15
 Take a look at the release-notes (
     [0.9.0](https://github.com/serratus/quaggaJS/releases/tag/v0.9.0))
 
 ### 2015-11-22
-
 - Fixes
   - Fixed inconsistencies for Code 128 decoding (See
       [\#76](https://github.com/serratus/quaggaJS/issues/76))
