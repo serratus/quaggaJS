@@ -1,6 +1,8 @@
 quaggaJS
 ========
 
+⚠️ **Important warning: This project is deprecated in favor of an improved version of itself, see** https://github.com/ericblade/quagga2
+
 [![Join the chat at https://gitter.im/quaggaJS/Lobby](https://badges.gitter.im/quaggaJS/Lobby.svg)](https://gitter.im/quaggaJS/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 - [Changelog](#changelog) (2017-06-07)
