@@ -229,15 +229,15 @@ In contrast to the calls described above, this method does not rely on
 `getUserMedia` and operates on a single image instead. The provided callback
 is the same as in `onDetected` and contains the result `data` object.
 
-### Quagga.offProcessed(handler)
+### Quagga.offProcessed(callback)
 
 In case the `onProcessed` event is no longer relevant, `offProcessed` removes
-the given `handler` from the event-queue.
+the given `callback` from the event-queue.
 
-### Quagga.offDetected(handler)
+### Quagga.offDetected(callback)
 
 In case the `onDetected` event is no longer relevant, `offDetected` removes
-the given `handler` from the event-queue.
+the given `callback` from the event-queue.
 
 ## <a name="resultobject">The result object</a>
 
